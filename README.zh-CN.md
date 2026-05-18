@@ -1,16 +1,16 @@
 # 🧬 Evolver
 
-[![GitHub stars](https://img.shields.io/github/stars/EvoMap/evolver?style=social)](https://github.com/EvoMap/evolver/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/EvoMap/Evolver?style=social)](https://github.com/EvoMap/Evolver/stargazers)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 [![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D%2018-green.svg)](https://nodejs.org/)
-[![GitHub last commit](https://img.shields.io/github/last-commit/EvoMap/evolver)](https://github.com/EvoMap/evolver/commits/main)
+[![GitHub last commit](https://img.shields.io/github/last-commit/EvoMap/Evolver)](https://github.com/EvoMap/Evolver/commits/main)
 [![npm downloads](https://img.shields.io/npm/dm/@evomap/evolver.svg)](https://www.npmjs.com/package/@evomap/evolver)
-[![GitHub issues](https://img.shields.io/github/issues/EvoMap/evolver)](https://github.com/EvoMap/evolver/issues)
+[![GitHub issues](https://img.shields.io/github/issues/EvoMap/Evolver)](https://github.com/EvoMap/Evolver/issues)
 [![arXiv](https://img.shields.io/badge/arXiv-2604.15097-b31b1b.svg)](https://arxiv.org/abs/2604.15097)
 
 ![Evolver Cover](assets/cover.png)
 
-**[evomap.ai](https://evomap.ai)** | [Wiki 文档](https://evomap.ai/wiki) | [English Docs](README.md) | [Japanese / 日本語ドキュメント](README.ja-JP.md) | [한국어 문서](README.ko-KR.md) | [GitHub](https://github.com/EvoMap/evolver) | [Releases](https://github.com/EvoMap/evolver/releases)
+**[evomap.ai](https://evomap.ai)** | [Wiki 文档](https://evomap.ai/wiki) | [English Docs](README.md) | [Japanese / 日本語ドキュメント](README.ja-JP.md) | [한국어 문서](README.ko-KR.md) | [GitHub](https://github.com/EvoMap/Evolver) | [Releases](https://github.com/EvoMap/Evolver/releases)
 
 ---
 
@@ -107,8 +107,8 @@ OpenClaw 会识别 Evolver 向 stdout 输出的 `sessions_spawn(...)` 协议，*
 
 ```bash
 cd <your-openclaw-workspace>
-git clone https://github.com/EvoMap/evolver.git
-cd evolver
+git clone https://github.com/EvoMap/Evolver.git
+cd Evolver
 npm install
 ```
 
@@ -119,8 +119,8 @@ npm install
 如果你已经 `npm install -g @evomap/evolver`，请完全跳过这节。源码模式仅为想修改引擎本身的贡献者准备。
 
 ```bash
-git clone https://github.com/EvoMap/evolver.git
-cd evolver
+git clone https://github.com/EvoMap/Evolver.git
+cd Evolver
 npm install
 
 # 随后，文档中所有 `evolver <flag>` 命令都可以用 `node index.js <flag>` 替换，效果完全等价
@@ -477,7 +477,7 @@ EVOLVER_VALIDATOR_ENABLED=0 evolver run --loop
 必填环境变量：
 
 - `PUBLIC_REMOTE`（默认：`public`）
-- `PUBLIC_REPO`（例如 `EvoMap/evolver`）
+- `PUBLIC_REPO`（例如 `EvoMap/Evolver`）
 - `PUBLIC_OUT_DIR`（默认：`dist-public`）
 - `PUBLIC_USE_BUILD_OUTPUT`（默认：`true`）
 
@@ -503,7 +503,7 @@ MAJOR.MINOR.PATCH
 
 ## 更新日志
 
-完整的版本发布记录请查看 [GitHub Releases](https://github.com/EvoMap/evolver/releases)。
+完整的版本发布记录请查看 [GitHub Releases](https://github.com/EvoMap/Evolver/releases)。
 
 ## FAQ
 
@@ -530,20 +530,20 @@ MAJOR.MINOR.PATCH
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=EvoMap/evolver&type=Date)](https://star-history.com/#EvoMap/evolver&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=EvoMap/Evolver&type=Date)](https://star-history.com/#EvoMap/Evolver&Date)
 
 ## 鸣谢
 
-- [onthebigtree](https://github.com/onthebigtree) -- 启发了 evomap 进化网络的诞生。修复了三个运行时逻辑 bug (PR [#25](https://github.com/EvoMap/evolver/pull/25))；贡献了主机名隐私哈希、可移植验证路径和死代码清理 (PR [#26](https://github.com/EvoMap/evolver/pull/26))。
+- [onthebigtree](https://github.com/onthebigtree) -- 启发了 evomap 进化网络的诞生。修复了三个运行时逻辑 bug (PR [#25](https://github.com/EvoMap/Evolver/pull/25))；贡献了主机名隐私哈希、可移植验证路径和死代码清理 (PR [#26](https://github.com/EvoMap/Evolver/pull/26))。
 - [lichunr](https://github.com/lichunr) -- 提供了数千美金 Token 供算力网络免费使用。
-- [shinjiyu](https://github.com/shinjiyu) -- 为 evolver 和 evomap 提交了大量 bug report，并贡献了多语言信号提取与 snippet 标签功能 (PR [#112](https://github.com/EvoMap/evolver/pull/112))。
-- [voidborne-d](https://github.com/voidborne-d) -- 为预广播脱敏层新增 11 种凭证检测模式，强化安全防护 (PR [#107](https://github.com/EvoMap/evolver/pull/107))；新增 45 项测试覆盖 strategy、validationReport 和 envFingerprint (PR [#139](https://github.com/EvoMap/evolver/pull/139))。
-- [blackdogcat](https://github.com/blackdogcat) -- 修复 dotenv 缺失依赖并实现智能 CPU 负载阈值自动计算 (PR [#144](https://github.com/EvoMap/evolver/pull/144))。
-- [LKCY33](https://github.com/LKCY33) -- 修复 .env 加载路径和目录权限问题 (PR [#21](https://github.com/EvoMap/evolver/pull/21))。
-- [hendrixAIDev](https://github.com/hendrixAIDev) -- 修复 dry-run 模式下 performMaintenance() 仍执行的问题 (PR [#68](https://github.com/EvoMap/evolver/pull/68))。
-- [toller892](https://github.com/toller892) -- 独立发现并报告了 events.jsonl forbidden_paths 冲突 bug (PR [#149](https://github.com/EvoMap/evolver/pull/149))。
-- [WeZZard](https://github.com/WeZZard) -- 为 SKILL.md 添加 A2A_NODE_ID 配置说明和节点注册指引，并在 a2aProtocol 中增加未配置 NODE_ID 时的警告提示 (PR [#164](https://github.com/EvoMap/evolver/pull/164))。
-- [Golden-Koi](https://github.com/Golden-Koi) -- 为 README 新增 cron/外部调度器保活最佳实践 (PR [#167](https://github.com/EvoMap/evolver/pull/167))。
+- [shinjiyu](https://github.com/shinjiyu) -- 为 evolver 和 evomap 提交了大量 bug report，并贡献了多语言信号提取与 snippet 标签功能 (PR [#112](https://github.com/EvoMap/Evolver/pull/112))。
+- [voidborne-d](https://github.com/voidborne-d) -- 为预广播脱敏层新增 11 种凭证检测模式，强化安全防护 (PR [#107](https://github.com/EvoMap/Evolver/pull/107))；新增 45 项测试覆盖 strategy、validationReport 和 envFingerprint (PR [#139](https://github.com/EvoMap/Evolver/pull/139))。
+- [blackdogcat](https://github.com/blackdogcat) -- 修复 dotenv 缺失依赖并实现智能 CPU 负载阈值自动计算 (PR [#144](https://github.com/EvoMap/Evolver/pull/144))。
+- [LKCY33](https://github.com/LKCY33) -- 修复 .env 加载路径和目录权限问题 (PR [#21](https://github.com/EvoMap/Evolver/pull/21))。
+- [hendrixAIDev](https://github.com/hendrixAIDev) -- 修复 dry-run 模式下 performMaintenance() 仍执行的问题 (PR [#68](https://github.com/EvoMap/Evolver/pull/68))。
+- [toller892](https://github.com/toller892) -- 独立发现并报告了 events.jsonl forbidden_paths 冲突 bug (PR [#149](https://github.com/EvoMap/Evolver/pull/149))。
+- [WeZZard](https://github.com/WeZZard) -- 为 SKILL.md 添加 A2A_NODE_ID 配置说明和节点注册指引，并在 a2aProtocol 中增加未配置 NODE_ID 时的警告提示 (PR [#164](https://github.com/EvoMap/Evolver/pull/164))。
+- [Golden-Koi](https://github.com/Golden-Koi) -- 为 README 新增 cron/外部调度器保活最佳实践 (PR [#167](https://github.com/EvoMap/Evolver/pull/167))。
 - [upbit](https://github.com/upbit) -- 在 evolver 和 evomap 技术的普及中起到了至关重要的作用。
 - [池建强](https://mowen.cn) -- 在传播和用户体验改进过程中做出了巨大贡献。
 

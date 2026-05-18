@@ -1,6 +1,6 @@
 'use strict';
 
-// Regression coverage for EvoMap/evolver#529
+// Regression coverage for EvoMap/Evolver#529
 //   "Proxy: MailboxStore stale node_secret causes infinite auth failure loop"
 //
 // Three fixes are exercised here:

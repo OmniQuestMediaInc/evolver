@@ -335,7 +335,7 @@ if (!OPTS.keepStage && !OPTS.dryRun) {
 }
 
 step(`Done. ${TARGETS.length} binar${TARGETS.length === 1 ? 'y' : 'ies'} in ${path.relative(REPO_ROOT, OUT_DIR)}/`);
-console.log('  next: gh release upload v<ver> dist-binaries/* --repo EvoMap/evolver');
+console.log('  next: gh release upload v<ver> dist-binaries/* --repo EvoMap/Evolver');
 
 //
 // =====================================================================

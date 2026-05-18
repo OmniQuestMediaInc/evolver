@@ -673,7 +673,7 @@ async function main() {
     // Post-run hint
     console.log('\n' + '=======================================================');
     console.log('Evolver finished. If you use this project, consider starring the upstream repository.');
-    console.log('Upstream: https://github.com/EvoMap/evolver');
+    console.log('Upstream: https://github.com/EvoMap/Evolver');
     console.log('=======================================================\n');
     
   } else if (command === 'solidify') {
