@@ -110,7 +110,7 @@ OpenClaw는 Evolver가 stdout으로 출력하는 `sessions_spawn(...)` 프로토
 ```bash
 cd <your-openclaw-workspace>
 git clone https://github.com/EvoMap/Evolver.git
-cd Evolver
+cd Evolver || cd evolver
 npm install
 ```
 
@@ -122,7 +122,7 @@ OpenClaw 세션 내에서 Evolver가 실행되면, 호스트가 stdout 지시문
 
 ```bash
 git clone https://github.com/EvoMap/Evolver.git
-cd Evolver
+cd Evolver || cd evolver
 npm install
 
 # 이후 문서의 모든 `evolver <flag>`는 `node index.js <flag>`로 대체 가능하며, 동작은 동일합니다

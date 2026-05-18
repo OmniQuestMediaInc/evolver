@@ -147,7 +147,7 @@ Skip this section entirely if you installed via `npm install -g @evomap/evolver`
 
 ```bash
 git clone https://github.com/EvoMap/Evolver.git
-cd Evolver
+cd Evolver || cd evolver
 npm install
 
 # Then use node index.js wherever the CLI docs say evolver

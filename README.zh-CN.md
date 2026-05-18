@@ -108,7 +108,7 @@ OpenClaw 会识别 Evolver 向 stdout 输出的 `sessions_spawn(...)` 协议，*
 ```bash
 cd <your-openclaw-workspace>
 git clone https://github.com/EvoMap/Evolver.git
-cd Evolver
+cd Evolver || cd evolver
 npm install
 ```
 
@@ -120,7 +120,7 @@ npm install
 
 ```bash
 git clone https://github.com/EvoMap/Evolver.git
-cd Evolver
+cd Evolver || cd evolver
 npm install
 
 # 随后，文档中所有 `evolver <flag>` 命令都可以用 `node index.js <flag>` 替换，效果完全等价
