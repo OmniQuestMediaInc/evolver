@@ -64,7 +64,7 @@ class LifecycleManager {
    * operator explicitly sets `A2A_NODE_SECRET` in the environment AND it
    * disagrees with the stored value, the env var wins and we sync the store
    * back to the env value. This breaks the failure mode reported in
-   * EvoMap/evolver#529 where a stale secret persisted in
+   * EvoMap/Evolver#529 where a stale secret persisted in
    * `~/.evomap/mailbox/state.json` keeps overriding a freshly minted secret
    * exported from `.env`, producing an infinite re-auth loop:
    *   stale store secret -> hello "OK" (lenient path) -> heartbeat 403
@@ -192,7 +192,7 @@ class LifecycleManager {
    * Re-authenticate after 403: rotate secret via hello, then verify with a
    * heartbeat. Returns true if auth is restored, false otherwise.
    *
-   * Recovery sequence (issue EvoMap/evolver#529):
+   * Recovery sequence (issue EvoMap/Evolver#529):
    *   attempt 1 -> hello with current Bearer + rotate_secret=true
    *                (works when the stale secret is still recognised)
    *   attempt 2 -> drop the bearer locally, hello WITHOUT Authorization

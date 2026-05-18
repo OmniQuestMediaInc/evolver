@@ -1,16 +1,16 @@
 # 🧬 Evolver
 
-[![GitHub stars](https://img.shields.io/github/stars/EvoMap/evolver?style=social)](https://github.com/EvoMap/evolver/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/EvoMap/Evolver?style=social)](https://github.com/EvoMap/Evolver/stargazers)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 [![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D%2018-green.svg)](https://nodejs.org/)
-[![GitHub last commit](https://img.shields.io/github/last-commit/EvoMap/evolver)](https://github.com/EvoMap/evolver/commits/main)
+[![GitHub last commit](https://img.shields.io/github/last-commit/EvoMap/Evolver)](https://github.com/EvoMap/Evolver/commits/main)
 [![npm downloads](https://img.shields.io/npm/dm/@evomap/evolver.svg)](https://www.npmjs.com/package/@evomap/evolver)
-[![GitHub issues](https://img.shields.io/github/issues/EvoMap/evolver)](https://github.com/EvoMap/evolver/issues)
+[![GitHub issues](https://img.shields.io/github/issues/EvoMap/Evolver)](https://github.com/EvoMap/Evolver/issues)
 [![arXiv](https://img.shields.io/badge/arXiv-2604.15097-b31b1b.svg)](https://arxiv.org/abs/2604.15097)
 
 ![Evolver Cover](assets/cover.png)
 
-**[evomap.ai](https://evomap.ai)** | [Documentation](https://evomap.ai/wiki) | [Chinese / 中文文档](README.zh-CN.md) | [Japanese / 日本語ドキュメント](README.ja-JP.md) | [Korean / 한국어 문서](README.ko-KR.md) | [GitHub](https://github.com/EvoMap/evolver) | [Releases](https://github.com/EvoMap/evolver/releases)
+**[evomap.ai](https://evomap.ai)** | [Documentation](https://evomap.ai/wiki) | [Chinese / 中文文档](README.zh-CN.md) | [Japanese / 日本語ドキュメント](README.ja-JP.md) | [Korean / 한국어 문서](README.ko-KR.md) | [GitHub](https://github.com/EvoMap/Evolver) | [Releases](https://github.com/EvoMap/Evolver/releases)
 
 ---
 
@@ -146,8 +146,8 @@ Evolver integrates with major agent runtimes through `setup-hooks`. Run it once 
 Skip this section entirely if you installed via `npm install -g @evomap/evolver` above. This path exists so contributors can hack on the engine.
 
 ```bash
-git clone https://github.com/EvoMap/evolver.git
-cd evolver
+git clone https://github.com/EvoMap/Evolver.git
+cd Evolver || cd evolver
 npm install
 
 # Then use node index.js wherever the CLI docs say evolver
@@ -483,7 +483,7 @@ This repository is the public distribution.
 Required env vars:
 
 - `PUBLIC_REMOTE` (default: `public`)
-- `PUBLIC_REPO` (e.g. `EvoMap/evolver`)
+- `PUBLIC_REPO` (e.g. `EvoMap/Evolver`)
 - `PUBLIC_OUT_DIR` (default: `dist-public`)
 - `PUBLIC_USE_BUILD_OUTPUT` (default: `true`)
 
@@ -509,7 +509,7 @@ MAJOR.MINOR.PATCH
 
 ## Changelog
 
-See the full release history on [GitHub Releases](https://github.com/EvoMap/evolver/releases).
+See the full release history on [GitHub Releases](https://github.com/EvoMap/Evolver/releases).
 
 ## FAQ
 
@@ -538,20 +538,20 @@ Clone it into any directory you like. If you use [OpenClaw](https://openclaw.com
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=EvoMap/evolver&type=Date)](https://star-history.com/#EvoMap/evolver&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=EvoMap/Evolver&type=Date)](https://star-history.com/#EvoMap/Evolver&Date)
 
 ## Acknowledgments
 
-- [onthebigtree](https://github.com/onthebigtree) -- Inspired the creation of evomap evolution network. Fixed three runtime and logic bugs (PR [#25](https://github.com/EvoMap/evolver/pull/25)); contributed hostname privacy hashing, portable validation paths, and dead code cleanup (PR [#26](https://github.com/EvoMap/evolver/pull/26)).
+- [onthebigtree](https://github.com/onthebigtree) -- Inspired the creation of evomap evolution network. Fixed three runtime and logic bugs (PR [#25](https://github.com/EvoMap/Evolver/pull/25)); contributed hostname privacy hashing, portable validation paths, and dead code cleanup (PR [#26](https://github.com/EvoMap/Evolver/pull/26)).
 - [lichunr](https://github.com/lichunr) -- Contributed thousands of dollars in tokens for our compute network to use for free.
-- [shinjiyu](https://github.com/shinjiyu) -- Submitted numerous bug reports and contributed multilingual signal extraction with snippet-carrying tags (PR [#112](https://github.com/EvoMap/evolver/pull/112)).
-- [voidborne-d](https://github.com/voidborne-d) -- Hardened pre-broadcast sanitization with 11 new credential redaction patterns (PR [#107](https://github.com/EvoMap/evolver/pull/107)); added 45 tests for strategy, validationReport, and envFingerprint (PR [#139](https://github.com/EvoMap/evolver/pull/139)).
-- [blackdogcat](https://github.com/blackdogcat) -- Fixed missing dotenv dependency and implemented intelligent CPU load threshold auto-calculation (PR [#144](https://github.com/EvoMap/evolver/pull/144)).
-- [LKCY33](https://github.com/LKCY33) -- Fixed .env loading path and directory permissions (PR [#21](https://github.com/EvoMap/evolver/pull/21)).
-- [hendrixAIDev](https://github.com/hendrixAIDev) -- Fixed performMaintenance() running in dry-run mode (PR [#68](https://github.com/EvoMap/evolver/pull/68)).
-- [toller892](https://github.com/toller892) -- Independently identified and reported the events.jsonl forbidden_paths bug (PR [#149](https://github.com/EvoMap/evolver/pull/149)).
-- [WeZZard](https://github.com/WeZZard) -- Added A2A_NODE_ID setup guide to SKILL.md and a console warning in a2aProtocol when NODE_ID is not explicitly configured (PR [#164](https://github.com/EvoMap/evolver/pull/164)).
-- [Golden-Koi](https://github.com/Golden-Koi) -- Added cron/external runner keepalive best practice to README (PR [#167](https://github.com/EvoMap/evolver/pull/167)).
+- [shinjiyu](https://github.com/shinjiyu) -- Submitted numerous bug reports and contributed multilingual signal extraction with snippet-carrying tags (PR [#112](https://github.com/EvoMap/Evolver/pull/112)).
+- [voidborne-d](https://github.com/voidborne-d) -- Hardened pre-broadcast sanitization with 11 new credential redaction patterns (PR [#107](https://github.com/EvoMap/Evolver/pull/107)); added 45 tests for strategy, validationReport, and envFingerprint (PR [#139](https://github.com/EvoMap/Evolver/pull/139)).
+- [blackdogcat](https://github.com/blackdogcat) -- Fixed missing dotenv dependency and implemented intelligent CPU load threshold auto-calculation (PR [#144](https://github.com/EvoMap/Evolver/pull/144)).
+- [LKCY33](https://github.com/LKCY33) -- Fixed .env loading path and directory permissions (PR [#21](https://github.com/EvoMap/Evolver/pull/21)).
+- [hendrixAIDev](https://github.com/hendrixAIDev) -- Fixed performMaintenance() running in dry-run mode (PR [#68](https://github.com/EvoMap/Evolver/pull/68)).
+- [toller892](https://github.com/toller892) -- Independently identified and reported the events.jsonl forbidden_paths bug (PR [#149](https://github.com/EvoMap/Evolver/pull/149)).
+- [WeZZard](https://github.com/WeZZard) -- Added A2A_NODE_ID setup guide to SKILL.md and a console warning in a2aProtocol when NODE_ID is not explicitly configured (PR [#164](https://github.com/EvoMap/Evolver/pull/164)).
+- [Golden-Koi](https://github.com/Golden-Koi) -- Added cron/external runner keepalive best practice to README (PR [#167](https://github.com/EvoMap/Evolver/pull/167)).
 - [upbit](https://github.com/upbit) -- Played a vital role in popularizing evolver and evomap technologies.
 - [Chi Jianqiang](https://mowen.cn) -- Made significant contributions to promotion and user experience improvements.
 
@@ -559,4 +559,4 @@ Clone it into any directory you like. If you use [OpenClaw](https://openclaw.com
 
 [MIT](https://opensource.org/licenses/MIT)
 
-> Core evolution engine modules are distributed in obfuscated form to protect intellectual property. Source: [EvoMap/evolver](https://github.com/EvoMap/evolver).
+> Core evolution engine modules are distributed in obfuscated form to protect intellectual property. Source: [EvoMap/Evolver](https://github.com/EvoMap/Evolver).

@@ -20,7 +20,7 @@
   "license": "GPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EvoMap/evolver.git"
+    "url": "https://github.com/EvoMap/Evolver.git"
   },
   "homepage": "https://evomap.ai",
   "scripts": {

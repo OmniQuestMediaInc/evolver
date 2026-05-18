@@ -72,8 +72,9 @@ function executeForceUpdate(forceUpdate) {
   // Channel 1: GitHub Release (via degit)
   try {
     console.log('[ForceUpdate] Channel 1: GitHub Release download...');
-    try { fs.rmSync(TMP_TARGET, { recursive: true, force: true }); } catch (_) {}
-    execSync('npx -y degit EvoMap/evolver ' + JSON.stringify(TMP_TARGET), {
+    var tmpTarget = path.resolve(REPO_ROOT, '..', '.evolver-update-tmp');
+    try { fs.rmSync(tmpTarget, { recursive: true, force: true }); } catch (_) {}
+    execSync('npx -y degit EvoMap/Evolver ' + JSON.stringify(tmpTarget), {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 60000, windowsHide: true, maxBuffer: MAX_EXEC_BUFFER,
     });

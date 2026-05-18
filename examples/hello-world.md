@@ -5,7 +5,7 @@ Try Evolver locally in 3 steps:
 1. Clone and enter:
 
 ```bash
-git clone https://github.com/EvoMap/evolver.git && cd evolver
+git clone https://github.com/EvoMap/Evolver.git && (cd Evolver || cd evolver)
 ```
 
 2. Install and run a single evolution:

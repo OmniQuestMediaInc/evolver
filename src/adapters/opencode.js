@@ -162,7 +162,7 @@ function printPostInstallNotice(pluginPath) {
   // that tab. This is by opencode design, not a bug. See:
   //   https://github.com/sst/opencode -> packages/opencode/specs/tui-plugins.md
   // Surfacing this proactively here prevents the "is it actually loaded?"
-  // confusion that motivated EvoMap/evolver issue #531.
+  // confusion that motivated EvoMap/Evolver issue #531.
   console.log('');
   console.log('[opencode] Restart opencode for the plugin to take effect.');
   console.log('[opencode] Note: this is a SERVER plugin (event hooks). It will NOT appear in');
