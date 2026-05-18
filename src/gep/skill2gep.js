@@ -586,17 +586,25 @@ function runOnSkillInvocation(opts) {
 // is attached (Gene-only bundles are not supported by the A2A schema). Each
 // channel's failure is isolated so a broken one cannot block the other.
 // ---------------------------------------------------------------------------
+// publishAssets runs two independent publish channels in parallel:
+//   skill_store: skillPublisher.publishSkillToHub (human-facing Gene index)
+//   gep_bundle:  a2a.httpTransportSend (machine-facing auditable channel)
+// ok is true only when at least one channel succeeds with a real (non-dry-run) publish.
+// When HUB_DRY_RUN is active, both channels short-circuit and ok is false;
+// callers should check result.dry_run to distinguish from a real failure.
 function publishAssets(gene, capsule) {
   const skillPromise = publishSkillChannel(gene);
   const bundlePromise = capsule ? publishBundleChannel(gene, capsule) : Promise.resolve({ ok: false, skipped: 'no_capsule' });
   return Promise.all([skillPromise, bundlePromise]).then(([skill, bundle]) => ({
     skill_store: skill,
     gep_bundle: bundle,
-    ok: Boolean((skill && skill.ok) || (bundle && bundle.ok)),
+    ok: Boolean((skill && skill.ok && !skill.dry_run) || (bundle && bundle.ok && !bundle.dry_run)),
+    dry_run: Boolean((skill && skill.dry_run) || (bundle && bundle.dry_run)),
   }));
 }
 
 function publishSkillChannel(gene) {
+  if (a2a._isDryRun()) return Promise.resolve({ ok: true, dry_run: true });
   try {
     const p = skillPublisher.publishSkillToHub(gene);
     return Promise.resolve(p).catch((err) => ({ ok: false, error: err && err.message ? err.message : String(err) }));
@@ -609,18 +617,56 @@ function publishBundleChannel(gene, capsule) {
   const hubUrl = a2a.getHubUrl && a2a.getHubUrl();
   if (!hubUrl) return Promise.resolve({ ok: false, error: 'no_hub_url' });
   let message;
+  let capsuleClone;
   try {
     // buildPublishBundle mutates asset_id on the objects it receives, so
     // clone first to avoid polluting the locally stored gene/capsule.
+    // Also sanitize the clone before publishing so the recall verifier
+    // can index by the same hash the Hub will store. Without client-side
+    // sanitize, Hub's server-side PII redaction silently rewrites the
+    // body and recomputes a different asset_id; the verifier then looks
+    // up a hash that does not exist on Hub, producing persistent
+    // roundtrip_missing. Mirrors solidify.js publish paths.
+    // (Bugbot review on PR #53 round 3.)
     const geneClone = JSON.parse(JSON.stringify(gene));
-    const capsuleClone = JSON.parse(JSON.stringify(capsule));
+    capsuleClone = JSON.parse(JSON.stringify(capsule));
+    try {
+      const { sanitizePayload } = require('./sanitize');
+      capsuleClone = sanitizePayload(capsuleClone);
+      // Note: do NOT compute asset_id here. buildPublishBundle stamps the
+      // canonical asset_id (after also potentially adding execution_trace
+      // and model_name). Computing a hash here would be discarded — and if
+      // buildPublishBundle adds execution_trace, the pre-hash would silently
+      // disagree with the post-hash. The verifier-enqueue closure below reads
+      // capsuleClone.asset_id AFTER buildPublishBundle returns.
+      // (Bugbot review on PR #53 round 4.)
+    } catch (sanitizeErr) {
+      // sanitize is best-effort here; if it fails the unsanitized clone
+      // still publishes — Hub's own PII redaction will still kick in.
+      // Log so the operator can investigate but do not abort the publish.
+      console.log('[skill2gep] sanitize failed (non-fatal): ' + (sanitizeErr && sanitizeErr.message || sanitizeErr));
+    }
     message = a2a.buildPublishBundle({ gene: geneClone, capsule: capsuleClone });
   } catch (err) {
     return Promise.resolve({ ok: false, error: 'build_publish_bundle_failed: ' + (err && err.message ? err.message : String(err)) });
   }
   try {
     const send = a2a.httpTransportSend(message, { hubUrl: hubUrl, timeoutMs: 15000 });
-    return Promise.resolve(send).catch((err) => ({ ok: false, error: err && err.message ? err.message : String(err) }));
+    return Promise.resolve(send)
+      .then(function (res) {
+        if (res && res.ok && !res.dry_run) {
+          try {
+            require('./recallVerifier').enqueuePublishedAsset({
+              asset_id: (capsuleClone && capsuleClone.asset_id) || capsule.asset_id,
+              type: 'SkillBundle',
+              signals: Array.isArray(capsule.trigger) ? capsule.trigger : [],
+              publishedAt: Date.now(),
+            });
+          } catch (rvErr) { /* non-fatal */ }
+        }
+        return res;
+      })
+      .catch((err) => ({ ok: false, error: err && err.message ? err.message : String(err) }));
   } catch (err) {
     return Promise.resolve({ ok: false, error: err && err.message ? err.message : String(err) });
   }

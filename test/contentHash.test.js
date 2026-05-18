@@ -104,3 +104,33 @@ describe('SCHEMA_VERSION', () => {
     assert.match(SCHEMA_VERSION, /^\d+\.\d+\.\d+$/);
   });
 });
+
+describe('@evomap/gep-sdk facade', () => {
+  it('re-exports SDK references identically (no inlined copies)', () => {
+    const sdk = require('@evomap/gep-sdk');
+    const facade = require('../src/gep/contentHash');
+    assert.equal(facade.SCHEMA_VERSION, sdk.SCHEMA_VERSION);
+    assert.equal(facade.canonicalize, sdk.canonicalize);
+    assert.equal(facade.computeAssetId, sdk.computeAssetId);
+    assert.equal(facade.verifyAssetId, sdk.verifyAssetId);
+  });
+
+  it('produces the same asset_id as v1.83.0 for a known fixed gene', () => {
+    // Frozen fixture: a Gene whose asset_id was computed by the inlined
+    // pre-1.84.0 implementation. If the SDK ever ships a behaviour-breaking
+    // change to canonicalize() / computeAssetId(), this test fails before
+    // we accidentally bump and break Hub-side asset_id verification.
+    const gene = {
+      type: 'Gene',
+      schema_version: '1.6.0',
+      id: 'gene_repair_from_errors',
+      category: 'repair',
+      signals_match: ['log_error'],
+      strategy: ['Inspect logs', 'Apply fix', 'Re-run validation'],
+      constraints: { max_files: 20, forbidden_paths: ['.git', 'node_modules'] },
+      validation: ['npm test'],
+    };
+    const id = computeAssetId(gene);
+    assert.equal(id, 'sha256:327aa3452cde16a9aa2416431bbb2c75339cca05306e4933498cef63fc8a3d08');
+  });
+});

@@ -326,6 +326,43 @@ async function main() {
           }
         } catch (_diagErr) { /* diagnostics must never block startup */ }
 
+        // Hub outcome mirror diagnostic. memoryGraph.syncEventToHub posts every
+        // outcome/attempt/solidify/skill_emit event to <hub>/a2a/memory/event
+        // by default, which is what populates this node's recall stream from
+        // the Hub side (consumed by gep-mcp-server's gep_recall). It is silent
+        // best-effort: failures don't crash the daemon but also don't surface,
+        // so users get a "why does gep_recall return 0 matches" puzzle. A
+        // single startup line says explicitly whether the mirror is on, what
+        // node it would post as, and what to flip if you want it off.
+        try {
+          const a2a = require('./src/gep/a2aProtocol');
+          const mirrorOff = process.env.MEMORY_GRAPH_SYNC_HUB === '0';
+          const hubUrl = typeof a2a.getHubUrl === 'function' ? a2a.getHubUrl() : '';
+          const nodeId = typeof a2a.getNodeId === 'function' ? a2a.getNodeId() : '';
+          const hasSecret = typeof a2a.getHubNodeSecret === 'function' && !!a2a.getHubNodeSecret();
+          if (mirrorOff) {
+            console.log('[HubMirror] DISABLED — set MEMORY_GRAPH_SYNC_HUB=1 (or unset it) to mirror outcome events to <hub>/a2a/memory/event.');
+          } else if (!hubUrl || !nodeId || !hasSecret) {
+            console.log(`[HubMirror] inactive — missing one of: hub=${hubUrl ? 'OK' : 'MISSING'} node_id=${nodeId ? 'OK' : 'MISSING'} secret=${hasSecret ? 'OK' : 'MISSING'}. Local memory graph is unaffected.`);
+          } else {
+            console.log(`[HubMirror] ENABLED — outcome/attempt/solidify/skill_emit events mirror to ${hubUrl}/a2a/memory/event as ${nodeId}. Set MEMORY_GRAPH_SYNC_HUB=0 to disable.`);
+          }
+        } catch (_mirrorDiagErr) { /* diagnostics must never block startup */ }
+
+        // RecallVerify diagnostic banner: parallel to HubMirror but reads its
+        // own env, since verification can run with HubMirror off (verifier
+        // events are local-only on first ship).
+        try {
+          const enabled = String(process.env.EVOLVE_RECALL_VERIFY || '1') !== '0';
+          const sampleRateRaw = Number(process.env.EVOLVE_RECALL_VERIFY_SAMPLE_RATE);
+          const sampleRate = Number.isFinite(sampleRateRaw) && sampleRateRaw >= 0 && sampleRateRaw <= 1 ? sampleRateRaw : 1.0;
+          if (!enabled) {
+            console.log('[RecallVerify] DISABLED — set EVOLVE_RECALL_VERIFY=1 to verify published assets round-trip via Hub Phase 2 lookup.');
+          } else {
+            console.log(`[RecallVerify] ENABLED — verifying published assets via Hub Phase 2 lookup, sample_rate=${sampleRate}. Set EVOLVE_RECALL_VERIFY=0 to disable.`);
+          }
+        } catch (_rvDiagErr) { /* diagnostics must never block startup */ }
+
         const { getEvolutionDir, getEvolverLogPath } = require('./src/gep/paths');
         const solidifyStatePath = path.join(getEvolutionDir(), 'evolution_solidify_state.json');
         const cycleProgressPath = path.join(getEvolutionDir(), 'cycle_progress.json');
@@ -373,6 +410,16 @@ async function main() {
           }
         } catch (e) {
           console.warn('[Heartbeat] Failed to start: ' + (e.message || e));
+        }
+
+        // RecallVerify worker: starts once per process; drains the publish-
+        // verification queue with backoff. unref'd so it never blocks exit.
+        try {
+          if (String(process.env.EVOLVE_RECALL_VERIFY || '1') !== '0') {
+            require('./src/gep/recallVerifier').startWorker();
+          }
+        } catch (rvStartErr) {
+          console.warn('[RecallVerify] startWorker failed: ' + (rvStartErr && rvStartErr.message || rvStartErr));
         }
 
         // Validator daemon: independent timer that fetches and executes
@@ -1558,6 +1605,25 @@ async function main() {
       console.log('');
     }
 
+  } else if (command === 'webui') {
+    const portFlag = args.find(a => typeof a === 'string' && a.startsWith('--port='));
+    const port = portFlag ? Number(portFlag.slice('--port='.length)) : undefined;
+    const { startWebUi } = require('./src/webui');
+    try {
+      const info = await startWebUi({ port });
+      console.log('[webui] Open ' + info.url);
+      const shutdown = async () => {
+        try { await info.server.stop(); } catch (_) {}
+        process.exit(0);
+      };
+      process.on('SIGINT', shutdown);
+      process.on('SIGTERM', shutdown);
+      await new Promise(() => {});
+    } catch (error) {
+      console.error('[webui] Failed: ' + (error && error.message || error));
+      process.exit(1);
+    }
+
   } else if (command === 'setup-hooks') {
     const hookAdapter = require('./src/adapters/hookAdapter');
     const { setupHooks, resolveConfigRoot, detectPlatform, loadAdapter } = hookAdapter;
@@ -1690,7 +1756,7 @@ async function main() {
     }
 
   } else {
-    console.log(`Usage: node index.js [run|/evolve|solidify|review|distill|fetch|sync|asset-log|setup-hooks|buy|orders|verify|atp-complete] [--loop]
+    console.log(`Usage: node index.js [run|/evolve|solidify|review|distill|fetch|sync|asset-log|webui|setup-hooks|buy|orders|verify|atp-complete] [--loop]
   - fetch flags:
     - --skill=<id> | -s <id>   (skill ID to download)
     - --out=<dir>              (output directory, default: ./skills/<skill_id>)
@@ -1723,6 +1789,8 @@ async function main() {
     - --last=<N>               (show last N entries)
     - --since=<ISO_date>       (entries after date)
     - --json                   (raw JSON output)
+  - webui flags:
+    - --port=<N>               (local Web UI port, default 19821)
 
   ATP (Agent Transaction Protocol) subcommands:
   - buy <caps>                 (place an ATP order; caps is comma-separated)
