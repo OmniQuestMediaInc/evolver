@@ -58,7 +58,9 @@ describe('cleanup - run', () => {
       if (v !== undefined) process.env[k] = v;
       else delete process.env[k];
     }
-    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch (_) {}
   });
 
   it('returns 0 when directory is empty', () => {
@@ -81,8 +83,13 @@ describe('cleanup - run', () => {
 
     run();
 
-    const remaining = fs.readdirSync(tmpDir).filter(f => f.startsWith('gep_prompt_'));
-    assert.ok(remaining.length >= 10, `should keep at least 10 files, got ${remaining.length}`);
+    const remaining = fs
+      .readdirSync(tmpDir)
+      .filter(f => f.startsWith('gep_prompt_'));
+    assert.ok(
+      remaining.length >= 10,
+      `should keep at least 10 files, got ${remaining.length}`
+    );
   });
 
   it('deletes old files beyond MIN_KEEP', () => {

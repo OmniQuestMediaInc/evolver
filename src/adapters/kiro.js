@@ -77,9 +77,14 @@ Signals: log_error, perf_bottleneck, user_feature_request, capability_gap, deplo
 
 function appendSectionToFile(filePath, marker, content) {
   let existing = '';
-  try { existing = fs.readFileSync(filePath, 'utf8'); } catch { /* new file */ }
+  try {
+    existing = fs.readFileSync(filePath, 'utf8');
+  } catch {
+    /* new file */
+  }
   if (existing.includes(marker)) return false;
-  const separator = existing.length > 0 && !existing.endsWith('\n') ? '\n\n' : '\n';
+  const separator =
+    existing.length > 0 && !existing.endsWith('\n') ? '\n\n' : '\n';
   fs.writeFileSync(filePath, existing + separator + content + '\n', 'utf8');
   return true;
 }
@@ -98,10 +103,17 @@ function isEvolverManagedHookFile(filePath) {
     if (!raw) return false;
     const data = JSON.parse(raw);
     if (data && data._evolver_managed === true) return true;
-    if (typeof data.name === 'string' && /^evolver\b/i.test(data.name)) return true;
-    if (data.then && typeof data.then.command === 'string' &&
-        /evolver-(session|signal)/.test(data.then.command)) return true;
-  } catch { /* treat as non-evolver */ }
+    if (typeof data.name === 'string' && /^evolver\b/i.test(data.name))
+      return true;
+    if (
+      data.then &&
+      typeof data.then.command === 'string' &&
+      /evolver-(session|signal)/.test(data.then.command)
+    )
+      return true;
+  } catch {
+    /* treat as non-evolver */
+  }
   return false;
 }
 
@@ -111,12 +123,18 @@ function install({ configRoot, evolverRoot, force }) {
   const agentsMdPath = path.join(configRoot, 'AGENTS.md');
   const scriptsBase = '.kiro/hooks';
 
-  const hookPaths = Object.values(HOOK_FILES).map(name => path.join(hooksDir, name));
+  const hookPaths = Object.values(HOOK_FILES).map(name =>
+    path.join(hooksDir, name)
+  );
 
   if (!force) {
-    const existingEvolverHook = hookPaths.find(p => fs.existsSync(p) && isEvolverManagedHookFile(p));
+    const existingEvolverHook = hookPaths.find(
+      p => fs.existsSync(p) && isEvolverManagedHookFile(p)
+    );
     if (existingEvolverHook) {
-      console.log('[kiro] Evolver hooks already installed. Use --force to overwrite.');
+      console.log(
+        '[kiro] Evolver hooks already installed. Use --force to overwrite.'
+      );
       return { ok: true, skipped: true };
     }
   }
@@ -131,16 +149,27 @@ function install({ configRoot, evolverRoot, force }) {
     console.log('[kiro] Wrote ' + dest);
   }
 
-  const copied = copyHookScripts(hooksDir, path.join(evolverRoot, 'src', 'adapters'));
-  console.log('[kiro] Copied ' + copied.length + ' hook scripts to ' + hooksDir);
+  const copied = copyHookScripts(
+    hooksDir,
+    path.join(evolverRoot, 'src', 'adapters')
+  );
+  console.log(
+    '[kiro] Copied ' + copied.length + ' hook scripts to ' + hooksDir
+  );
 
-  const injected = appendSectionToFile(agentsMdPath, EVOLVER_MARKER, buildAgentsMdSection());
+  const injected = appendSectionToFile(
+    agentsMdPath,
+    EVOLVER_MARKER,
+    buildAgentsMdSection()
+  );
   if (injected) {
     console.log('[kiro] Injected evolution section into ' + agentsMdPath);
   }
 
   console.log('[kiro] Installation complete.');
-  console.log('[kiro] Kiro auto-discovers *.kiro.hook files in .kiro/hooks/ -- no restart needed.');
+  console.log(
+    '[kiro] Kiro auto-discovers *.kiro.hook files in .kiro/hooks/ -- no restart needed.'
+  );
 
   return {
     ok: true,
@@ -164,10 +193,18 @@ function uninstall({ configRoot }) {
         if (!entry.endsWith(HOOK_FILE_SUFFIX)) continue;
         const full = path.join(hooksDir, entry);
         if (isEvolverManagedHookFile(full)) {
-          try { fs.unlinkSync(full); removedCount++; changed = true; } catch { /* ignore */ }
+          try {
+            fs.unlinkSync(full);
+            removedCount++;
+            changed = true;
+          } catch {
+            /* ignore */
+          }
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   const scripts = removeHookScripts(hooksDir);
@@ -178,18 +215,27 @@ function uninstall({ configRoot }) {
       let content = fs.readFileSync(agentsMdPath, 'utf8');
       if (content.includes(EVOLVER_MARKER)) {
         const idx = content.indexOf(EVOLVER_MARKER);
-        const nextSection = content.indexOf('\n## ', idx + EVOLVER_MARKER.length);
+        const nextSection = content.indexOf(
+          '\n## ',
+          idx + EVOLVER_MARKER.length
+        );
         const endIdx = nextSection !== -1 ? nextSection : content.length;
-        content = content.slice(0, idx).trimEnd() + (nextSection !== -1 ? content.slice(endIdx) : '');
+        content =
+          content.slice(0, idx).trimEnd() +
+          (nextSection !== -1 ? content.slice(endIdx) : '');
         fs.writeFileSync(agentsMdPath, content.trimEnd() + '\n', 'utf8');
         changed = true;
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
-  console.log(changed
-    ? `[kiro] Uninstalled evolver hooks (${removedCount} hook files + ${scripts} scripts removed).`
-    : '[kiro] No evolver hooks found to uninstall.');
+  console.log(
+    changed
+      ? `[kiro] Uninstalled evolver hooks (${removedCount} hook files + ${scripts} scripts removed).`
+      : '[kiro] No evolver hooks found to uninstall.'
+  );
 
   return { ok: true, removed: changed };
 }

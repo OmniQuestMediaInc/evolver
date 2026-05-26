@@ -18,7 +18,12 @@ const os = require('os');
 
 const FLAGS_DIR = path.join(os.homedir(), '.evomap');
 const FLAGS_FILE = path.join(FLAGS_DIR, 'feature_flags.json');
-const LOCAL_FLAGS_FILE = path.resolve(__dirname, '..', '..', '.evomap_feature_flags.json');
+const LOCAL_FLAGS_FILE = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  '.evomap_feature_flags.json'
+);
 
 let _cache = null;
 let _cacheLoaded = false;
@@ -46,11 +51,17 @@ function _writeToDisk(obj) {
     if (!fs.existsSync(FLAGS_DIR)) {
       fs.mkdirSync(FLAGS_DIR, { recursive: true, mode: 0o700 });
     }
-    fs.writeFileSync(FLAGS_FILE, JSON.stringify(obj, null, 2), { encoding: 'utf8', mode: 0o600 });
+    fs.writeFileSync(FLAGS_FILE, JSON.stringify(obj, null, 2), {
+      encoding: 'utf8',
+      mode: 0o600,
+    });
     return true;
   } catch (_) {}
   try {
-    fs.writeFileSync(LOCAL_FLAGS_FILE, JSON.stringify(obj, null, 2), { encoding: 'utf8', mode: 0o600 });
+    fs.writeFileSync(LOCAL_FLAGS_FILE, JSON.stringify(obj, null, 2), {
+      encoding: 'utf8',
+      mode: 0o600,
+    });
     return true;
   } catch (_) {}
   return false;

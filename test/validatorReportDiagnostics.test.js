@@ -37,12 +37,17 @@ function withFakeFetch(impl, fn) {
   global.fetch = impl;
   return Promise.resolve()
     .then(fn)
-    .finally(() => { global.fetch = original; });
+    .finally(() => {
+      global.fetch = original;
+    });
 }
 
 describe('reporter.classifyCommandFailure', function () {
   it('returns ok for a successful command', function () {
-    assert.equal(reporter.classifyCommandFailure({ ok: true }), reporter.FAILURE_CLASS.OK);
+    assert.equal(
+      reporter.classifyCommandFailure({ ok: true }),
+      reporter.FAILURE_CLASS.OK
+    );
   });
 
   it('classifies node -e style sandbox blocks separately from spawn failures', function () {
@@ -52,46 +57,61 @@ describe('reporter.classifyCommandFailure', function () {
     };
     assert.equal(
       reporter.classifyCommandFailure(r),
-      reporter.FAILURE_CLASS.SANDBOX_BLOCK_NODE_FLAG,
+      reporter.FAILURE_CLASS.SANDBOX_BLOCK_NODE_FLAG
     );
   });
 
   it('classifies inline-eval-without-script as sandbox_block_node_flag', function () {
     const r = {
       ok: false,
-      stderr: 'command_parse_failed: node requires a script file argument in sandbox',
+      stderr:
+        'command_parse_failed: node requires a script file argument in sandbox',
     };
     assert.equal(
       reporter.classifyCommandFailure(r),
-      reporter.FAILURE_CLASS.SANDBOX_BLOCK_NODE_FLAG,
+      reporter.FAILURE_CLASS.SANDBOX_BLOCK_NODE_FLAG
     );
   });
 
   it('classifies spawn_failed prefix from sandboxExecutor', function () {
     assert.equal(
-      reporter.classifyCommandFailure({ ok: false, stderr: 'spawn_failed: ENOENT' }),
-      reporter.FAILURE_CLASS.SPAWN_FAILED,
+      reporter.classifyCommandFailure({
+        ok: false,
+        stderr: 'spawn_failed: ENOENT',
+      }),
+      reporter.FAILURE_CLASS.SPAWN_FAILED
     );
   });
 
   it('classifies executable_not_allowed when bash/python is rejected', function () {
     assert.equal(
-      reporter.classifyCommandFailure({ ok: false, stderr: 'executable_not_allowed: bash (allowed: node)' }),
-      reporter.FAILURE_CLASS.EXEC_NOT_ALLOWED,
+      reporter.classifyCommandFailure({
+        ok: false,
+        stderr: 'executable_not_allowed: bash (allowed: node)',
+      }),
+      reporter.FAILURE_CLASS.EXEC_NOT_ALLOWED
     );
   });
 
   it('classifies timed-out commands', function () {
     assert.equal(
-      reporter.classifyCommandFailure({ ok: false, timedOut: true, stderr: '' }),
-      reporter.FAILURE_CLASS.TIMEOUT,
+      reporter.classifyCommandFailure({
+        ok: false,
+        timedOut: true,
+        stderr: '',
+      }),
+      reporter.FAILURE_CLASS.TIMEOUT
     );
   });
 
   it('classifies non-zero exit when the assertion script genuinely failed', function () {
     assert.equal(
-      reporter.classifyCommandFailure({ ok: false, exitCode: 1, stderr: 'AssertionError' }),
-      reporter.FAILURE_CLASS.EXIT_NONZERO,
+      reporter.classifyCommandFailure({
+        ok: false,
+        exitCode: 1,
+        stderr: 'AssertionError',
+      }),
+      reporter.FAILURE_CLASS.EXIT_NONZERO
     );
   });
 
@@ -99,9 +119,10 @@ describe('reporter.classifyCommandFailure', function () {
     assert.equal(
       reporter.classifyCommandFailure({
         ok: false,
-        stderr: 'command_parse_failed: shell metacharacter not allowed in command: |',
+        stderr:
+          'command_parse_failed: shell metacharacter not allowed in command: |',
       }),
-      reporter.FAILURE_CLASS.PARSE_FAILED,
+      reporter.FAILURE_CLASS.PARSE_FAILED
     );
   });
 });
@@ -112,26 +133,37 @@ describe('reporter.buildReportPayload diagnostic surface', function () {
       { task_id: 'vt_1', nonce: 'n_1' },
       {
         results: [
-          { cmd: 'node validate.js', ok: true, exitCode: 0, durationMs: 12, stdout: 'ok', stderr: '' },
+          {
+            cmd: 'node validate.js',
+            ok: true,
+            exitCode: 0,
+            durationMs: 12,
+            stdout: 'ok',
+            stderr: '',
+          },
           {
             cmd: 'node -e "x"',
             ok: false,
             exitCode: -1,
             durationMs: 0,
             stdout: '',
-            stderr: 'command_parse_failed: node flag not allowed in sandbox: -e',
+            stderr:
+              'command_parse_failed: node flag not allowed in sandbox: -e',
             timedOut: false,
           },
         ],
         overallOk: false,
         durationMs: 15,
-      },
+      }
     );
     assert.ok(Array.isArray(payload.commands));
     assert.equal(payload.commands.length, 2);
     assert.equal(payload.commands[0].failure_class, 'ok');
     assert.equal(payload.commands[1].failure_class, 'sandbox_block_node_flag');
-    assert.match(payload.commands[1].stderr_tail || '', /node flag not allowed/);
+    assert.match(
+      payload.commands[1].stderr_tail || '',
+      /node flag not allowed/
+    );
     assert.equal(typeof payload.commands[1].duration_ms, 'number');
   });
 
@@ -141,11 +173,17 @@ describe('reporter.buildReportPayload diagnostic surface', function () {
       {
         results: [
           { cmd: 'a', ok: true, exitCode: 0, durationMs: 1 },
-          { cmd: 'b', ok: false, exitCode: 1, durationMs: 1, stderr: 'AssertionError' },
+          {
+            cmd: 'b',
+            ok: false,
+            exitCode: 1,
+            durationMs: 1,
+            stderr: 'AssertionError',
+          },
         ],
         overallOk: false,
         durationMs: 2,
-      },
+      }
     );
     assert.equal(payload.failure_class, 'exit_nonzero');
   });
@@ -153,7 +191,11 @@ describe('reporter.buildReportPayload diagnostic surface', function () {
   it('returns failure_class=ok when overall passes', function () {
     const payload = reporter.buildReportPayload(
       { task_id: 't', nonce: 'n' },
-      { results: [{ cmd: 'a', ok: true, exitCode: 0, durationMs: 1 }], overallOk: true, durationMs: 1 },
+      {
+        results: [{ cmd: 'a', ok: true, exitCode: 0, durationMs: 1 }],
+        overallOk: true,
+        durationMs: 1,
+      }
     );
     assert.equal(payload.failure_class, 'ok');
     assert.equal(payload.commands.length, 1);
@@ -164,10 +206,18 @@ describe('reporter.buildReportPayload diagnostic surface', function () {
     const payload = reporter.buildReportPayload(
       { task_id: 't', nonce: 'n' },
       {
-        results: [{ cmd: 'a', ok: false, exitCode: 1, durationMs: 1, stderr: longStderr }],
+        results: [
+          {
+            cmd: 'a',
+            ok: false,
+            exitCode: 1,
+            durationMs: 1,
+            stderr: longStderr,
+          },
+        ],
         overallOk: false,
         durationMs: 1,
-      },
+      }
     );
     assert.ok(payload.commands[0].stderr_tail.length <= 240);
     assert.equal(payload.commands[0].stderr_tail.slice(-1), 'X');
@@ -175,11 +225,16 @@ describe('reporter.buildReportPayload diagnostic surface', function () {
 
   it('caps commands array to 8 entries even on very long batches', function () {
     const results = Array.from({ length: 20 }, (_, i) => ({
-      cmd: 'cmd ' + i, ok: true, exitCode: 0, durationMs: 1, stdout: '', stderr: '',
+      cmd: 'cmd ' + i,
+      ok: true,
+      exitCode: 0,
+      durationMs: 1,
+      stdout: '',
+      stderr: '',
     }));
     const payload = reporter.buildReportPayload(
       { task_id: 't', nonce: 'n' },
-      { results, overallOk: true, durationMs: 20 },
+      { results, overallOk: true, durationMs: 20 }
     );
     assert.equal(payload.commands.length, 8);
     assert.equal(payload.commands_total, 20);
@@ -189,7 +244,11 @@ describe('reporter.buildReportPayload diagnostic surface', function () {
 describe('sandboxExecutor.runPreflight', function () {
   it('passes on a host where `node <script>` works', async function () {
     const out = await sandbox.runPreflight();
-    assert.equal(out.ok, true, 'preflight should pass when node binary is on PATH');
+    assert.equal(
+      out.ok,
+      true,
+      'preflight should pass when node binary is on PATH'
+    );
     assert.equal(typeof out.durationMs, 'number');
     assert.equal(typeof out.exitCode, 'number');
     assert.equal(out.exitCode, 0);
@@ -207,7 +266,8 @@ describe('validator.runValidatorCycle preflight gate', function () {
     process.env.A2A_NODE_ID = 'node_test_validator_pf';
     try {
       const sb = require('../src/gep/validator/stakeBootstrap');
-      if (sb && typeof sb._resetStateForTests === 'function') sb._resetStateForTests();
+      if (sb && typeof sb._resetStateForTests === 'function')
+        sb._resetStateForTests();
     } catch (_) {}
     validatorIndex._resetPreflightForTests();
   });
@@ -217,7 +277,9 @@ describe('validator.runValidatorCycle preflight gate', function () {
     }
     Object.assign(process.env, originalEnv);
     if (tmpHome) {
-      try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch (_) {}
+      try {
+        fs.rmSync(tmpHome, { recursive: true, force: true });
+      } catch (_) {}
     }
     validatorIndex._resetPreflightForTests();
   });
@@ -231,31 +293,52 @@ describe('validator.runValidatorCycle preflight gate', function () {
       stderrTail: 'node: not found',
     });
     let fetched = 0;
-    const fetchImpl = async () => { fetched += 1; return mkRes({ ok: false, status: 599 }); };
-    const out = await withFakeFetch(fetchImpl, () => validatorIndex.runValidatorCycle({}));
+    const fetchImpl = async () => {
+      fetched += 1;
+      return mkRes({ ok: false, status: 599 });
+    };
+    const out = await withFakeFetch(fetchImpl, () =>
+      validatorIndex.runValidatorCycle({})
+    );
     assert.equal(out.skipped, 'preflight_failed');
     assert.equal(out.reason, 'preflight_exit_nonzero');
-    assert.equal(fetched, 0, 'no Hub call should be issued when preflight failed');
+    assert.equal(
+      fetched,
+      0,
+      'no Hub call should be issued when preflight failed'
+    );
   });
 
   it('proceeds normally when preflight is forced ok', async function () {
     process.env.EVOLVER_VALIDATOR_ENABLED = '1';
-    validatorIndex._setPreflightForTests({ ok: true, durationMs: 30, exitCode: 0 });
-    const fetchImpl = async (url) => {
-      if (url.endsWith('/a2a/validator/stake')) return mkRes({ body: { stake: { stake_amount: 100 } } });
+    validatorIndex._setPreflightForTests({
+      ok: true,
+      durationMs: 30,
+      exitCode: 0,
+    });
+    const fetchImpl = async url => {
+      if (url.endsWith('/a2a/validator/stake'))
+        return mkRes({ body: { stake: { stake_amount: 100 } } });
       if (url.endsWith('/a2a/fetch')) {
         return mkRes({
           body: {
             validation_tasks: [
-              { task_id: 'vt_pf_ok', nonce: 'n', validation_commands: [CMD_PASS] },
+              {
+                task_id: 'vt_pf_ok',
+                nonce: 'n',
+                validation_commands: [CMD_PASS],
+              },
             ],
           },
         });
       }
-      if (url.endsWith('/a2a/report')) return mkRes({ body: { status: 'accepted' } });
+      if (url.endsWith('/a2a/report'))
+        return mkRes({ body: { status: 'accepted' } });
       return mkRes({ ok: false });
     };
-    const out = await withFakeFetch(fetchImpl, () => validatorIndex.runValidatorCycle({}));
+    const out = await withFakeFetch(fetchImpl, () =>
+      validatorIndex.runValidatorCycle({})
+    );
     assert.equal(out.processed, 1);
     assert.equal(out.outcomes[0].report.overall_ok, true);
     assert.equal(out.outcomes[0].report.failure_class, 'ok');

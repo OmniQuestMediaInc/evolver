@@ -23,13 +23,19 @@ class TaskMonitor {
     try {
       const saved = typeof raw === 'string' ? JSON.parse(raw) : raw;
       if (saved.tasks_claimed) this._stats.tasks_claimed = saved.tasks_claimed;
-      if (saved.tasks_completed) this._stats.tasks_completed = saved.tasks_completed;
+      if (saved.tasks_completed)
+        this._stats.tasks_completed = saved.tasks_completed;
       if (saved.tasks_failed) this._stats.tasks_failed = saved.tasks_failed;
-      if (saved.tasks_received) this._stats.tasks_received = saved.tasks_received;
+      if (saved.tasks_received)
+        this._stats.tasks_received = saved.tasks_received;
       if (saved.last_claim_at) this._stats.last_claim_at = saved.last_claim_at;
-      if (saved.last_complete_at) this._stats.last_complete_at = saved.last_complete_at;
-      if (saved.avg_completion_ms) this._stats.avg_completion_ms = saved.avg_completion_ms;
-    } catch { /* ignore corrupt state */ }
+      if (saved.last_complete_at)
+        this._stats.last_complete_at = saved.last_complete_at;
+      if (saved.avg_completion_ms)
+        this._stats.avg_completion_ms = saved.avg_completion_ms;
+    } catch {
+      /* ignore corrupt state */
+    }
   }
 
   get subscribed() {
@@ -44,11 +50,14 @@ class TaskMonitor {
   }
 
   subscribe(filters = []) {
-    this.store.setState('task_subscription', JSON.stringify({
-      enabled: true,
-      filters,
-      subscribed_at: new Date().toISOString(),
-    }));
+    this.store.setState(
+      'task_subscription',
+      JSON.stringify({
+        enabled: true,
+        filters,
+        subscribed_at: new Date().toISOString(),
+      })
+    );
     const result = this.store.send({
       type: 'task_subscribe',
       payload: { capability_filter: filters },
@@ -57,10 +66,13 @@ class TaskMonitor {
   }
 
   unsubscribe() {
-    this.store.setState('task_subscription', JSON.stringify({
-      enabled: false,
-      unsubscribed_at: new Date().toISOString(),
-    }));
+    this.store.setState(
+      'task_subscription',
+      JSON.stringify({
+        enabled: false,
+        unsubscribed_at: new Date().toISOString(),
+      })
+    );
     const result = this.store.send({
       type: 'task_unsubscribe',
       payload: {},
@@ -71,7 +83,10 @@ class TaskMonitor {
   recordClaim(taskId) {
     this._stats.tasks_claimed++;
     this._stats.last_claim_at = Date.now();
-    this.store.setState('task_monitor_stats', JSON.stringify(this.getMetrics()));
+    this.store.setState(
+      'task_monitor_stats',
+      JSON.stringify(this.getMetrics())
+    );
   }
 
   recordComplete(taskId, startedAt) {
@@ -84,14 +99,22 @@ class TaskMonitor {
         this._stats._completion_times.shift();
       }
       const sum = this._stats._completion_times.reduce((a, b) => a + b, 0);
-      this._stats.avg_completion_ms = Math.round(sum / this._stats._completion_times.length);
+      this._stats.avg_completion_ms = Math.round(
+        sum / this._stats._completion_times.length
+      );
     }
-    this.store.setState('task_monitor_stats', JSON.stringify(this.getMetrics()));
+    this.store.setState(
+      'task_monitor_stats',
+      JSON.stringify(this.getMetrics())
+    );
   }
 
   recordFailed(taskId) {
     this._stats.tasks_failed++;
-    this.store.setState('task_monitor_stats', JSON.stringify(this.getMetrics()));
+    this.store.setState(
+      'task_monitor_stats',
+      JSON.stringify(this.getMetrics())
+    );
   }
 
   recordTaskReceived(count = 1) {

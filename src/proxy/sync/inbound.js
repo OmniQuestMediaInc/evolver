@@ -25,7 +25,12 @@ class InboundSync {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: this.getHeaders(),
-        body: JSON.stringify({ sender_id: senderId, proxy_protocol_version: PROXY_PROTOCOL_VERSION, cursor, limit }),
+        body: JSON.stringify({
+          sender_id: senderId,
+          proxy_protocol_version: PROXY_PROTOCOL_VERSION,
+          cursor,
+          limit,
+        }),
         signal: AbortSignal.timeout(35_000),
       });
 
@@ -69,12 +74,14 @@ class InboundSync {
   }
 
   async ackDelivered(channel = 'evomap-hub') {
-    const delivered = this.store.list({
-      type: '%',
-      direction: 'inbound',
-      status: 'delivered',
-      limit: 100,
-    }).filter(m => m.channel === channel);
+    const delivered = this.store
+      .list({
+        type: '%',
+        direction: 'inbound',
+        status: 'delivered',
+        limit: 100,
+      })
+      .filter(m => m.channel === channel);
 
     if (delivered.length === 0) return { acked: 0 };
 
@@ -85,7 +92,10 @@ class InboundSync {
       await fetch(endpoint, {
         method: 'POST',
         headers: this.getHeaders(),
-        body: JSON.stringify({ sender_id: senderId, message_ids: delivered.map(m => m.id) }),
+        body: JSON.stringify({
+          sender_id: senderId,
+          message_ids: delivered.map(m => m.id),
+        }),
         signal: AbortSignal.timeout(10_000),
       });
       return { acked: delivered.length };
@@ -96,4 +106,8 @@ class InboundSync {
   }
 }
 
-module.exports = { InboundSync, DEFAULT_POLL_INTERVAL_ACTIVE, DEFAULT_POLL_INTERVAL_IDLE };
+module.exports = {
+  InboundSync,
+  DEFAULT_POLL_INTERVAL_ACTIVE,
+  DEFAULT_POLL_INTERVAL_IDLE,
+};

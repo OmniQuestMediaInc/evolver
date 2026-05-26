@@ -1,6 +1,10 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { resolveStrategy, getStrategyNames, STRATEGIES } = require('../src/gep/strategy');
+const {
+  resolveStrategy,
+  getStrategyNames,
+  STRATEGIES,
+} = require('../src/gep/strategy');
 
 describe('STRATEGIES', function () {
   it('defines all expected presets', function () {
@@ -18,7 +22,11 @@ describe('STRATEGIES', function () {
       assert.equal(typeof s.repair, 'number', `${name}.repair`);
       assert.equal(typeof s.optimize, 'number', `${name}.optimize`);
       assert.equal(typeof s.innovate, 'number', `${name}.innovate`);
-      assert.equal(typeof s.repairLoopThreshold, 'number', `${name}.repairLoopThreshold`);
+      assert.equal(
+        typeof s.repairLoopThreshold,
+        'number',
+        `${name}.repairLoopThreshold`
+      );
       assert.equal(typeof s.label, 'string', `${name}.label`);
       assert.equal(typeof s.description, 'string', `${name}.description`);
     }
@@ -49,9 +57,11 @@ describe('resolveStrategy', function () {
   afterEach(function () {
     if (origStrategy !== undefined) process.env.EVOLVE_STRATEGY = origStrategy;
     else delete process.env.EVOLVE_STRATEGY;
-    if (origForceInnovation !== undefined) process.env.FORCE_INNOVATION = origForceInnovation;
+    if (origForceInnovation !== undefined)
+      process.env.FORCE_INNOVATION = origForceInnovation;
     else delete process.env.FORCE_INNOVATION;
-    if (origEvolveForceInnovation !== undefined) process.env.EVOLVE_FORCE_INNOVATION = origEvolveForceInnovation;
+    if (origEvolveForceInnovation !== undefined)
+      process.env.EVOLVE_FORCE_INNOVATION = origEvolveForceInnovation;
     else delete process.env.EVOLVE_FORCE_INNOVATION;
   });
 

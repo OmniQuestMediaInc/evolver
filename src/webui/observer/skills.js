@@ -8,13 +8,19 @@ function listSkills() {
   const dir = getSkillsDir();
   if (!fs.existsSync(dir)) return { exists: false, items: [] };
 
-  const entries = safeReaddir(dir).filter((entry) => entry.isDirectory());
-  const items = entries.map((entry) => buildSkillSummary(path.join(dir, entry.name), entry.name));
+  const entries = safeReaddir(dir).filter(entry => entry.isDirectory());
+  const items = entries.map(entry =>
+    buildSkillSummary(path.join(dir, entry.name), entry.name)
+  );
   return { exists: true, items };
 }
 
 function buildSkillSummary(skillPath, name) {
-  const skillFile = findFirstExisting(skillPath, ['SKILL.md', 'skill.md', 'README.md']);
+  const skillFile = findFirstExisting(skillPath, [
+    'SKILL.md',
+    'skill.md',
+    'README.md',
+  ]);
   let description = '';
   let bytes = 0;
   if (skillFile) {
@@ -44,7 +50,10 @@ function extractDescription(filePath) {
       const desc = frontmatter[1].match(/description\s*:\s*([^\n]+)/);
       if (desc) return desc[1].trim().replace(/^['"]|['"]$/g, '');
     }
-    const firstParagraph = raw.replace(/^---[\s\S]*?---/, '').trim().split(/\n\s*\n/)[0];
+    const firstParagraph = raw
+      .replace(/^---[\s\S]*?---/, '')
+      .trim()
+      .split(/\n\s*\n/)[0];
     return firstParagraph.replace(/^#+\s*/, '').slice(0, 240);
   } catch {
     return '';

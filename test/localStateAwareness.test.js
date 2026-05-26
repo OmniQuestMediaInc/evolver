@@ -8,7 +8,9 @@ function freshRequire(modulePath) {
   const resolved = require.resolve(modulePath);
   delete require.cache[resolved];
   // Also clear paths.js cache to pick up env overrides
-  try { delete require.cache[require.resolve('../src/gep/paths')]; } catch (_) {}
+  try {
+    delete require.cache[require.resolve('../src/gep/paths')];
+  } catch (_) {}
   return require(resolved);
 }
 
@@ -16,10 +18,19 @@ describe('localStateAwareness', () => {
   let tmpDir;
   const savedEnv = {};
   const envKeys = [
-    'EVOLVER_REPO_ROOT', 'OPENCLAW_WORKSPACE', 'MEMORY_DIR',
-    'EVOLUTION_DIR', 'SKILLS_DIR', 'A2A_NODE_ID', 'A2A_HUB_URL',
-    'A2A_NODE_SECRET', 'AGENT_NAME', 'EVOLVE_STRATEGY',
-    'WORKER_ENABLED', 'EVOLVER_SESSION_SCOPE', 'GITHUB_TOKEN',
+    'EVOLVER_REPO_ROOT',
+    'OPENCLAW_WORKSPACE',
+    'MEMORY_DIR',
+    'EVOLUTION_DIR',
+    'SKILLS_DIR',
+    'A2A_NODE_ID',
+    'A2A_HUB_URL',
+    'A2A_NODE_SECRET',
+    'AGENT_NAME',
+    'EVOLVE_STRATEGY',
+    'WORKER_ENABLED',
+    'EVOLVER_SESSION_SCOPE',
+    'GITHUB_TOKEN',
     'GEP_ASSETS_DIR',
   ];
 
@@ -43,14 +54,18 @@ describe('localStateAwareness', () => {
 
   describe('captureLocalState', () => {
     it('returns a non-empty string', () => {
-      const { captureLocalState } = freshRequire('../src/gep/localStateAwareness');
+      const { captureLocalState } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const result = captureLocalState();
       assert.ok(typeof result === 'string');
       assert.ok(result.length > 0);
     });
 
     it('contains all expected section headers', () => {
-      const { captureLocalState } = freshRequire('../src/gep/localStateAwareness');
+      const { captureLocalState } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const result = captureLocalState();
       assert.ok(result.includes('[Node Identity]'));
       assert.ok(result.includes('[Environment Config]'));
@@ -62,7 +77,9 @@ describe('localStateAwareness', () => {
 
   describe('captureNodeIdentity', () => {
     it('reports NOT SET when no node ID configured', () => {
-      const { captureNodeIdentity } = freshRequire('../src/gep/localStateAwareness');
+      const { captureNodeIdentity } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureNodeIdentity();
       const joined = lines.join('\n');
       assert.ok(joined.includes('NOT SET') || joined.includes('REGISTERED'));
@@ -70,7 +87,9 @@ describe('localStateAwareness', () => {
 
     it('reports REGISTERED when A2A_NODE_ID is set', () => {
       process.env.A2A_NODE_ID = 'node_abc123def456';
-      const { captureNodeIdentity } = freshRequire('../src/gep/localStateAwareness');
+      const { captureNodeIdentity } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureNodeIdentity();
       const joined = lines.join('\n');
       assert.ok(joined.includes('REGISTERED'));
@@ -79,14 +98,18 @@ describe('localStateAwareness', () => {
 
     it('reports PRESENT when A2A_NODE_SECRET is set', () => {
       process.env.A2A_NODE_SECRET = 'test_secret_value';
-      const { captureNodeIdentity } = freshRequire('../src/gep/localStateAwareness');
+      const { captureNodeIdentity } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureNodeIdentity();
       const joined = lines.join('\n');
       assert.ok(joined.includes('PRESENT'));
     });
 
     it('reports MISSING when no secret exists', () => {
-      const { captureNodeIdentity } = freshRequire('../src/gep/localStateAwareness');
+      const { captureNodeIdentity } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureNodeIdentity();
       const joined = lines.join('\n');
       assert.ok(joined.includes('MISSING') || joined.includes('PRESENT'));
@@ -97,7 +120,9 @@ describe('localStateAwareness', () => {
     it('lists configured env keys', () => {
       process.env.A2A_NODE_ID = 'node_test123';
       process.env.A2A_HUB_URL = 'https://test.evomap.ai';
-      const { captureEnvConfig } = freshRequire('../src/gep/localStateAwareness');
+      const { captureEnvConfig } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureEnvConfig();
       const joined = lines.join('\n');
       assert.ok(joined.includes('A2A_NODE_ID'));
@@ -105,7 +130,9 @@ describe('localStateAwareness', () => {
     });
 
     it('reports .env file status', () => {
-      const { captureEnvConfig } = freshRequire('../src/gep/localStateAwareness');
+      const { captureEnvConfig } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureEnvConfig();
       const joined = lines.join('\n');
       assert.ok(joined.includes('.env file:'));
@@ -113,7 +140,9 @@ describe('localStateAwareness', () => {
 
     it('detects .env file when present', () => {
       fs.writeFileSync(path.join(tmpDir, '.env'), 'A2A_NODE_ID=test\n');
-      const { captureEnvConfig } = freshRequire('../src/gep/localStateAwareness');
+      const { captureEnvConfig } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureEnvConfig();
       const joined = lines.join('\n');
       assert.ok(joined.includes('EXISTS'));
@@ -122,7 +151,9 @@ describe('localStateAwareness', () => {
 
   describe('captureEvolutionState', () => {
     it('reports NOT FOUND when no evolution state exists', () => {
-      const { captureEvolutionState } = freshRequire('../src/gep/localStateAwareness');
+      const { captureEvolutionState } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureEvolutionState();
       const joined = lines.join('\n');
       assert.ok(joined.includes('NOT FOUND'));
@@ -138,7 +169,9 @@ describe('localStateAwareness', () => {
       );
       process.env.MEMORY_DIR = memDir;
       process.env.EVOLUTION_DIR = evoDir;
-      const { captureEvolutionState } = freshRequire('../src/gep/localStateAwareness');
+      const { captureEvolutionState } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureEvolutionState();
       const joined = lines.join('\n');
       assert.ok(joined.includes('42'));
@@ -148,7 +181,9 @@ describe('localStateAwareness', () => {
   describe('captureMemoryState', () => {
     it('reports MISSING when memory dir does not exist', () => {
       process.env.MEMORY_DIR = path.join(tmpDir, 'nonexistent');
-      const { captureMemoryState } = freshRequire('../src/gep/localStateAwareness');
+      const { captureMemoryState } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureMemoryState();
       const joined = lines.join('\n');
       assert.ok(joined.includes('MISSING'));
@@ -157,9 +192,14 @@ describe('localStateAwareness', () => {
     it('detects MEMORY.md when present', () => {
       const memDir = path.join(tmpDir, 'workspace', 'memory');
       fs.mkdirSync(memDir, { recursive: true });
-      fs.writeFileSync(path.join(memDir, 'MEMORY.md'), '# Test Memory\nSome content here');
+      fs.writeFileSync(
+        path.join(memDir, 'MEMORY.md'),
+        '# Test Memory\nSome content here'
+      );
       process.env.MEMORY_DIR = memDir;
-      const { captureMemoryState } = freshRequire('../src/gep/localStateAwareness');
+      const { captureMemoryState } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureMemoryState();
       const joined = lines.join('\n');
       assert.ok(joined.includes('MEMORY.md'));
@@ -173,7 +213,9 @@ describe('localStateAwareness', () => {
       fs.mkdirSync(path.join(skillsDir, 'skill-a'), { recursive: true });
       fs.mkdirSync(path.join(skillsDir, 'skill-b'), { recursive: true });
       process.env.SKILLS_DIR = skillsDir;
-      const { captureSkillsState } = freshRequire('../src/gep/localStateAwareness');
+      const { captureSkillsState } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureSkillsState();
       const joined = lines.join('\n');
       assert.ok(joined.includes('2'));
@@ -181,7 +223,9 @@ describe('localStateAwareness', () => {
 
     it('reports NOT FOUND when skills dir missing', () => {
       process.env.SKILLS_DIR = path.join(tmpDir, 'no-skills');
-      const { captureSkillsState } = freshRequire('../src/gep/localStateAwareness');
+      const { captureSkillsState } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const lines = captureSkillsState();
       const joined = lines.join('\n');
       assert.ok(joined.includes('NOT FOUND'));
@@ -190,7 +234,9 @@ describe('localStateAwareness', () => {
 
   describe('captureLocalStatePaths', () => {
     it('returns an object with expected keys', () => {
-      const { captureLocalStatePaths } = freshRequire('../src/gep/localStateAwareness');
+      const { captureLocalStatePaths } = freshRequire(
+        '../src/gep/localStateAwareness'
+      );
       const paths = captureLocalStatePaths();
       assert.ok(paths.nodeIdFile);
       assert.ok(paths.nodeSecretFile);

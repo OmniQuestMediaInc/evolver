@@ -1,7 +1,15 @@
 const fs = require('fs');
 const path = require('path');
-const { getRepoRoot, getMemoryDir, getGepAssetsDir } = require('../src/gep/paths');
-const { normalizePersonalityState, personalityKey, defaultPersonalityState } = require('../src/gep/personality');
+const {
+  getRepoRoot,
+  getMemoryDir,
+  getGepAssetsDir,
+} = require('../src/gep/paths');
+const {
+  normalizePersonalityState,
+  personalityKey,
+  defaultPersonalityState,
+} = require('../src/gep/personality');
 
 function readJsonIfExists(p, fallback) {
   try {
@@ -69,7 +77,10 @@ function aggregateFromEvents(events) {
   const map = new Map();
   for (const ev of Array.isArray(events) ? events : []) {
     if (!ev || ev.type !== 'EvolutionEvent') continue;
-    const ps = ev.personality_state && typeof ev.personality_state === 'object' ? ev.personality_state : null;
+    const ps =
+      ev.personality_state && typeof ev.personality_state === 'object'
+        ? ev.personality_state
+        : null;
     if (!ps) continue;
     const key = personalityKey(normalizePersonalityState(ps));
     const cur = map.get(key) || {
@@ -83,11 +94,15 @@ function aggregateFromEvents(events) {
       mutation: { repair: 0, optimize: 0, innovate: 0 },
       mutation_success: { repair: 0, optimize: 0, innovate: 0 },
     };
-    const st = ev.outcome && ev.outcome.status ? String(ev.outcome.status) : 'unknown';
+    const st =
+      ev.outcome && ev.outcome.status ? String(ev.outcome.status) : 'unknown';
     if (st === 'success') cur.success += 1;
     else if (st === 'failed') cur.fail += 1;
 
-    const sc = ev.outcome && Number.isFinite(Number(ev.outcome.score)) ? clamp01(Number(ev.outcome.score)) : null;
+    const sc =
+      ev.outcome && Number.isFinite(Number(ev.outcome.score))
+        ? clamp01(Number(ev.outcome.score))
+        : null;
     if (sc != null) {
       cur.n += 1;
       cur.avg_score = cur.avg_score + (sc - cur.avg_score) / cur.n;
@@ -114,7 +129,10 @@ function main() {
 
   const personalityPath = path.join(memoryDir, 'personality_state.json');
   const model = readJsonIfExists(personalityPath, null);
-  const current = model && model.current ? normalizePersonalityState(model.current) : defaultPersonalityState();
+  const current =
+    model && model.current
+      ? normalizePersonalityState(model.current)
+      : defaultPersonalityState();
   const currentKey = personalityKey(current);
 
   const eventsPath = path.join(assetsDir, 'events.jsonl');
@@ -123,24 +141,48 @@ function main() {
   const agg = aggregateFromEvents(evs);
 
   // Prefer model.stats if present, but still show event-derived aggregation (ground truth).
-  const stats = model && model.stats && typeof model.stats === 'object' ? model.stats : {};
+  const stats =
+    model && model.stats && typeof model.stats === 'object' ? model.stats : {};
   const statRows = Object.entries(stats).map(([key, e]) => {
     const entry = e && typeof e === 'object' ? e : {};
     const success = Number(entry.success) || 0;
     const fail = Number(entry.fail) || 0;
     const total = success + fail;
-    const avg = Number.isFinite(Number(entry.avg_score)) ? clamp01(Number(entry.avg_score)) : null;
+    const avg = Number.isFinite(Number(entry.avg_score))
+      ? clamp01(Number(entry.avg_score))
+      : null;
     const score = scoreFromCounts(success, fail, avg);
-    return { key, success, fail, total, avg_score: avg, score, updated_at: entry.updated_at || null, source: 'model' };
+    return {
+      key,
+      success,
+      fail,
+      total,
+      avg_score: avg,
+      score,
+      updated_at: entry.updated_at || null,
+      source: 'model',
+    };
   });
 
   const evRows = agg.map(e => {
     const success = Number(e.success) || 0;
     const fail = Number(e.fail) || 0;
     const total = success + fail;
-    const avg = Number.isFinite(Number(e.avg_score)) ? clamp01(Number(e.avg_score)) : null;
+    const avg = Number.isFinite(Number(e.avg_score))
+      ? clamp01(Number(e.avg_score))
+      : null;
     const score = scoreFromCounts(success, fail, avg);
-    return { key: e.key, success, fail, total, avg_score: avg, score, updated_at: e.last_at || null, source: 'events', _ev: e };
+    return {
+      key: e.key,
+      success,
+      fail,
+      total,
+      avg_score: avg,
+      score,
+      updated_at: e.last_at || null,
+      source: 'events',
+      _ev: e,
+    };
   });
 
   // Merge rows by key (events take precedence for total/success/fail; model provides updated_at if events missing).
@@ -214,14 +256,19 @@ function main() {
         const s = Number(mSucc[cat]) || 0;
         parts.push(`${cat}:${s}/${n}`);
       }
-      if (parts.length) process.stdout.write(`       mutation_success: ${parts.join(' | ')}\n`);
+      if (parts.length)
+        process.stdout.write(`       mutation_success: ${parts.join(' | ')}\n`);
     }
   }
 
   process.stdout.write('\n');
   process.stdout.write(`[Notes]\n`);
-  process.stdout.write(`- score is a smoothed composite of success_rate + avg_score (sample-weighted)\n`);
-  process.stdout.write(`- current_key appears in the ranking once enough data accumulates\n`);
+  process.stdout.write(
+    `- score is a smoothed composite of success_rate + avg_score (sample-weighted)\n`
+  );
+  process.stdout.write(
+    `- current_key appears in the ranking once enough data accumulates\n`
+  );
 }
 
 try {
@@ -231,4 +278,3 @@ try {
   process.stderr.write('\n');
   process.exit(1);
 }
-

@@ -7,11 +7,23 @@ function defaultOrderHandler(order) {
   const signals = (order.signals || '').toLowerCase();
 
   let result;
-  if (title.includes('review') || signals.includes('code_review') || signals.includes('bug')) {
+  if (
+    title.includes('review') ||
+    signals.includes('code_review') ||
+    signals.includes('bug')
+  ) {
     result = 'Code review processed by evolver. Analysis complete.';
-  } else if (title.includes('translat') || signals.includes('translation') || signals.includes('localization')) {
+  } else if (
+    title.includes('translat') ||
+    signals.includes('translation') ||
+    signals.includes('localization')
+  ) {
     result = 'Translation processed by evolver. Output ready.';
-  } else if (title.includes('summar') || signals.includes('summarization') || signals.includes('digest')) {
+  } else if (
+    title.includes('summar') ||
+    signals.includes('summarization') ||
+    signals.includes('digest')
+  ) {
     result = 'Summarization processed by evolver. Digest generated.';
   } else {
     result = 'Task processed by evolver agent.';
@@ -33,7 +45,9 @@ function resolveAtpServices() {
       const parsed = JSON.parse(envServices);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     } catch (_) {
-      console.warn('[ATP] EVOLVER_ATP_SERVICES is not valid JSON, using defaults.');
+      console.warn(
+        '[ATP] EVOLVER_ATP_SERVICES is not valid JSON, using defaults.'
+      );
     }
   }
 
@@ -46,7 +60,8 @@ function resolveAtpServices() {
   return [
     {
       title: agentName + ' - Code Evolution',
-      description: 'Automated code evolution, bug fixes, and code review powered by GEP.',
+      description:
+        'Automated code evolution, bug fixes, and code review powered by GEP.',
       capabilities: ['code_evolution', 'bug_fix', 'code_review', 'refactoring'],
       useCases: ['Automated repair', 'Code quality', 'Evolution cycle'],
       pricePerTask: 5,

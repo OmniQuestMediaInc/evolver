@@ -1,6 +1,11 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { selectGene, selectCapsule, selectGeneAndCapsule, isEpigeneticallySuppressed } = require('../src/gep/selector');
+const {
+  selectGene,
+  selectCapsule,
+  selectGeneAndCapsule,
+  isEpigeneticallySuppressed,
+} = require('../src/gep/selector');
 const { captureEnvFingerprint } = require('../src/gep/envFingerprint');
 
 const GENES = [
@@ -24,7 +29,12 @@ const GENES = [
     type: 'Gene',
     id: 'gene_innovate',
     category: 'innovate',
-    signals_match: ['user_feature_request', 'user_improvement_suggestion', 'capability_gap', 'stable_success_plateau'],
+    signals_match: [
+      'user_feature_request',
+      'user_improvement_suggestion',
+      'capability_gap',
+      'stable_success_plateau',
+    ],
     strategy: ['build it'],
     validation: ['node -e "true"'],
   },
@@ -91,7 +101,9 @@ describe('selectGene', () => {
         preferredGeneId: 'gene_optimize',
       });
       assert.equal(result.selected.id, 'gene_optimize');
-    } finally { Math.random = orig; }
+    } finally {
+      Math.random = orig;
+    }
   });
 
   it('does not let multiplier override a much-higher-scoring gene', () => {
@@ -102,26 +114,48 @@ describe('selectGene', () => {
         preferredGeneId: 'gene_optimize',
       });
       assert.equal(result.selected.id, 'gene_repair');
-    } finally { Math.random = orig; }
+    } finally {
+      Math.random = orig;
+    }
   });
 
   it('matches gene via baseName:snippet signal (user_feature_request:snippet)', () => {
-    const result = selectGene(GENES, ['user_feature_request:add a dark mode toggle to the settings'], {});
+    const result = selectGene(
+      GENES,
+      ['user_feature_request:add a dark mode toggle to the settings'],
+      {}
+    );
     assert.ok(result.selected);
-    assert.equal(result.selected.id, 'gene_innovate', 'innovate gene has signals_match user_feature_request');
+    assert.equal(
+      result.selected.id,
+      'gene_innovate',
+      'innovate gene has signals_match user_feature_request'
+    );
   });
 
   it('matches gene via baseName:snippet signal (user_improvement_suggestion:snippet)', () => {
-    const result = selectGene(GENES, ['user_improvement_suggestion:refactor the payment module and simplify the API'], {});
+    const result = selectGene(
+      GENES,
+      [
+        'user_improvement_suggestion:refactor the payment module and simplify the API',
+      ],
+      {}
+    );
     assert.ok(result.selected);
-    assert.equal(result.selected.id, 'gene_innovate', 'innovate gene has signals_match user_improvement_suggestion');
+    assert.equal(
+      result.selected.id,
+      'gene_innovate',
+      'innovate gene has signals_match user_improvement_suggestion'
+    );
   });
 
   it('uses derived learning tags to match related performance genes', () => {
     const originalRandom = Math.random;
     Math.random = () => 0.99;
     try {
-      const result = selectGene(GENES, ['perf_bottleneck'], { effectivePopulationSize: 100 });
+      const result = selectGene(GENES, ['perf_bottleneck'], {
+        effectivePopulationSize: 100,
+      });
       assert.ok(result.selected);
       assert.equal(result.selected.id, 'gene_perf_optimize');
     } finally {
@@ -150,13 +184,13 @@ describe('selectGene', () => {
           id: 'gene_perf_safe',
           category: 'optimize',
           signals_match: ['perf_bottleneck'],
-          learning_history: [
-            { outcome: 'success', mode: 'none' },
-          ],
+          learning_history: [{ outcome: 'success', mode: 'none' }],
           validation: ['node -e "true"'],
         },
       ];
-      const result = selectGene(riskyGenes, ['perf_bottleneck'], { effectivePopulationSize: 100 });
+      const result = selectGene(riskyGenes, ['perf_bottleneck'], {
+        effectivePopulationSize: 100,
+      });
       assert.ok(result.selected);
       assert.equal(result.selected.id, 'gene_perf_safe');
     } finally {
@@ -197,7 +231,11 @@ describe('selectGeneAndCapsule', () => {
       genes: GENES,
       capsules: CAPSULES,
       signals: ['error', 'log_error'],
-      memoryAdvice: { bannedGeneIds: new Set(), preferredGeneId: null, totalAttempts: 0 },
+      memoryAdvice: {
+        bannedGeneIds: new Set(),
+        preferredGeneId: null,
+        totalAttempts: 0,
+      },
       driftEnabled: false,
     });
     assert.ok(result.selectionPath);
@@ -211,31 +249,70 @@ describe('computeDriftIntensity adaptive decay', () => {
   const { computeDriftIntensity } = require('../src/gep/selector');
 
   it('returns base drift with max offset when no memory evidence', () => {
-    const d = computeDriftIntensity({ driftEnabled: true, genePoolSize: 10, memoryEvidence: 0 });
+    const d = computeDriftIntensity({
+      driftEnabled: true,
+      genePoolSize: 10,
+      memoryEvidence: 0,
+    });
     const expected = Math.min(1, 1 / Math.sqrt(10) + 0.3);
-    assert.ok(Math.abs(d - expected) < 0.001, `expected ~${expected.toFixed(3)}, got ${d.toFixed(3)}`);
+    assert.ok(
+      Math.abs(d - expected) < 0.001,
+      `expected ~${expected.toFixed(3)}, got ${d.toFixed(3)}`
+    );
   });
 
   it('decays offset as memory evidence grows', () => {
-    const dLow = computeDriftIntensity({ driftEnabled: true, genePoolSize: 10, memoryEvidence: 0 });
-    const dMid = computeDriftIntensity({ driftEnabled: true, genePoolSize: 10, memoryEvidence: 50 });
-    const dHigh = computeDriftIntensity({ driftEnabled: true, genePoolSize: 10, memoryEvidence: 200 });
-    assert.ok(dLow > dMid, `low evidence drift ${dLow} should exceed mid ${dMid}`);
-    assert.ok(dMid > dHigh, `mid evidence drift ${dMid} should exceed high ${dHigh}`);
+    const dLow = computeDriftIntensity({
+      driftEnabled: true,
+      genePoolSize: 10,
+      memoryEvidence: 0,
+    });
+    const dMid = computeDriftIntensity({
+      driftEnabled: true,
+      genePoolSize: 10,
+      memoryEvidence: 50,
+    });
+    const dHigh = computeDriftIntensity({
+      driftEnabled: true,
+      genePoolSize: 10,
+      memoryEvidence: 200,
+    });
+    assert.ok(
+      dLow > dMid,
+      `low evidence drift ${dLow} should exceed mid ${dMid}`
+    );
+    assert.ok(
+      dMid > dHigh,
+      `mid evidence drift ${dMid} should exceed high ${dHigh}`
+    );
   });
 
   it('reaches floor offset at full maturity', () => {
     const ne = 10;
     const fullMature = ne * 10;
-    const d = computeDriftIntensity({ driftEnabled: true, genePoolSize: ne, memoryEvidence: fullMature * 2 });
+    const d = computeDriftIntensity({
+      driftEnabled: true,
+      genePoolSize: ne,
+      memoryEvidence: fullMature * 2,
+    });
     const expectedFloor = Math.min(1, 1 / Math.sqrt(ne) + 0.02);
-    assert.ok(Math.abs(d - expectedFloor) < 0.001, `expected floor ~${expectedFloor.toFixed(3)}, got ${d.toFixed(3)}`);
+    assert.ok(
+      Math.abs(d - expectedFloor) < 0.001,
+      `expected floor ~${expectedFloor.toFixed(3)}, got ${d.toFixed(3)}`
+    );
   });
 
   it('returns population-dependent drift when not explicitly enabled', () => {
-    const d = computeDriftIntensity({ driftEnabled: false, genePoolSize: 10, memoryEvidence: 50 });
+    const d = computeDriftIntensity({
+      driftEnabled: false,
+      genePoolSize: 10,
+      memoryEvidence: 50,
+    });
     const expected = Math.min(1, 1 / Math.sqrt(10));
-    assert.ok(Math.abs(d - expected) < 0.001, `expected ~${expected.toFixed(3)}, got ${d.toFixed(3)}`);
+    assert.ok(
+      Math.abs(d - expected) < 0.001,
+      `expected ~${expected.toFixed(3)}, got ${d.toFixed(3)}`
+    );
   });
 });
 
@@ -268,16 +345,25 @@ describe('selectGene drift respects bannedGeneIds (regression)', () => {
     Math.random = () => 0;
     try {
       for (let i = 0; i < 20; i++) {
-        const result = selectGene([FAILING, ALT], ['recurring_error', 'repair_loop_detected'], {
-          driftEnabled: true,
-          bannedGeneIds: banned,
-          effectivePopulationSize: 2,
-        });
+        const result = selectGene(
+          [FAILING, ALT],
+          ['recurring_error', 'repair_loop_detected'],
+          {
+            driftEnabled: true,
+            bannedGeneIds: banned,
+            effectivePopulationSize: 2,
+          }
+        );
         assert.ok(result.selected, 'should still select a non-banned gene');
-        assert.notEqual(result.selected.id, 'gene_repair_failed',
-          'banned gene must never be selected, even under drift');
+        assert.notEqual(
+          result.selected.id,
+          'gene_repair_failed',
+          'banned gene must never be selected, even under drift'
+        );
       }
-    } finally { Math.random = orig; }
+    } finally {
+      Math.random = orig;
+    }
   });
 
   it('returns null when every candidate is banned, regardless of drift', () => {
@@ -296,8 +382,10 @@ describe('isEpigeneticallySuppressed', () => {
   // Independent from memoryGraph's per-signal-key ban so it survives even
   // if signal keys keep shifting and per-key counts never accumulate.
   const ENV = captureEnvFingerprint();
-  const envContext = [ENV.platform || '', ENV.arch || '', ENV.node_version || '']
-    .filter(Boolean).join('/') || 'unknown';
+  const envContext =
+    [ENV.platform || '', ENV.arch || '', ENV.node_version || '']
+      .filter(Boolean)
+      .join('/') || 'unknown';
 
   it('returns false for a gene with no epigenetic marks', () => {
     const gene = { type: 'Gene', id: 'gene_clean' };
@@ -308,7 +396,14 @@ describe('isEpigeneticallySuppressed', () => {
     const gene = {
       type: 'Gene',
       id: 'gene_mild',
-      epigenetic_marks: [{ context: envContext, boost: -0.1, reason: 'failure_in_environment', created_at: new Date().toISOString() }],
+      epigenetic_marks: [
+        {
+          context: envContext,
+          boost: -0.1,
+          reason: 'failure_in_environment',
+          created_at: new Date().toISOString(),
+        },
+      ],
     };
     assert.equal(isEpigeneticallySuppressed(gene, ENV), false);
   });
@@ -317,7 +412,14 @@ describe('isEpigeneticallySuppressed', () => {
     const gene = {
       type: 'Gene',
       id: 'gene_severe',
-      epigenetic_marks: [{ context: envContext, boost: -0.3, reason: 'suppressed_by_failure', created_at: new Date().toISOString() }],
+      epigenetic_marks: [
+        {
+          context: envContext,
+          boost: -0.3,
+          reason: 'suppressed_by_failure',
+          created_at: new Date().toISOString(),
+        },
+      ],
     };
     assert.equal(isEpigeneticallySuppressed(gene, ENV), true);
   });
@@ -326,7 +428,14 @@ describe('isEpigeneticallySuppressed', () => {
     const gene = {
       type: 'Gene',
       id: 'gene_dead',
-      epigenetic_marks: [{ context: envContext, boost: -0.5, reason: 'suppressed_by_failure', created_at: new Date().toISOString() }],
+      epigenetic_marks: [
+        {
+          context: envContext,
+          boost: -0.5,
+          reason: 'suppressed_by_failure',
+          created_at: new Date().toISOString(),
+        },
+      ],
     };
     assert.equal(isEpigeneticallySuppressed(gene, ENV), true);
   });
@@ -335,7 +444,14 @@ describe('isEpigeneticallySuppressed', () => {
     const gene = {
       type: 'Gene',
       id: 'gene_other_env',
-      epigenetic_marks: [{ context: 'aix/sparc/v0.0.0', boost: -0.5, reason: 'suppressed_by_failure', created_at: new Date().toISOString() }],
+      epigenetic_marks: [
+        {
+          context: 'aix/sparc/v0.0.0',
+          boost: -0.5,
+          reason: 'suppressed_by_failure',
+          created_at: new Date().toISOString(),
+        },
+      ],
     };
     assert.equal(isEpigeneticallySuppressed(gene, ENV), false);
   });
@@ -343,8 +459,10 @@ describe('isEpigeneticallySuppressed', () => {
 
 describe('selectGene filters epigenetically suppressed genes (regression)', () => {
   const ENV = captureEnvFingerprint();
-  const envContext = [ENV.platform || '', ENV.arch || '', ENV.node_version || '']
-    .filter(Boolean).join('/') || 'unknown';
+  const envContext =
+    [ENV.platform || '', ENV.arch || '', ENV.node_version || '']
+      .filter(Boolean)
+      .join('/') || 'unknown';
 
   it('skips a gene with boost <= -0.3 even when its signal score would win', () => {
     const suppressed = {
@@ -352,7 +470,14 @@ describe('selectGene filters epigenetically suppressed genes (regression)', () =
       id: 'gene_repair_suppressed',
       category: 'repair',
       signals_match: ['error', 'exception', 'failed', 'crash'],
-      epigenetic_marks: [{ context: envContext, boost: -0.4, reason: 'suppressed_by_failure', created_at: new Date().toISOString() }],
+      epigenetic_marks: [
+        {
+          context: envContext,
+          boost: -0.4,
+          reason: 'suppressed_by_failure',
+          created_at: new Date().toISOString(),
+        },
+      ],
       validation: ['node -e "true"'],
     };
     const fallback = {
@@ -362,7 +487,11 @@ describe('selectGene filters epigenetically suppressed genes (regression)', () =
       signals_match: ['error'],
       validation: ['node -e "true"'],
     };
-    const result = selectGene([suppressed, fallback], ['error', 'exception', 'failed', 'crash'], {});
+    const result = selectGene(
+      [suppressed, fallback],
+      ['error', 'exception', 'failed', 'crash'],
+      {}
+    );
     assert.ok(result.selected);
     assert.equal(result.selected.id, 'gene_repair_fallback');
   });
@@ -376,11 +505,21 @@ describe('selectGene filters epigenetically suppressed genes (regression)', () =
       id: 'gene_only',
       category: 'repair',
       signals_match: ['error'],
-      epigenetic_marks: [{ context: envContext, boost: -0.5, reason: 'suppressed_by_failure', created_at: new Date().toISOString() }],
+      epigenetic_marks: [
+        {
+          context: envContext,
+          boost: -0.5,
+          reason: 'suppressed_by_failure',
+          created_at: new Date().toISOString(),
+        },
+      ],
       validation: ['node -e "true"'],
     };
     const result = selectGene([onlyOne], ['error'], {});
-    assert.equal(result.selected, null,
-      'all suppressed -> selector returns null so the caller can mutate a new gene');
+    assert.equal(
+      result.selected,
+      null,
+      'all suppressed -> selector returns null so the caller can mutate a new gene'
+    );
   });
 });

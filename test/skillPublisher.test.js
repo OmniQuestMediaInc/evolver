@@ -27,7 +27,11 @@ test('geneToSkillMd: top-level avoid field renders in dedicated ## Avoid section
   assert.match(md, /^- retrying on 4xx client errors$/m);
   assert.match(md, /^- unbounded retry loops without a deadline$/m);
   // AVOID items should NOT appear as strategy list items
-  assert.doesNotMatch(md, /^\d+\. \*\*Avoid\*\*/m, 'avoid must not be bolded as strategy step');
+  assert.doesNotMatch(
+    md,
+    /^\d+\. \*\*Avoid\*\*/m,
+    'avoid must not be bolded as strategy step'
+  );
   assert.doesNotMatch(md, /\*\*AVOID\*\*/i);
 });
 
@@ -51,8 +55,13 @@ test('geneToSkillMd: legacy "AVOID: ..." strategy steps are moved to ## Avoid se
   assert.match(md, /^- swallowing exceptions silently$/m);
   // Strategy section should skip AVOID lines entirely, so we expect 2 numbered items,
   // not 4. Also no "**AVOID**" bolding.
-  const strategyBlock = md.split(/^## Avoid$/m)[0].split(/^## Strategy$/m)[1] || '';
-  assert.doesNotMatch(strategyBlock, /AVOID/i, 'AVOID lines must be stripped from strategy block');
+  const strategyBlock =
+    md.split(/^## Avoid$/m)[0].split(/^## Strategy$/m)[1] || '';
+  assert.doesNotMatch(
+    strategyBlock,
+    /AVOID/i,
+    'AVOID lines must be stripped from strategy block'
+  );
   assert.match(strategyBlock, /^1\. \*\*Write\*\* -- /m);
   assert.match(strategyBlock, /^2\. \*\*Document\*\* -- /m);
 });
@@ -63,11 +72,7 @@ test('geneToSkillMd: no avoid section when gene has neither avoid field nor AVOI
     summary: 'Clean gene without any anti-patterns',
     category: 'innovate',
     signals_match: ['clean'],
-    strategy: [
-      'Plan the change',
-      'Implement it',
-      'Verify',
-    ],
+    strategy: ['Plan the change', 'Implement it', 'Verify'],
     validation: ['node --check ok.js'],
   };
   const md = geneToSkillMd(gene);
@@ -93,7 +98,7 @@ test('geneToSkillMd: determiners ("The", "This") are not extracted as verbs', ()
   assert.match(md, /^2\. \*\*Run\*\* -- the unit tests$/m);
 });
 
-test('geneToSkillMd: anti-pattern markers (NEVER, DON\'T) are not bolded as verbs', () => {
+test("geneToSkillMd: anti-pattern markers (NEVER, DON'T) are not bolded as verbs", () => {
   const gene = {
     id: 'gene_distilled_antipattern_markers',
     summary: 'Anti-pattern marker guard',

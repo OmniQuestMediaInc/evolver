@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+ 
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -37,7 +37,10 @@ function resolveEvolverEntry(workspaceRoot) {
 }
 
 function main() {
-  const waitMs = parseInt(String(process.env.EVOLVER_RECOVER_WAIT_MS || '10000'), 10);
+  const waitMs = parseInt(
+    String(process.env.EVOLVER_RECOVER_WAIT_MS || '10000'),
+    10
+  );
   const wait = Number.isFinite(waitMs) ? Math.max(0, waitMs) : 10000;
 
   console.log(`[RECOVERY] Waiting ${wait}ms before restart...`);
@@ -46,16 +49,21 @@ function main() {
   const workspaceRoot = resolveWorkspaceRoot();
   const entry = resolveEvolverEntry(workspaceRoot);
   if (!entry) {
-    console.error('[RECOVERY] Failed: cannot locate evolver entry under skills/.');
+    console.error(
+      '[RECOVERY] Failed: cannot locate evolver entry under skills/.'
+    );
     process.exit(2);
   }
 
-  console.log(`[RECOVERY] Restarting loop via ${path.relative(workspaceRoot, entry)} ...`);
-  const r = spawnSync(process.execPath, [entry, '--loop'], { stdio: 'inherit' });
+  console.log(
+    `[RECOVERY] Restarting loop via ${path.relative(workspaceRoot, entry)} ...`
+  );
+  const r = spawnSync(process.execPath, [entry, '--loop'], {
+    stdio: 'inherit',
+  });
   process.exit(typeof r.status === 'number' ? r.status : 1);
 }
 
 if (require.main === module) {
   main();
 }
-

@@ -35,7 +35,14 @@ describe('protocol constants', () => {
 
   it('has 6 valid message types', () => {
     assert.equal(VALID_MESSAGE_TYPES.length, 6);
-    for (const t of ['hello', 'publish', 'fetch', 'report', 'decision', 'revoke']) {
+    for (const t of [
+      'hello',
+      'publish',
+      'fetch',
+      'report',
+      'decision',
+      'revoke',
+    ]) {
       assert.ok(VALID_MESSAGE_TYPES.includes(t), `missing type: ${t}`);
     }
   });
@@ -52,7 +59,10 @@ describe('buildMessage', () => {
   });
 
   it('rejects invalid message type', () => {
-    assert.throws(() => buildMessage({ messageType: 'invalid' }), /Invalid message type/);
+    assert.throws(
+      () => buildMessage({ messageType: 'invalid' }),
+      /Invalid message type/
+    );
   });
 });
 
@@ -93,7 +103,10 @@ describe('typed message builders', () => {
 
   it('buildPublish requires asset with type and id', () => {
     assert.throws(() => buildPublish({}), /asset must have type and id/);
-    assert.throws(() => buildPublish({ asset: { type: 'Gene' } }), /asset must have type and id/);
+    assert.throws(
+      () => buildPublish({ asset: { type: 'Gene' } }),
+      /asset must have type and id/
+    );
 
     const msg = buildPublish({ asset: { type: 'Gene', id: 'g1' } });
     assert.equal(msg.message_type, 'publish');
@@ -109,13 +122,19 @@ describe('typed message builders', () => {
   });
 
   it('buildReport creates a report message', () => {
-    const msg = buildReport({ assetId: 'sha256:abc', validationReport: { ok: true } });
+    const msg = buildReport({
+      assetId: 'sha256:abc',
+      validationReport: { ok: true },
+    });
     assert.equal(msg.message_type, 'report');
     assert.equal(msg.payload.target_asset_id, 'sha256:abc');
   });
 
   it('buildDecision validates decision values', () => {
-    assert.throws(() => buildDecision({ decision: 'maybe' }), /decision must be/);
+    assert.throws(
+      () => buildDecision({ decision: 'maybe' }),
+      /decision must be/
+    );
 
     for (const d of ['accept', 'reject', 'quarantine']) {
       const msg = buildDecision({ decision: d, assetId: 'test' });
@@ -142,7 +161,14 @@ describe('isValidProtocolMessage', () => {
   });
 
   it('returns false for wrong protocol', () => {
-    assert.ok(!isValidProtocolMessage({ protocol: 'other', message_type: 'hello', message_id: 'x', timestamp: 'y' }));
+    assert.ok(
+      !isValidProtocolMessage({
+        protocol: 'other',
+        message_type: 'hello',
+        message_id: 'x',
+        timestamp: 'y',
+      })
+    );
   });
 
   it('returns false for missing fields', () => {
@@ -231,7 +257,10 @@ describe('sendHeartbeat log touch', () => {
     assert.ok(result.ok, 'heartbeat should succeed');
 
     var mtime = fs.statSync(logPath).mtimeMs;
-    assert.ok(mtime > oldTime.getTime(), 'mtime should be newer than the pre-set old time');
+    assert.ok(
+      mtime > oldTime.getTime(),
+      'mtime should be newer than the pre-set old time'
+    );
   });
 
   it('creates evolver_loop.log when it does not exist on successful heartbeat', async () => {
@@ -247,7 +276,10 @@ describe('sendHeartbeat log touch', () => {
 
     var result = await sendHeartbeat();
     assert.ok(result.ok, 'heartbeat should succeed');
-    assert.ok(fs.existsSync(logPath), 'evolver_loop.log should be created when missing');
+    assert.ok(
+      fs.existsSync(logPath),
+      'evolver_loop.log should be created when missing'
+    );
   });
 });
 
@@ -304,8 +336,14 @@ describe('hubOpenEventStream', () => {
 
     var result = hubOpenEventStream({});
     assert.equal(result.ok, true);
-    assert.ok(calledUrl.includes('/a2a/events/stream?'), 'URL should contain stream path');
-    assert.ok(calledUrl.includes('node_id='), 'URL should contain node_id param');
+    assert.ok(
+      calledUrl.includes('/a2a/events/stream?'),
+      'URL should contain stream path'
+    );
+    assert.ok(
+      calledUrl.includes('node_id='),
+      'URL should contain node_id param'
+    );
     delete globalThis.EventSource;
   });
 
@@ -328,7 +366,9 @@ describe('hubOpenEventStream', () => {
   it('close() calls eventSource.close()', () => {
     var closed = false;
     globalThis.EventSource = function () {
-      this.close = function () { closed = true; };
+      this.close = function () {
+        closed = true;
+      };
     };
 
     var result = hubOpenEventStream({});
@@ -358,15 +398,23 @@ describe('mergeAndCap', () => {
   });
 
   it('keeps exactly cap entries when total exceeds cap', () => {
-    var prev = Array.from({ length: 80 }, function (_, i) { return { id: i }; });
-    var incoming = Array.from({ length: 30 }, function (_, i) { return { id: 80 + i }; });
+    var prev = Array.from({ length: 80 }, function (_, i) {
+      return { id: i };
+    });
+    var incoming = Array.from({ length: 30 }, function (_, i) {
+      return { id: 80 + i };
+    });
     var result = mergeAndCap(prev, incoming, 100);
     assert.equal(result.length, 100);
   });
 
   it('keeps the LAST (newest) entries, not the first', () => {
-    var prev = Array.from({ length: 80 }, function (_, i) { return { id: i }; });
-    var incoming = Array.from({ length: 30 }, function (_, i) { return { id: 80 + i }; });
+    var prev = Array.from({ length: 80 }, function (_, i) {
+      return { id: i };
+    });
+    var incoming = Array.from({ length: 30 }, function (_, i) {
+      return { id: 80 + i };
+    });
     var result = mergeAndCap(prev, incoming, 100);
     // First 10 (oldest: id 0-9) should be dropped; last 100 start at id 10
     assert.equal(result[0].id, 10);
@@ -376,7 +424,9 @@ describe('mergeAndCap', () => {
   it('simulates 5 successive merges of 30 entries and stays bounded at 100', () => {
     var acc = [];
     for (var round = 0; round < 5; round++) {
-      var batch = Array.from({ length: 30 }, function (_, i) { return { id: round * 30 + i }; });
+      var batch = Array.from({ length: 30 }, function (_, i) {
+        return { id: round * 30 + i };
+      });
       acc = mergeAndCap(acc, batch, 100);
     }
     assert.equal(acc.length, 100);
@@ -404,7 +454,12 @@ describe('httpTransportReceive asset_id filter', () => {
 
   it('discards assets with no asset_id (tamper bypass prevention)', async () => {
     global.fetch = async function () {
-      return { ok: true, json: async function () { return { payload: { results: [{ type: 'Gene', id: 'g1' }] } }; } };
+      return {
+        ok: true,
+        json: async function () {
+          return { payload: { results: [{ type: 'Gene', id: 'g1' }] } };
+        },
+      };
     };
     var result = await httpTransportReceive({});
     assert.equal(result.length, 0);
@@ -414,7 +469,12 @@ describe('httpTransportReceive asset_id filter', () => {
     var asset = { type: 'Gene', id: 'g2', strategy: ['x'] };
     asset.asset_id = computeAssetId(asset);
     global.fetch = async function () {
-      return { ok: true, json: async function () { return { payload: { results: [asset] } }; } };
+      return {
+        ok: true,
+        json: async function () {
+          return { payload: { results: [asset] } };
+        },
+      };
     };
     var result = await httpTransportReceive({});
     assert.equal(result.length, 1);
@@ -424,7 +484,12 @@ describe('httpTransportReceive asset_id filter', () => {
   it('discards assets whose asset_id does not match content hash', async () => {
     var asset = { type: 'Gene', id: 'g3', asset_id: 'sha256:deadbeef' };
     global.fetch = async function () {
-      return { ok: true, json: async function () { return { payload: { results: [asset] } }; } };
+      return {
+        ok: true,
+        json: async function () {
+          return { payload: { results: [asset] } };
+        },
+      };
     };
     var result = await httpTransportReceive({});
     assert.equal(result.length, 0);
@@ -436,7 +501,12 @@ describe('httpTransportReceive asset_id filter', () => {
     var bad = { type: 'Capsule', id: 'c1', asset_id: 'sha256:bad' };
     var noId = { type: 'Gene', id: 'g5' };
     global.fetch = async function () {
-      return { ok: true, json: async function () { return { payload: { results: [good, bad, noId] } }; } };
+      return {
+        ok: true,
+        json: async function () {
+          return { payload: { results: [good, bad, noId] } };
+        },
+      };
     };
     var result = await httpTransportReceive({});
     // noId is discarded (missing asset_id treated as untrusted, same as tampered)
@@ -478,7 +548,11 @@ describe('httpTransportSend HUB_DRY_RUN', () => {
       process.env.HUB_DRY_RUN = val;
       _resetDryRunWarnedForTesting();
       var result = await httpTransportSend(msg, {});
-      assert.equal(result.dry_run, true, 'expected dry_run for HUB_DRY_RUN=' + val);
+      assert.equal(
+        result.dry_run,
+        true,
+        'expected dry_run for HUB_DRY_RUN=' + val
+      );
       delete process.env.HUB_DRY_RUN;
     }
   });

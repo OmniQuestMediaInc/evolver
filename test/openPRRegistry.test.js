@@ -34,7 +34,8 @@ function withExecMock(impl, fn) {
 const SAMPLE_PRS_JSON = JSON.stringify([
   {
     number: 38,
-    title: 'fix(gep): inbound asset_id integrity check + solidify integration tests',
+    title:
+      'fix(gep): inbound asset_id integrity check + solidify integration tests',
     headRefName: 'fix/phase4-integrity-tests',
     files: [
       { path: 'src/gep/a2aProtocol.js' },
@@ -46,10 +47,7 @@ const SAMPLE_PRS_JSON = JSON.stringify([
     number: 43,
     title: 'fix(gep): harden rollback against cross-repo data loss',
     headRefName: 'fix/rollback-safety-defaults',
-    files: [
-      { path: 'src/gep/solidify.js' },
-      { path: 'src/gep/gitOps.js' },
-    ],
+    files: [{ path: 'src/gep/solidify.js' }, { path: 'src/gep/gitOps.js' }],
   },
 ]);
 
@@ -68,7 +66,9 @@ describe('openPRRegistry — getOpenPRs', () => {
     const reg = loadFresh();
     reg._resetForTesting();
     withExecMock(
-      function () { return SAMPLE_PRS_JSON; },
+      function () {
+        return SAMPLE_PRS_JSON;
+      },
       function () {
         const prs = reg.getOpenPRs({ ttlMs: 0 });
         assert.equal(prs.length, 2);
@@ -86,7 +86,10 @@ describe('openPRRegistry — getOpenPRs', () => {
     const reg = loadFresh();
     reg._resetForTesting();
     withExecMock(
-      function () { const e = new Error('command not found: gh'); throw e; },
+      function () {
+        const e = new Error('command not found: gh');
+        throw e;
+      },
       function () {
         const prs = reg.getOpenPRs({ ttlMs: 0 });
         assert.deepEqual(prs, []);
@@ -98,7 +101,10 @@ describe('openPRRegistry — getOpenPRs', () => {
     const reg = loadFresh();
     reg._resetForTesting();
     withExecMock(
-      function () { const e = new Error('gh: API rate limit exceeded'); throw e; },
+      function () {
+        const e = new Error('gh: API rate limit exceeded');
+        throw e;
+      },
       function () {
         const prs = reg.getOpenPRs({ ttlMs: 0 });
         assert.deepEqual(prs, []);
@@ -111,7 +117,10 @@ describe('openPRRegistry — getOpenPRs', () => {
     reg._resetForTesting();
     let calls = 0;
     withExecMock(
-      function () { calls++; return SAMPLE_PRS_JSON; },
+      function () {
+        calls++;
+        return SAMPLE_PRS_JSON;
+      },
       function () {
         reg.getOpenPRs({ ttlMs: 60000 });
         reg.getOpenPRs({ ttlMs: 60000 });
@@ -126,7 +135,10 @@ describe('openPRRegistry — getOpenPRs', () => {
     reg._resetForTesting();
     let calls = 0;
     withExecMock(
-      function () { calls++; return SAMPLE_PRS_JSON; },
+      function () {
+        calls++;
+        return SAMPLE_PRS_JSON;
+      },
       function () {
         // ttlMs=0 means every call sees age >= ttlMs and triggers re-fetch
         reg.getOpenPRs({ ttlMs: 0 });
@@ -142,7 +154,10 @@ describe('openPRRegistry — getOpenPRs', () => {
     reg._resetForTesting();
     let calls = 0;
     withExecMock(
-      function () { calls++; return SAMPLE_PRS_JSON; },
+      function () {
+        calls++;
+        return SAMPLE_PRS_JSON;
+      },
       function () {
         const prs = reg.getOpenPRs({ ttlMs: 0 });
         assert.deepEqual(prs, []);
@@ -155,7 +170,9 @@ describe('openPRRegistry — getOpenPRs', () => {
     const reg = loadFresh();
     reg._resetForTesting();
     withExecMock(
-      function () { return 'not valid json {'; },
+      function () {
+        return 'not valid json {';
+      },
       function () {
         const prs = reg.getOpenPRs({ ttlMs: 0 });
         assert.deepEqual(prs, []);
@@ -200,26 +217,34 @@ describe('openPRRegistry — findOverlap', () => {
         'test/solidifyIntegration.test.js',
         'src/gep/something_else.js',
       ],
-      prs: [{
-        number: 38,
-        title: 'fix(gep): integrity',
-        headRefName: 'fix/phase4',
-        files: [
-          'src/gep/a2aProtocol.js',
-          'src/gep/portable.js',
-          'test/solidifyIntegration.test.js',
-          'src/gep/skill2gep.js',
-        ],
-      }],
+      prs: [
+        {
+          number: 38,
+          title: 'fix(gep): integrity',
+          headRefName: 'fix/phase4',
+          files: [
+            'src/gep/a2aProtocol.js',
+            'src/gep/portable.js',
+            'test/solidifyIntegration.test.js',
+            'src/gep/skill2gep.js',
+          ],
+        },
+      ],
     });
     assert.equal(r.overlap, true);
     assert.equal(r.prNumber, 38);
-    assert.ok(Math.abs(r.overlapRatio - 0.75) < 0.001, 'overlap ratio should be 3/4');
-    assert.deepEqual(r.sharedFiles.sort(), [
-      'src/gep/a2aProtocol.js',
-      'src/gep/portable.js',
-      'test/solidifyIntegration.test.js',
-    ].sort());
+    assert.ok(
+      Math.abs(r.overlapRatio - 0.75) < 0.001,
+      'overlap ratio should be 3/4'
+    );
+    assert.deepEqual(
+      r.sharedFiles.sort(),
+      [
+        'src/gep/a2aProtocol.js',
+        'src/gep/portable.js',
+        'test/solidifyIntegration.test.js',
+      ].sort()
+    );
   });
 
   it('picks the strongest overlap when multiple PRs share files', () => {
@@ -230,7 +255,11 @@ describe('openPRRegistry — findOverlap', () => {
         // PR #1 shares 1/4 = 0.25
         { number: 1, title: 'low overlap', files: ['src/a.js', 'src/x.js'] },
         // PR #2 shares 3/4 = 0.75 — should be picked
-        { number: 2, title: 'high overlap', files: ['src/a.js', 'src/b.js', 'src/c.js'] },
+        {
+          number: 2,
+          title: 'high overlap',
+          files: ['src/a.js', 'src/b.js', 'src/c.js'],
+        },
         // PR #3 shares 2/4 = 0.50
         { number: 3, title: 'mid overlap', files: ['src/a.js', 'src/b.js'] },
       ],
@@ -310,11 +339,25 @@ describe('openPRRegistry — findSignalHints', () => {
       signals: ['integrity_check', 'asset_id'],
       prs: [
         // No files property
-        { number: 38, title: 'integrity check asset_id fix', headRefName: 'fix/x' },
+        {
+          number: 38,
+          title: 'integrity check asset_id fix',
+          headRefName: 'fix/x',
+        },
         // files=null
-        { number: 43, title: 'rollback safety', headRefName: 'fix/y', files: null },
+        {
+          number: 43,
+          title: 'rollback safety',
+          headRefName: 'fix/y',
+          files: null,
+        },
         // valid PR — should still be returned
-        { number: 50, title: 'integrity check asset', headRefName: 'fix/z', files: ['a.js'] },
+        {
+          number: 50,
+          title: 'integrity check asset',
+          headRefName: 'fix/z',
+          files: ['a.js'],
+        },
       ],
       threshold: 0.5,
     });
@@ -332,16 +375,20 @@ describe('openPRRegistry — findSignalHints', () => {
       signals: ['alpha', 'beta', 'gamma'],
       prs: [
         { number: 1, title: 'alpha beta gamma', headRefName: 'a', files: [] }, // 1.0
-        { number: 2, title: 'alpha beta', headRefName: 'b', files: [] },        // 0.66
-        { number: 3, title: 'alpha', headRefName: 'c', files: [] },              // 0.33 (below 0.5 threshold)
-        { number: 4, title: 'alpha gamma', headRefName: 'd', files: [] },       // 0.66
-        { number: 5, title: 'beta gamma', headRefName: 'e', files: [] },        // 0.66
+        { number: 2, title: 'alpha beta', headRefName: 'b', files: [] }, // 0.66
+        { number: 3, title: 'alpha', headRefName: 'c', files: [] }, // 0.33 (below 0.5 threshold)
+        { number: 4, title: 'alpha gamma', headRefName: 'd', files: [] }, // 0.66
+        { number: 5, title: 'beta gamma', headRefName: 'e', files: [] }, // 0.66
       ],
       threshold: 0.5,
     });
     assert.equal(hits.length, 3);
     assert.equal(hits[0].number, 1); // highest
     // PR #3 is below threshold, must NOT be present
-    assert.ok(!hits.some(function (h) { return h.number === 3; }));
+    assert.ok(
+      !hits.some(function (h) {
+        return h.number === 3;
+      })
+    );
   });
 });

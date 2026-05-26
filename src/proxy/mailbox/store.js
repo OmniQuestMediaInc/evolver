@@ -65,7 +65,11 @@ function generateUUIDv7() {
 function safeParse(payload) {
   if (payload == null) return null;
   if (typeof payload !== 'string') return payload;
-  try { return JSON.parse(payload); } catch { return payload; }
+  try {
+    return JSON.parse(payload);
+  } catch {
+    return payload;
+  }
 }
 
 function appendLine(filePath, obj) {
@@ -80,7 +84,11 @@ function readLines(filePath) {
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    try { results.push(JSON.parse(trimmed)); } catch { /* skip corrupt lines */ }
+    try {
+      results.push(JSON.parse(trimmed));
+    } catch {
+      /* skip corrupt lines */
+    }
   }
   return results;
 }
@@ -97,11 +105,11 @@ class MailboxStore {
     this._stateFile = path.join(dataDir, 'state.json');
 
     // in-memory indexes
-    this._messages = new Map();          // id -> message object
-    this._outbound = [];                 // ordered outbound refs (id)
-    this._inbound = [];                  // ordered inbound refs (id)
+    this._messages = new Map(); // id -> message object
+    this._outbound = []; // ordered outbound refs (id)
+    this._inbound = []; // ordered inbound refs (id)
 
-    this._state = {};                    // key-value state (cursors, node_id, etc.)
+    this._state = {}; // key-value state (cursors, node_id, etc.)
 
     this._loadState();
     this._rebuildIndex();
@@ -320,7 +328,10 @@ class MailboxStore {
 
   updateStatusBatch(updates) {
     for (const u of updates) {
-      this.updateStatus(u.id, u.status, { error: u.error, syncedAt: u.syncedAt });
+      this.updateStatus(u.id, u.status, {
+        error: u.error,
+        syncedAt: u.syncedAt,
+      });
     }
   }
 
@@ -377,7 +388,8 @@ class MailboxStore {
   }
 
   setState(key, value) {
-    this._state[key] = typeof value === 'string' ? value : JSON.stringify(value);
+    this._state[key] =
+      typeof value === 'string' ? value : JSON.stringify(value);
     this._persistState();
   }
 
@@ -412,4 +424,10 @@ const MIGRATIONS = {
   // version 1 is the initial schema -- no migration needed from 0 (fresh install)
 };
 
-module.exports = { MailboxStore, generateUUIDv7, DEFAULT_CHANNEL, SCHEMA_VERSION, PROXY_PROTOCOL_VERSION };
+module.exports = {
+  MailboxStore,
+  generateUUIDv7,
+  DEFAULT_CHANNEL,
+  SCHEMA_VERSION,
+  PROXY_PROTOCOL_VERSION,
+};

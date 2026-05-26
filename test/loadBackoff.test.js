@@ -21,7 +21,9 @@ describe('load backoff hardening (#446 Android/Termux 0 CPU)', () => {
   });
 
   it('detectCpuCount falls back when os.cpus() throws', () => {
-    os.cpus = () => { throw new Error('ENOSYS /proc/cpuinfo'); };
+    os.cpus = () => {
+      throw new Error('ENOSYS /proc/cpuinfo');
+    };
     const n = evolve.detectCpuCount();
     assert.ok(n >= 4, 'throwing os.cpus() must not produce 0 cores, got ' + n);
   });
@@ -34,7 +36,10 @@ describe('load backoff hardening (#446 Android/Termux 0 CPU)', () => {
   it('getDefaultLoadMax never returns 0.0 on Android-like environments', () => {
     os.cpus = () => [];
     const max = evolve.getDefaultLoadMax();
-    assert.ok(max > 0, 'default load max must be > 0 even when cpus() is empty, got ' + max);
+    assert.ok(
+      max > 0,
+      'default load max must be > 0 even when cpus() is empty, got ' + max
+    );
     assert.ok(max >= 0.9, 'default load max must be at least 0.9, got ' + max);
   });
 
@@ -42,7 +47,10 @@ describe('load backoff hardening (#446 Android/Termux 0 CPU)', () => {
     os.cpus = () => [];
     os.loadavg = () => [29.29, 29.36, 29.38];
     const load = evolve.getSystemLoad();
-    assert.ok(load.load1m <= 8, 'load1m must be clamped to <= 2*4=8, got ' + load.load1m);
+    assert.ok(
+      load.load1m <= 8,
+      'load1m must be clamped to <= 2*4=8, got ' + load.load1m
+    );
     assert.ok(load.load5m <= 8);
     assert.ok(load.load15m <= 8);
   });
@@ -65,6 +73,9 @@ describe('load backoff hardening (#446 Android/Termux 0 CPU)', () => {
     // After the fix: max>=3.6 and load1m is clamped, so the backoff decision
     // is now driven by real overload, not by a misreported CPU count.
     assert.ok(max > 0, 'load max must be positive');
-    assert.ok(load.load1m <= max * 2.5, 'clamped load must not stay orders of magnitude above max');
+    assert.ok(
+      load.load1m <= max * 2.5,
+      'clamped load must not stay orders of magnitude above max'
+    );
   });
 });

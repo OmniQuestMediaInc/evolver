@@ -38,7 +38,10 @@ function getObserverPaths() {
     capsulesJsonlPath: path.join(gepAssetsDir, 'capsules.jsonl'),
     eventsPath: path.join(gepAssetsDir, 'events.jsonl'),
     candidatesPath: path.join(gepAssetsDir, 'candidates.jsonl'),
-    externalCandidatesPath: path.join(gepAssetsDir, 'external_candidates.jsonl'),
+    externalCandidatesPath: path.join(
+      gepAssetsDir,
+      'external_candidates.jsonl'
+    ),
     failedCapsulesPath: path.join(gepAssetsDir, 'failed_capsules.json'),
   };
 }

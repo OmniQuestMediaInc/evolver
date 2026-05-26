@@ -4,7 +4,14 @@
 // by monkey-patching global fetch for report/stake submissions.
 'use strict';
 
-const { describe, it, before, after, beforeEach, afterEach } = require('node:test');
+const {
+  describe,
+  it,
+  before,
+  after,
+  beforeEach,
+  afterEach,
+} = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
 const fs = require('fs');
@@ -32,7 +39,9 @@ function withFakeFetch(impl, fn) {
   global.fetch = impl;
   return Promise.resolve()
     .then(fn)
-    .finally(() => { global.fetch = original; });
+    .finally(() => {
+      global.fetch = original;
+    });
 }
 
 function mkRes({ status = 200, body = {}, ok = true } = {}) {
@@ -54,15 +63,17 @@ describe('sandboxExecutor.runInSandbox', function () {
     assert.match(out.results[0].stdout, /hello-sandbox/);
     // cwd must not be evolver workspace; should be under /tmp (or OS tmpdir)
     const tmpRoot = require('os').tmpdir();
-    assert.match(out.results[0].stdout, new RegExp(tmpRoot.replace(/\\/g, '\\\\')));
+    assert.match(
+      out.results[0].stdout,
+      new RegExp(tmpRoot.replace(/\\/g, '\\\\'))
+    );
   });
 
   it('stops at first failure and reports overallOk=false', async function () {
-    const out = await sandbox.runInSandbox([
-      CMD_ECHO_FIRST,
-      CMD_EXIT_2,
-      CMD_HELLO,
-    ], {});
+    const out = await sandbox.runInSandbox(
+      [CMD_ECHO_FIRST, CMD_EXIT_2, CMD_HELLO],
+      {}
+    );
     assert.equal(out.overallOk, false);
     assert.equal(out.stoppedEarly, true);
     // Only the first two commands ran.
@@ -79,7 +90,9 @@ describe('sandboxExecutor.runInSandbox', function () {
 
   it('cleans up sandbox directory after execution', async function () {
     let captured;
-    const out = await sandbox.runInSandbox([CMD_PRINT_CWD], { keepSandbox: true });
+    const out = await sandbox.runInSandbox([CMD_PRINT_CWD], {
+      keepSandbox: true,
+    });
     captured = out.sandboxDir;
     assert.ok(captured);
     assert.ok(fs.existsSync(captured));
@@ -105,9 +118,10 @@ describe('sandboxExecutor.runInSandbox', function () {
   it('rejects node -e inline eval (sandbox depth-in-depth)', async function () {
     // Even if policyCheck were bypassed, the sandbox itself must refuse
     // `node -e`-style evaluators because `node` is in ALLOWED_EXECUTABLES.
-    const out = await sandbox.runInSandbox([
-      'node -e "require(\'child_process\').execSync(\'id\')"',
-    ], {});
+    const out = await sandbox.runInSandbox(
+      ["node -e \"require('child_process').execSync('id')\""],
+      {}
+    );
     assert.equal(out.overallOk, false);
     assert.equal(out.results[0].ok, false);
     // Blocked flags are caught in the parseCommand/assertNodeCommandSafe block
@@ -143,8 +157,22 @@ describe('reporter.buildReportPayload', function () {
     const task = { task_id: 'vt_123', nonce: 'n_abc' };
     const execution = {
       results: [
-        { cmd: 'echo a', ok: true, stdout: 'a', stderr: '', exitCode: 0, durationMs: 10 },
-        { cmd: 'echo b', ok: true, stdout: 'b', stderr: '', exitCode: 0, durationMs: 5 },
+        {
+          cmd: 'echo a',
+          ok: true,
+          stdout: 'a',
+          stderr: '',
+          exitCode: 0,
+          durationMs: 10,
+        },
+        {
+          cmd: 'echo b',
+          ok: true,
+          stdout: 'b',
+          stderr: '',
+          exitCode: 0,
+          durationMs: 5,
+        },
       ],
       overallOk: true,
       durationMs: 15,
@@ -158,7 +186,9 @@ describe('reporter.buildReportPayload', function () {
     assert.equal(payload.reproduction_score, 1);
     assert.equal(typeof payload.execution_log_hash, 'string');
     assert.equal(payload.execution_log_hash.length, 64);
-    assert.ok(payload.env_fingerprint && typeof payload.env_fingerprint === 'object');
+    assert.ok(
+      payload.env_fingerprint && typeof payload.env_fingerprint === 'object'
+    );
   });
 
   it('hashes execution log deterministically', function () {
@@ -182,7 +212,7 @@ describe('reporter.buildReportPayload', function () {
         ],
         overallOk: false,
         durationMs: 10,
-      },
+      }
     );
     assert.equal(payload.reproduction_score, 0.5);
   });
@@ -194,7 +224,9 @@ describe('validator.runValidatorCycle', function () {
   beforeEach(() => {
     // Isolate stakeBootstrap disk state per test so a successful stake
     // in one test doesn't silence the stake attempt in the next.
-    tmpHome = fs.mkdtempSync(path.join(require('os').tmpdir(), 'validator-cycle-'));
+    tmpHome = fs.mkdtempSync(
+      path.join(require('os').tmpdir(), 'validator-cycle-')
+    );
     process.env.EVOLVER_HOME = tmpHome;
     process.env.A2A_HUB_URL = 'http://hub.local';
     process.env.HUB_NODE_SECRET = 'secret';
@@ -202,7 +234,8 @@ describe('validator.runValidatorCycle', function () {
     // Reset the module-level stake state so each test starts fresh.
     try {
       const sb = require('../src/gep/validator/stakeBootstrap');
-      if (sb && typeof sb._resetStateForTests === 'function') sb._resetStateForTests();
+      if (sb && typeof sb._resetStateForTests === 'function')
+        sb._resetStateForTests();
     } catch (_) {}
   });
   afterEach(() => {
@@ -211,7 +244,9 @@ describe('validator.runValidatorCycle', function () {
     }
     Object.assign(process.env, originalEnv);
     if (tmpHome) {
-      try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch (_) {}
+      try {
+        fs.rmSync(tmpHome, { recursive: true, force: true });
+      } catch (_) {}
     }
   });
 
@@ -238,10 +273,7 @@ describe('validator.runValidatorCycle', function () {
                 task_id: 'vt_fail',
                 nonce: 'nonce_abc',
                 asset_id: 'asset_x',
-                validation_commands: [
-                CMD_PASS,
-                CMD_FAIL,
-              ],
+                validation_commands: [CMD_PASS, CMD_FAIL],
                 expires_at: new Date(Date.now() + 60000).toISOString(),
               },
             ],
@@ -253,22 +285,30 @@ describe('validator.runValidatorCycle', function () {
       }
       return mkRes({ ok: false, status: 404, body: { error: 'not_found' } });
     };
-    const out = await withFakeFetch(fetchImpl, () => validatorIndex.runValidatorCycle({}));
+    const out = await withFakeFetch(fetchImpl, () =>
+      validatorIndex.runValidatorCycle({})
+    );
     assert.equal(out.processed, 1);
     assert.equal(out.outcomes[0].status, 'reported');
     assert.equal(out.outcomes[0].report.overall_ok, false);
     assert.equal(out.outcomes[0].report.commands_total, 2);
     assert.equal(out.outcomes[0].report.commands_passed, 1);
     // Ensure stake was attempted once.
-    const stakeCalls = calls.filter((c) => c.url.endsWith('/a2a/validator/stake'));
+    const stakeCalls = calls.filter(c =>
+      c.url.endsWith('/a2a/validator/stake')
+    );
     assert.equal(stakeCalls.length, 1);
     // Regression: validator fetch MUST send tasks_only so Hub skips asset
     // search + GDI credit deduction. Pre-2026-04-30 this sent only
     // validation_only (ignored by Hub), burning ~96 credits per poll cycle.
-    const fetchCalls = calls.filter((c) => c.url.endsWith('/a2a/fetch'));
+    const fetchCalls = calls.filter(c => c.url.endsWith('/a2a/fetch'));
     assert.equal(fetchCalls.length, 1);
     const fetchBody = JSON.parse(fetchCalls[0].init.body);
-    assert.equal(fetchBody.payload.tasks_only, true, 'validator fetch MUST include tasks_only:true');
+    assert.equal(
+      fetchBody.payload.tasks_only,
+      true,
+      'validator fetch MUST include tasks_only:true'
+    );
   });
 
   it('reports passing result when all commands succeed', async function () {
@@ -285,10 +325,7 @@ describe('validator.runValidatorCycle', function () {
               {
                 task_id: 'vt_ok',
                 nonce: 'nonce_xyz',
-                validation_commands: [
-                CMD_PASS,
-                CMD_PASS,
-              ],
+                validation_commands: [CMD_PASS, CMD_PASS],
               },
             ],
           },
@@ -299,19 +336,24 @@ describe('validator.runValidatorCycle', function () {
       }
       return mkRes({ ok: false, status: 404, body: {} });
     };
-    const out = await withFakeFetch(fetchImpl, () => validatorIndex.runValidatorCycle({}));
+    const out = await withFakeFetch(fetchImpl, () =>
+      validatorIndex.runValidatorCycle({})
+    );
     assert.equal(out.outcomes[0].report.overall_ok, true);
     assert.equal(out.outcomes[0].report.commands_passed, 2);
   });
 
   it('gracefully handles empty validation_tasks list', async function () {
     process.env.EVOLVER_VALIDATOR_ENABLED = '1';
-    const fetchImpl = async (url) => {
+    const fetchImpl = async url => {
       if (url.endsWith('/a2a/validator/stake')) return mkRes({ body: {} });
-      if (url.endsWith('/a2a/fetch')) return mkRes({ body: { validation_tasks: [] } });
+      if (url.endsWith('/a2a/fetch'))
+        return mkRes({ body: { validation_tasks: [] } });
       return mkRes({ ok: false });
     };
-    const out = await withFakeFetch(fetchImpl, () => validatorIndex.runValidatorCycle({}));
+    const out = await withFakeFetch(fetchImpl, () =>
+      validatorIndex.runValidatorCycle({})
+    );
     assert.equal(out.tasks, 0);
     assert.equal(out.processed, 0);
   });

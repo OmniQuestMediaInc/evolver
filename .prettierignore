@@ -1,0 +1,9 @@
+node_modules
+*.lock
+*.log
+*.json
+*.md
+LICENSE
+.git
+.github
+archive

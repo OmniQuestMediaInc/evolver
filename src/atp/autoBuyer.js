@@ -111,15 +111,21 @@ function _pruneDedup(ledger, now) {
 }
 
 function _questionHash(opts) {
-  const caps = Array.isArray(opts.capabilities) ? opts.capabilities.slice().sort().join(',') : '';
+  const caps = Array.isArray(opts.capabilities)
+    ? opts.capabilities.slice().sort().join(',')
+    : '';
   const q = (opts.question || '').slice(0, 2000);
-  return crypto.createHash('sha256').update(caps + '|' + q).digest('hex').slice(0, 24);
+  return crypto
+    .createHash('sha256')
+    .update(caps + '|' + q)
+    .digest('hex')
+    .slice(0, 24);
 }
 
 function _effectiveCap(value, now) {
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0) return 0;
-  const within = _startedAt > 0 && (now - _startedAt) < COLD_START_WINDOW_MS;
+  const within = _startedAt > 0 && now - _startedAt < COLD_START_WINDOW_MS;
   return within ? Math.floor(n / 2) : Math.floor(n);
 }
 
@@ -128,15 +134,41 @@ function start(opts) {
   if (!_isEnabled()) return;
   _started = true;
   _startedAt = Date.now();
-  const dailyCap = Math.max(0, Math.floor(Number((opts && opts.dailyCap) || process.env.ATP_AUTOBUY_DAILY_CAP_CREDITS) || DEFAULT_DAILY_CAP));
-  const perOrderCap = Math.max(0, Math.floor(Number((opts && opts.perOrderCap) || process.env.ATP_AUTOBUY_PER_ORDER_CAP_CREDITS) || DEFAULT_PER_ORDER_CAP));
-  const timeoutMs = Math.max(500, Math.floor(Number((opts && opts.timeoutMs) || DEFAULT_ORDER_TIMEOUT_MS)));
+  const dailyCap = Math.max(
+    0,
+    Math.floor(
+      Number(
+        (opts && opts.dailyCap) || process.env.ATP_AUTOBUY_DAILY_CAP_CREDITS
+      ) || DEFAULT_DAILY_CAP
+    )
+  );
+  const perOrderCap = Math.max(
+    0,
+    Math.floor(
+      Number(
+        (opts && opts.perOrderCap) ||
+          process.env.ATP_AUTOBUY_PER_ORDER_CAP_CREDITS
+      ) || DEFAULT_PER_ORDER_CAP
+    )
+  );
+  const timeoutMs = Math.max(
+    500,
+    Math.floor(Number((opts && opts.timeoutMs) || DEFAULT_ORDER_TIMEOUT_MS))
+  );
   _config = { dailyCap, perOrderCap, timeoutMs };
   let ledger = _readLedger();
   ledger = _rotateIfNewDay(ledger, _startedAt);
   ledger = _pruneDedup(ledger, _startedAt);
   _writeLedger(ledger);
-  console.log('[ATP-AutoBuyer] Started (dailyCap=' + dailyCap + ', perOrderCap=' + perOrderCap + ', cold-start half-cap for ' + (COLD_START_WINDOW_MS / 1000) + 's)');
+  console.log(
+    '[ATP-AutoBuyer] Started (dailyCap=' +
+      dailyCap +
+      ', perOrderCap=' +
+      perOrderCap +
+      ', cold-start half-cap for ' +
+      COLD_START_WINDOW_MS / 1000 +
+      's)'
+  );
 }
 
 function stop() {
@@ -152,14 +184,20 @@ function _withTimeout(promise, timeoutMs) {
   return Promise.race([
     promise,
     new Promise(function (resolve) {
-      setTimeout(function () { resolve({ ok: false, error: 'autobuyer_timeout' }); }, timeoutMs);
+      setTimeout(function () {
+        resolve({ ok: false, error: 'autobuyer_timeout' });
+      }, timeoutMs);
     }),
   ]);
 }
 
 async function considerOrder(opts) {
   if (!_started) return { ok: false, skipped: true, reason: 'not_started' };
-  if (!opts || !Array.isArray(opts.capabilities) || opts.capabilities.length === 0) {
+  if (
+    !opts ||
+    !Array.isArray(opts.capabilities) ||
+    opts.capabilities.length === 0
+  ) {
     return { ok: false, skipped: true, reason: 'no_capabilities' };
   }
   const now = Date.now();
@@ -176,8 +214,20 @@ async function considerOrder(opts) {
   const perOrderCap = _effectiveCap(_config.perOrderCap, now);
   const remaining = Math.max(0, dailyCap - (ledger.spent || 0));
   if (remaining <= 0) {
-    console.warn('[ATP-AutoBuyer] Daily cap reached, skipping order (spent=' + ledger.spent + ', cap=' + dailyCap + ')');
-    return { ok: false, skipped: true, reason: 'daily_cap_reached', spent: ledger.spent, cap: dailyCap };
+    console.warn(
+      '[ATP-AutoBuyer] Daily cap reached, skipping order (spent=' +
+        ledger.spent +
+        ', cap=' +
+        dailyCap +
+        ')'
+    );
+    return {
+      ok: false,
+      skipped: true,
+      reason: 'daily_cap_reached',
+      spent: ledger.spent,
+      cap: dailyCap,
+    };
   }
 
   const requested = Math.max(1, Math.floor(Number(opts.budget) || perOrderCap));
@@ -196,13 +246,23 @@ async function considerOrder(opts) {
     minReputation: opts.minReputation,
   };
 
-  const result = await _withTimeout(hubClient.placeOrder(orderOpts), _config.timeoutMs);
+  const result = await _withTimeout(
+    hubClient.placeOrder(orderOpts),
+    _config.timeoutMs
+  );
 
   if (result && result.ok) {
     ledger.spent = (ledger.spent || 0) + budget;
     ledger.dedup[hash] = now;
     _writeLedger(ledger);
-    console.log('[ATP-AutoBuyer] Order placed: ' + (result.data && result.data.order_id) + ' budget=' + budget + ' remaining_today=' + Math.max(0, dailyCap - ledger.spent));
+    console.log(
+      '[ATP-AutoBuyer] Order placed: ' +
+        (result.data && result.data.order_id) +
+        ' budget=' +
+        budget +
+        ' remaining_today=' +
+        Math.max(0, dailyCap - ledger.spent)
+    );
     return { ok: true, data: result.data, spent: budget };
   }
 

@@ -19,24 +19,30 @@ function request(url, method, body) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
     const payload = body ? JSON.stringify(body) : '';
-    const req = http.request({
-      hostname: u.hostname,
-      port: u.port,
-      path: u.pathname + u.search,
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload),
+    const req = http.request(
+      {
+        hostname: u.hostname,
+        port: u.port,
+        path: u.pathname + u.search,
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload),
+        },
       },
-    }, (res) => {
-      const chunks = [];
-      res.on('data', c => chunks.push(c));
-      res.on('end', () => {
-        const raw = Buffer.concat(chunks).toString();
-        try { resolve({ status: res.statusCode, body: JSON.parse(raw) }); }
-        catch { resolve({ status: res.statusCode, body: raw }); }
-      });
-    });
+      res => {
+        const chunks = [];
+        res.on('data', c => chunks.push(c));
+        res.on('end', () => {
+          const raw = Buffer.concat(chunks).toString();
+          try {
+            resolve({ status: res.statusCode, body: JSON.parse(raw) });
+          } catch {
+            resolve({ status: res.statusCode, body: raw });
+          }
+        });
+      }
+    );
     req.on('error', reject);
     if (payload) req.write(payload);
     req.end();
@@ -51,14 +57,20 @@ describe('ProxyHttpServer', () => {
     store = new MailboxStore(dataDir);
 
     const mockProxyHandlers = {
-      assetFetch: async (body) => ({ assets: [], query: body }),
-      assetSearch: async (body) => ({ results: [], query: body }),
-      assetValidate: async (body) => ({ valid: true, asset_id: body.asset_id || 'test' }),
+      assetFetch: async body => ({ assets: [], query: body }),
+      assetSearch: async body => ({ results: [], query: body }),
+      assetValidate: async body => ({
+        valid: true,
+        asset_id: body.asset_id || 'test',
+      }),
     };
 
     const routes = buildRoutes(store, mockProxyHandlers, null, {});
 
-    server = new ProxyHttpServer(routes, { port: 39820, logger: { log: () => {}, error: () => {}, warn: () => {} } });
+    server = new ProxyHttpServer(routes, {
+      port: 39820,
+      logger: { log: () => {}, error: () => {}, warn: () => {} },
+    });
     const info = await server.start();
     baseUrl = info.url;
   });
@@ -66,7 +78,9 @@ describe('ProxyHttpServer', () => {
   after(async () => {
     await server.stop();
     store.close();
-    try { fs.rmSync(dataDir, { recursive: true }); } catch {}
+    try {
+      fs.rmSync(dataDir, { recursive: true });
+    } catch {}
   });
 
   describe('POST /mailbox/send', () => {
@@ -124,8 +138,14 @@ describe('ProxyHttpServer', () => {
 
   describe('GET /mailbox/status/:id', () => {
     it('returns message details', async () => {
-      const { message_id } = store.send({ type: 'status_test', payload: { test: true } });
-      const res = await request(`${baseUrl}/mailbox/status/${message_id}`, 'GET');
+      const { message_id } = store.send({
+        type: 'status_test',
+        payload: { test: true },
+      });
+      const res = await request(
+        `${baseUrl}/mailbox/status/${message_id}`,
+        'GET'
+      );
       assert.equal(res.status, 200);
       assert.equal(res.body.id, message_id);
       assert.equal(res.body.type, 'status_test');
@@ -140,7 +160,10 @@ describe('ProxyHttpServer', () => {
   describe('GET /mailbox/list', () => {
     it('lists messages by type', async () => {
       store.send({ type: 'list_http_test', payload: {} });
-      const res = await request(`${baseUrl}/mailbox/list?type=list_http_test`, 'GET');
+      const res = await request(
+        `${baseUrl}/mailbox/list?type=list_http_test`,
+        'GET'
+      );
       assert.equal(res.status, 200);
       assert.ok(res.body.messages.length >= 1);
     });
@@ -185,7 +208,10 @@ describe('ProxyHttpServer', () => {
 
   describe('GET /asset/submissions', () => {
     it('lists asset submissions with results', async () => {
-      store.send({ type: 'asset_submit', payload: { assets: [{ type: 'Gene' }] } });
+      store.send({
+        type: 'asset_submit',
+        payload: { assets: [{ type: 'Gene' }] },
+      });
       const res = await request(`${baseUrl}/asset/submissions`, 'GET');
       assert.equal(res.status, 200);
       assert.ok(Array.isArray(res.body.submissions));
@@ -227,7 +253,9 @@ describe('ProxyHttpServer', () => {
     });
 
     it('POST /task/claim accepts valid task_id', async () => {
-      const res = await request(`${baseUrl}/task/claim`, 'POST', { task_id: 'task_123' });
+      const res = await request(`${baseUrl}/task/claim`, 'POST', {
+        task_id: 'task_123',
+      });
       assert.equal(res.status, 200);
       assert.ok(res.body.message_id);
     });
@@ -300,7 +328,10 @@ describe('ProxyHttpServer', () => {
       assert.equal(res.body.status, 'running');
       assert.ok('outbound_pending' in res.body);
       assert.ok('inbound_pending' in res.body);
-      assert.ok(res.body.proxy_protocol_version, 'should include proxy_protocol_version');
+      assert.ok(
+        res.body.proxy_protocol_version,
+        'should include proxy_protocol_version'
+      );
       assert.ok(res.body.schema_version, 'should include schema_version');
       assert.match(res.body.proxy_protocol_version, /^\d+\.\d+\.\d+$/);
     });
@@ -327,44 +358,60 @@ describe('ProxyHttpServer', () => {
         payload: { blob: big },
       });
       assert.equal(res.status, 413, 'oversized body must 413');
-      assert.ok(res.body && /too large/i.test(res.body.error || ''),
-        'response should explain body too large');
+      assert.ok(
+        res.body && /too large/i.test(res.body.error || ''),
+        'response should explain body too large'
+      );
     });
 
     it('rejects streaming bodies that exceed the cap even when Content-Length lies', async () => {
       // Chunked upload without declared Content-Length: the per-chunk counter
       // must still fire.
       const u = new URL(`${baseUrl}/mailbox/send`);
-      const payload = JSON.stringify({ type: 'hub_event', payload: { blob: 'x'.repeat(2 * 1024 * 1024) } });
+      const payload = JSON.stringify({
+        type: 'hub_event',
+        payload: { blob: 'x'.repeat(2 * 1024 * 1024) },
+      });
       const result = await new Promise((resolve, reject) => {
-        const req = http.request({
-          hostname: u.hostname,
-          port: u.port,
-          path: u.pathname,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Transfer-Encoding': 'chunked',
+        const req = http.request(
+          {
+            hostname: u.hostname,
+            port: u.port,
+            path: u.pathname,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Transfer-Encoding': 'chunked',
+            },
           },
-        }, (res) => {
-          const chunks = [];
-          res.on('data', c => chunks.push(c));
-          res.on('end', () => {
-            const raw = Buffer.concat(chunks).toString();
-            try { resolve({ status: res.statusCode, body: JSON.parse(raw) }); }
-            catch { resolve({ status: res.statusCode, body: raw }); }
-          });
-        });
-        req.on('error', (e) => {
+          res => {
+            const chunks = [];
+            res.on('data', c => chunks.push(c));
+            res.on('end', () => {
+              const raw = Buffer.concat(chunks).toString();
+              try {
+                resolve({ status: res.statusCode, body: JSON.parse(raw) });
+              } catch {
+                resolve({ status: res.statusCode, body: raw });
+              }
+            });
+          }
+        );
+        req.on('error', e => {
           // The server destroys the socket when the cap is hit. Map socket
           // hang-up into the expected reject-by-413 shape for this assertion.
-          if (e.code === 'ECONNRESET' || e.code === 'EPIPE') return resolve({ status: 413, body: { error: 'aborted' } });
+          if (e.code === 'ECONNRESET' || e.code === 'EPIPE')
+            return resolve({ status: 413, body: { error: 'aborted' } });
           reject(e);
         });
         req.write(payload);
         req.end();
       });
-      assert.equal(result.status, 413, 'streaming oversized body must 413 or be aborted');
+      assert.equal(
+        result.status,
+        413,
+        'streaming oversized body must 413 or be aborted'
+      );
     });
 
     it('accepts bodies within the cap', async () => {
@@ -372,8 +419,10 @@ describe('ProxyHttpServer', () => {
         type: 'hub_event',
         payload: { ok: true },
       });
-      assert.ok(res.status === 200 || res.status === 201,
-        'small bodies must still pass: got ' + res.status);
+      assert.ok(
+        res.status === 200 || res.status === 201,
+        'small bodies must still pass: got ' + res.status
+      );
     });
   });
 });

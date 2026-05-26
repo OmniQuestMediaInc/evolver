@@ -51,7 +51,10 @@ const INTERFACE_CONTRACT = [
 
 function getChangedFiles() {
   try {
-    const out = execSync('git diff --name-only HEAD~1', { cwd: ROOT, encoding: 'utf8' }).trim();
+    const out = execSync('git diff --name-only HEAD~1', {
+      cwd: ROOT,
+      encoding: 'utf8',
+    }).trim();
     return out ? out.split('\n') : [];
   } catch (e) {
     return [];
@@ -61,12 +64,18 @@ function getChangedFiles() {
 function checkInterface(spec) {
   const fullPath = path.join(ROOT, spec.file);
   if (!fs.existsSync(fullPath)) {
-    return { file: spec.file, status: 'MISSING', detail: 'file does not exist' };
+    return {
+      file: spec.file,
+      status: 'MISSING',
+      detail: 'file does not exist',
+    };
   }
 
   try {
     const mod = require(fullPath);
-    const missing = spec.requiredExports.filter(name => typeof mod[name] !== 'function');
+    const missing = spec.requiredExports.filter(
+      name => typeof mod[name] !== 'function'
+    );
     if (missing.length > 0) {
       return {
         file: spec.file,
@@ -76,7 +85,11 @@ function checkInterface(spec) {
     }
     return { file: spec.file, status: 'OK' };
   } catch (e) {
-    return { file: spec.file, status: 'ERROR', detail: `require failed: ${e.message}` };
+    return {
+      file: spec.file,
+      status: 'ERROR',
+      detail: `require failed: ${e.message}`,
+    };
   }
 }
 
@@ -98,12 +111,18 @@ function main() {
 
   for (const r of results) {
     const icon = r.status === 'OK' ? '[OK]' : '[!!]';
-    process.stdout.write(`${icon} ${r.file}${r.detail ? ' -- ' + r.detail : ''}\n`);
+    process.stdout.write(
+      `${icon} ${r.file}${r.detail ? ' -- ' + r.detail : ''}\n`
+    );
   }
 
   if (broken.length > 0) {
-    process.stdout.write(`\n${broken.length} interface(s) broken. feishu-evolver-wrapper needs update.\n`);
-    process.stdout.write('Check the feishu-evolver-wrapper repo for required updates.\n');
+    process.stdout.write(
+      `\n${broken.length} interface(s) broken. feishu-evolver-wrapper needs update.\n`
+    );
+    process.stdout.write(
+      'Check the feishu-evolver-wrapper repo for required updates.\n'
+    );
     process.exit(1);
   } else {
     process.stdout.write(`\nAll ${results.length} interface(s) compatible.\n`);

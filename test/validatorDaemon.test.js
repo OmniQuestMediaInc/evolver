@@ -16,7 +16,9 @@ function withFakeFetch(impl, fn) {
   global.fetch = impl;
   return Promise.resolve()
     .then(fn)
-    .finally(() => { global.fetch = original; });
+    .finally(() => {
+      global.fetch = original;
+    });
 }
 
 function mkRes(body) {
@@ -46,7 +48,8 @@ describe('validator daemon', function () {
     process.env.EVOLVER_VALIDATOR_DAEMON_FIRST_DELAY_MS = '0';
     try {
       const sb = freshRequire('../src/gep/validator/stakeBootstrap');
-      if (sb && typeof sb._resetStateForTests === 'function') sb._resetStateForTests();
+      if (sb && typeof sb._resetStateForTests === 'function')
+        sb._resetStateForTests();
     } catch (_) {}
   });
 
@@ -60,7 +63,9 @@ describe('validator daemon', function () {
     }
     Object.assign(process.env, originalEnv);
     if (tmpHome) {
-      try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch (_) {}
+      try {
+        fs.rmSync(tmpHome, { recursive: true, force: true });
+      } catch (_) {}
     }
   });
 
@@ -78,12 +83,18 @@ describe('validator daemon', function () {
   it('skips ticks when EVOLVER_VALIDATOR_ENABLED=0', async function () {
     process.env.EVOLVER_VALIDATOR_ENABLED = '0';
     let fetchCalls = 0;
-    await withFakeFetch(async () => { fetchCalls += 1; return mkRes({ validation_tasks: [] }); }, async () => {
-      const v = freshRequire('../src/gep/validator');
-      v.startValidatorDaemon();
-      await new Promise((r) => setTimeout(r, 50));
-      v.stopValidatorDaemon();
-    });
+    await withFakeFetch(
+      async () => {
+        fetchCalls += 1;
+        return mkRes({ validation_tasks: [] });
+      },
+      async () => {
+        const v = freshRequire('../src/gep/validator');
+        v.startValidatorDaemon();
+        await new Promise(r => setTimeout(r, 50));
+        v.stopValidatorDaemon();
+      }
+    );
     assert.equal(fetchCalls, 0, 'no hub calls when disabled');
   });
 
@@ -91,8 +102,9 @@ describe('validator daemon', function () {
     process.env.EVOLVER_VALIDATOR_ENABLED = '1';
     let fetchCount = 0;
     let reportCount = 0;
-    const fetchImpl = async (url) => {
-      if (url.endsWith('/a2a/validator/stake')) return mkRes({ stake: { stake_amount: 100 } });
+    const fetchImpl = async url => {
+      if (url.endsWith('/a2a/validator/stake'))
+        return mkRes({ stake: { stake_amount: 100 } });
       if (url.endsWith('/a2a/fetch')) {
         fetchCount += 1;
         if (fetchCount === 1) {
@@ -118,7 +130,7 @@ describe('validator daemon', function () {
       const v = freshRequire('../src/gep/validator');
       v.startValidatorDaemon();
       // Wait for first tick + sandbox exec; sandbox is real but `echo` is fast.
-      await new Promise((r) => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 1500));
       v.stopValidatorDaemon();
       const stats = v.getValidatorDaemonStats();
       assert.ok(stats.ticks >= 1, 'at least one tick happened: ' + stats.ticks);

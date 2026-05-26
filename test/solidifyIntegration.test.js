@@ -14,12 +14,21 @@ const { getRepoRoot } = require('../src/gep/paths');
 let tmpDir;
 let origEnv;
 const ENV_KEYS = [
-  'EVOLVER_REPO_ROOT', 'GEP_ASSETS_DIR', 'EVOLUTION_DIR',
-  'MEMORY_DIR', 'EVOLVER_SOLIDIFY_VERIFY', 'EVOLVER_LLM_REVIEW',
-  'A2A_HUB_URL', 'A2A_NODE_SECRET', 'HUB_DRY_RUN',
-  'EVOLVER_SESSION_SCOPE', 'NODE_ENV',
-  'EVOLVER_AUTO_PUBLISH', 'EVOLVER_PUBLISH_ANTI_PATTERNS',
-  'EVOLVER_DEFAULT_VISIBILITY', 'EVOLVER_LEAK_CHECK',
+  'EVOLVER_REPO_ROOT',
+  'GEP_ASSETS_DIR',
+  'EVOLUTION_DIR',
+  'MEMORY_DIR',
+  'EVOLVER_SOLIDIFY_VERIFY',
+  'EVOLVER_LLM_REVIEW',
+  'A2A_HUB_URL',
+  'A2A_NODE_SECRET',
+  'HUB_DRY_RUN',
+  'EVOLVER_SESSION_SCOPE',
+  'NODE_ENV',
+  'EVOLVER_AUTO_PUBLISH',
+  'EVOLVER_PUBLISH_ANTI_PATTERNS',
+  'EVOLVER_DEFAULT_VISIBILITY',
+  'EVOLVER_LEAK_CHECK',
 ];
 
 let gitAvailable = true;
@@ -38,8 +47,16 @@ const SEED_GENE = {
   anti_patterns: [],
   constraints: { max_files: 20, max_lines: 500, forbidden_paths: [] },
 };
-const SEED_GENES_JSON = JSON.stringify({ version: 1, genes: [SEED_GENE] }, null, 2);
-const SEED_CAPSULES_JSON = JSON.stringify({ version: 1, capsules: [] }, null, 2);
+const SEED_GENES_JSON = JSON.stringify(
+  { version: 1, genes: [SEED_GENE] },
+  null,
+  2
+);
+const SEED_CAPSULES_JSON = JSON.stringify(
+  { version: 1, capsules: [] },
+  null,
+  2
+);
 
 function setupTmpRepo() {
   origEnv = {};
@@ -53,18 +70,28 @@ function setupTmpRepo() {
   fs.mkdirSync(memoryDir, { recursive: true });
 
   fs.writeFileSync(path.join(gepDir, 'genes.json'), SEED_GENES_JSON, 'utf8');
-  fs.writeFileSync(path.join(gepDir, 'capsules.json'), SEED_CAPSULES_JSON, 'utf8');
+  fs.writeFileSync(
+    path.join(gepDir, 'capsules.json'),
+    SEED_CAPSULES_JSON,
+    'utf8'
+  );
   fs.writeFileSync(path.join(gepDir, 'events.jsonl'), '', 'utf8');
 
   // Init git repo with one commit so isGitRepo() + blast radius work.
   // -c commit.gpgsign=false prevents failures on machines with global GPG signing.
   try {
     execSync('git init', { cwd: tmpDir, stdio: 'ignore' });
-    execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', {
+      cwd: tmpDir,
+      stdio: 'ignore',
+    });
     execSync('git config user.name "Test"', { cwd: tmpDir, stdio: 'ignore' });
     fs.writeFileSync(path.join(tmpDir, 'README.md'), 'test repo\n', 'utf8');
     execSync('git add -A', { cwd: tmpDir, stdio: 'ignore' });
-    execSync('git -c commit.gpgsign=false commit -m "init"', { cwd: tmpDir, stdio: 'ignore' });
+    execSync('git -c commit.gpgsign=false commit -m "init"', {
+      cwd: tmpDir,
+      stdio: 'ignore',
+    });
   } catch (_e) {
     // git not available or misconfigured — tests will be skipped individually.
     gitAvailable = false;
@@ -94,7 +121,9 @@ function teardownTmpRepo() {
     if (origEnv[k] === undefined) delete process.env[k];
     else process.env[k] = origEnv[k];
   }
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch (_) {}
 }
 
 function writeLastRun(evolutionDir, overrides = {}) {
@@ -122,7 +151,11 @@ function writeLastRun(evolutionDir, overrides = {}) {
     ...overrides,
   };
   const statePath = path.join(evolutionDir, 'evolution_solidify_state.json');
-  fs.writeFileSync(statePath, JSON.stringify({ last_run: lastRun }, null, 2), 'utf8');
+  fs.writeFileSync(
+    statePath,
+    JSON.stringify({ last_run: lastRun }, null, 2),
+    'utf8'
+  );
   return lastRun;
 }
 
@@ -155,21 +188,36 @@ describe('solidify() integration', () => {
     // Reset shared mutable state before each test so order doesn't matter.
     const gepDir = process.env.GEP_ASSETS_DIR;
     fs.writeFileSync(path.join(gepDir, 'events.jsonl'), '', 'utf8');
-    const statePath = path.join(process.env.EVOLUTION_DIR, 'evolution_solidify_state.json');
-    try { fs.rmSync(statePath, { force: true }); } catch (_) {}
+    const statePath = path.join(
+      process.env.EVOLUTION_DIR,
+      'evolution_solidify_state.json'
+    );
+    try {
+      fs.rmSync(statePath, { force: true });
+    } catch (_) {}
     // Restore GEP asset files to seed state so upsertGene/upsertCapsule
     // side-effects from previous tests don't leave dirty tracked files that
     // would skew blast radius detection in subsequent tests.
     fs.writeFileSync(path.join(gepDir, 'genes.json'), SEED_GENES_JSON, 'utf8');
-    fs.writeFileSync(path.join(gepDir, 'capsules.json'), SEED_CAPSULES_JSON, 'utf8');
+    fs.writeFileSync(
+      path.join(gepDir, 'capsules.json'),
+      SEED_CAPSULES_JSON,
+      'utf8'
+    );
     // Stage the resets so git treats them as clean (same content as committed).
     try {
-      execSync('git add assets/gep/genes.json assets/gep/capsules.json', { cwd: tmpDir, stdio: 'ignore' });
-      execSync('git -c commit.gpgsign=false commit -m "beforeEach reset"', { cwd: tmpDir, stdio: 'ignore' });
+      execSync('git add assets/gep/genes.json assets/gep/capsules.json', {
+        cwd: tmpDir,
+        stdio: 'ignore',
+      });
+      execSync('git -c commit.gpgsign=false commit -m "beforeEach reset"', {
+        cwd: tmpDir,
+        stdio: 'ignore',
+      });
     } catch (_) {}
   });
 
-  it('returns ok:false when not a git repo', (t) => {
+  it('returns ok:false when not a git repo', t => {
     if (!gitAvailable) return t.skip('git not available in this environment');
     // All four path-sensitive env vars are redirected into nonGitDir so the
     // override is unambiguous — solidify cannot accidentally use the git-
@@ -181,8 +229,16 @@ describe('solidify() integration', () => {
     fs.mkdirSync(ngGepDir, { recursive: true });
     fs.mkdirSync(ngEvoDir, { recursive: true });
     fs.mkdirSync(ngMemDir, { recursive: true });
-    fs.writeFileSync(path.join(ngGepDir, 'genes.json'), JSON.stringify([]), 'utf8');
-    fs.writeFileSync(path.join(ngGepDir, 'capsules.json'), JSON.stringify([]), 'utf8');
+    fs.writeFileSync(
+      path.join(ngGepDir, 'genes.json'),
+      JSON.stringify([]),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(ngGepDir, 'capsules.json'),
+      JSON.stringify([]),
+      'utf8'
+    );
     fs.writeFileSync(path.join(ngGepDir, 'events.jsonl'), '', 'utf8');
     const origRoot = process.env.EVOLVER_REPO_ROOT;
     const origGep = process.env.GEP_ASSETS_DIR;
@@ -196,7 +252,11 @@ describe('solidify() integration', () => {
       // Pin the contract: getRepoRoot() must re-read EVOLVER_REPO_ROOT on every
       // call, not cache at module load. If paths.js ever caches at load time this
       // assertion fires before solidify() is called, making the failure obvious.
-      assert.equal(getRepoRoot(), nonGitDir, 'getRepoRoot must re-read env on each call');
+      assert.equal(
+        getRepoRoot(),
+        nonGitDir,
+        'getRepoRoot must re-read env on each call'
+      );
       const result = solidify();
       assert.equal(result.ok, false);
       assert.equal(result.failure_reason, 'not_a_git_repository');
@@ -209,24 +269,38 @@ describe('solidify() integration', () => {
     }
   });
 
-  it('first run with no prior state fails cleanly and writes an event', (t) => {
+  it('first run with no prior state fails cleanly and writes an event', t => {
     if (!gitAvailable) return t.skip('git not available in this environment');
     const eventsPath = path.join(process.env.GEP_ASSETS_DIR, 'events.jsonl');
-    const linesBefore = fs.readFileSync(eventsPath, 'utf8').trim().split('\n').filter(Boolean).length;
+    const linesBefore = fs
+      .readFileSync(eventsPath, 'utf8')
+      .trim()
+      .split('\n')
+      .filter(Boolean).length;
 
     // No last_run state — solidify should still complete, emitting a failed
     // outcome (missing mutation/personality) but writing an event to disk.
     const result = solidify({ dryRun: false });
-    assert.ok(typeof result === 'object' && result !== null, 'solidify returned an object');
+    assert.ok(
+      typeof result === 'object' && result !== null,
+      'solidify returned an object'
+    );
     assert.ok('ok' in result, 'result has ok field');
     // With no last_run, protocolViolations fire → outcome is failed but no crash.
     assert.equal(result.ok, false);
 
-    const linesAfter = fs.readFileSync(eventsPath, 'utf8').trim().split('\n').filter(Boolean);
-    assert.ok(linesAfter.length > linesBefore, 'solidify should have written at least one new event');
+    const linesAfter = fs
+      .readFileSync(eventsPath, 'utf8')
+      .trim()
+      .split('\n')
+      .filter(Boolean);
+    assert.ok(
+      linesAfter.length > linesBefore,
+      'solidify should have written at least one new event'
+    );
   });
 
-  it('valid session with lastRun state persists a capsule to disk', (t) => {
+  it('valid session with lastRun state persists a capsule to disk', t => {
     if (!gitAvailable) return t.skip('git not available in this environment');
     const evolutionDir = process.env.EVOLUTION_DIR;
     const gepDir = process.env.GEP_ASSETS_DIR;
@@ -241,16 +315,34 @@ describe('solidify() integration', () => {
     try {
       const result = solidify({ dryRun: false });
       assert.ok(result, 'solidify returned result');
-      assert.equal(result.ok, true, 'solidify should succeed with valid lastRun: ' + JSON.stringify(result.constraintCheck && result.constraintCheck.violations));
-      const stored = JSON.parse(fs.readFileSync(path.join(gepDir, 'capsules.json'), 'utf8'));
-      const capsules = Array.isArray(stored.capsules) ? stored.capsules : (Array.isArray(stored) ? stored : []);
-      assert.ok(capsules.length > 0, 'at least one capsule persisted to capsules.json');
+      assert.equal(
+        result.ok,
+        true,
+        'solidify should succeed with valid lastRun: ' +
+          JSON.stringify(
+            result.constraintCheck && result.constraintCheck.violations
+          )
+      );
+      const stored = JSON.parse(
+        fs.readFileSync(path.join(gepDir, 'capsules.json'), 'utf8')
+      );
+      const capsules = Array.isArray(stored.capsules)
+        ? stored.capsules
+        : Array.isArray(stored)
+          ? stored
+          : [];
+      assert.ok(
+        capsules.length > 0,
+        'at least one capsule persisted to capsules.json'
+      );
     } finally {
-      try { fs.rmSync(testFile, { force: true }); } catch (_) {}
+      try {
+        fs.rmSync(testFile, { force: true });
+      } catch (_) {}
     }
   });
 
-  it('rejects when blast radius exceeds gene max_files constraint', (t) => {
+  it('rejects when blast radius exceeds gene max_files constraint', t => {
     if (!gitAvailable) return t.skip('git not available in this environment');
     const evolutionDir = process.env.EVOLUTION_DIR;
     writeLastRun(evolutionDir);
@@ -259,22 +351,36 @@ describe('solidify() integration', () => {
     fs.mkdirSync(blastDir, { recursive: true });
     try {
       for (let i = 0; i < 25; i++) {
-        fs.writeFileSync(path.join(blastDir, `f${i}.js`), `exports.n = ${i};\n`, 'utf8');
+        fs.writeFileSync(
+          path.join(blastDir, `f${i}.js`),
+          `exports.n = ${i};\n`,
+          'utf8'
+        );
       }
       const result = solidify({ dryRun: false });
       assert.ok(result, 'solidify returned result');
-      assert.equal(result.ok, false, 'solidify should reject when blast radius exceeds max_files');
-      const violations = result.constraintCheck && result.constraintCheck.violations || [];
+      assert.equal(
+        result.ok,
+        false,
+        'solidify should reject when blast radius exceeds max_files'
+      );
+      const violations =
+        (result.constraintCheck && result.constraintCheck.violations) || [];
       assert.ok(
-        violations.some(function (v) { return /max_files|exceeded|OVERRUN/.test(String(v)); }),
-        'constraint violation should reference blast radius limit: ' + JSON.stringify(violations)
+        violations.some(function (v) {
+          return /max_files|exceeded|OVERRUN/.test(String(v));
+        }),
+        'constraint violation should reference blast radius limit: ' +
+          JSON.stringify(violations)
       );
     } finally {
-      try { fs.rmSync(blastDir, { recursive: true, force: true }); } catch (_) {}
+      try {
+        fs.rmSync(blastDir, { recursive: true, force: true });
+      } catch (_) {}
     }
   });
 
-  it('second run has parent_event_id pointing to first run event (event chain)', (t) => {
+  it('second run has parent_event_id pointing to first run event (event chain)', t => {
     if (!gitAvailable) return t.skip('git not available in this environment');
     const evolutionDir = process.env.EVOLUTION_DIR;
     const eventsPath = path.join(process.env.GEP_ASSETS_DIR, 'events.jsonl');
@@ -284,7 +390,11 @@ describe('solidify() integration', () => {
     const result1 = solidify({ dryRun: false });
     assert.ok(result1, 'first solidify returned result');
 
-    const lines1 = fs.readFileSync(eventsPath, 'utf8').trim().split('\n').filter(Boolean);
+    const lines1 = fs
+      .readFileSync(eventsPath, 'utf8')
+      .trim()
+      .split('\n')
+      .filter(Boolean);
     assert.ok(lines1.length >= 1, 'first run wrote an event');
     const event1 = JSON.parse(lines1[lines1.length - 1]);
     assert.ok(event1.id, 'first event has an id');
@@ -294,9 +404,17 @@ describe('solidify() integration', () => {
     const result2 = solidify({ dryRun: false });
     assert.ok(result2, 'second solidify returned result');
 
-    const lines2 = fs.readFileSync(eventsPath, 'utf8').trim().split('\n').filter(Boolean);
+    const lines2 = fs
+      .readFileSync(eventsPath, 'utf8')
+      .trim()
+      .split('\n')
+      .filter(Boolean);
     assert.ok(lines2.length >= 2, 'second run wrote another event');
     const event2 = JSON.parse(lines2[lines2.length - 1]);
-    assert.equal(event2.parent, event1.id, 'second event parent chains to first event id');
+    assert.equal(
+      event2.parent,
+      event1.id,
+      'second event parent chains to first event id'
+    );
   });
 });

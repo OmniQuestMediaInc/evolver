@@ -20,7 +20,9 @@ describe('writeCycleProgressAtomic', () => {
   });
 
   after(() => {
-    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch (_) {}
   });
 
   it('writes a complete JSON file with all caller fields + updated_at', () => {
@@ -43,9 +45,14 @@ describe('writeCycleProgressAtomic', () => {
     assert.equal(parsed.inner_cycle, 17);
     assert.equal(parsed.started_at, 1746543112000);
     assert.equal(parsed.phase, 'evolve.run');
-    assert.ok(typeof parsed.updated_at === 'number', 'updated_at must be a number');
-    assert.ok(parsed.updated_at >= before && parsed.updated_at <= after,
-      'updated_at must reflect call wall-clock');
+    assert.ok(
+      typeof parsed.updated_at === 'number',
+      'updated_at must be a number'
+    );
+    assert.ok(
+      parsed.updated_at >= before && parsed.updated_at <= after,
+      'updated_at must reflect call wall-clock'
+    );
   });
 
   it('overwrites previous contents on subsequent writes', () => {
@@ -69,7 +76,7 @@ describe('writeCycleProgressAtomic', () => {
       started_at: 200,
       phase: 'evolve.run',
     });
-    const leftovers = fs.readdirSync(tmpDir).filter((f) => f.includes('.tmp.'));
+    const leftovers = fs.readdirSync(tmpDir).filter(f => f.includes('.tmp.'));
     assert.deepEqual(leftovers, [], 'no .tmp.<pid> remnants allowed');
   });
 

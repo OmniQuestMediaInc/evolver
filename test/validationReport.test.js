@@ -1,6 +1,9 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildValidationReport, isValidValidationReport } = require('../src/gep/validationReport');
+const {
+  buildValidationReport,
+  isValidValidationReport,
+} = require('../src/gep/validationReport');
 
 describe('buildValidationReport', function () {
   it('builds a valid report with minimal input', function () {
@@ -131,18 +134,47 @@ describe('isValidValidationReport', function () {
   });
 
   it('returns false for wrong type field', function () {
-    assert.equal(isValidValidationReport({ type: 'Other', id: 'x', commands: [], overall_ok: true }), false);
+    assert.equal(
+      isValidValidationReport({
+        type: 'Other',
+        id: 'x',
+        commands: [],
+        overall_ok: true,
+      }),
+      false
+    );
   });
 
   it('returns false for missing id', function () {
-    assert.equal(isValidValidationReport({ type: 'ValidationReport', commands: [], overall_ok: true }), false);
+    assert.equal(
+      isValidValidationReport({
+        type: 'ValidationReport',
+        commands: [],
+        overall_ok: true,
+      }),
+      false
+    );
   });
 
   it('returns false for missing commands', function () {
-    assert.equal(isValidValidationReport({ type: 'ValidationReport', id: 'x', overall_ok: true }), false);
+    assert.equal(
+      isValidValidationReport({
+        type: 'ValidationReport',
+        id: 'x',
+        overall_ok: true,
+      }),
+      false
+    );
   });
 
   it('returns false for missing overall_ok', function () {
-    assert.equal(isValidValidationReport({ type: 'ValidationReport', id: 'x', commands: [] }), false);
+    assert.equal(
+      isValidValidationReport({
+        type: 'ValidationReport',
+        id: 'x',
+        commands: [],
+      }),
+      false
+    );
   });
 });

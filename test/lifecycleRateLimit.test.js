@@ -8,8 +8,10 @@ const { LifecycleManager } = require('../src/proxy/lifecycle/manager');
 function makeStore() {
   const state = {};
   return {
-    getState: (k) => state[k] || null,
-    setState: (k, v) => { state[k] = v; },
+    getState: k => state[k] || null,
+    setState: (k, v) => {
+      state[k] = v;
+    },
     countPending: () => 0,
     writeInbound: () => {},
     writeInboundBatch: () => {},
@@ -34,7 +36,7 @@ function responseFromJson({ status = 200, json = {}, headers = {} } = {}) {
   return {
     ok: status >= 200 && status < 300,
     status,
-    headers: { get: (k) => headers[k.toLowerCase()] || headers[k] || null },
+    headers: { get: k => headers[k.toLowerCase()] || headers[k] || null },
     json: async () => json,
     text: async () => JSON.stringify(json),
   };
@@ -43,18 +45,27 @@ function responseFromJson({ status = 200, json = {}, headers = {} } = {}) {
 test('lifecycle hello: sets _helloRateLimitUntil when hub returns 429', async () => {
   const originalFetch = global.fetch;
   try {
-    const mf = mockFetch(() => responseFromJson({
-      status: 429,
-      json: { error: 'hello_rate_limit: max 60/hour per IP' },
-      headers: { 'retry-after': '1800' },
-    }));
+    const mf = mockFetch(() =>
+      responseFromJson({
+        status: 429,
+        json: { error: 'hello_rate_limit: max 60/hour per IP' },
+        headers: { 'retry-after': '1800' },
+      })
+    );
     global.fetch = mf;
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store: makeStore(), logger: silentLogger() });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store: makeStore(),
+      logger: silentLogger(),
+    });
     const result = await mgr.hello();
     assert.strictEqual(result.ok, false);
     assert.strictEqual(result.error, 'hello_rate_limited');
     assert.strictEqual(result.retryAfter, 1800);
-    assert.ok(mgr._helloRateLimitUntil > Date.now(), 'rate limit window should be set');
+    assert.ok(
+      mgr._helloRateLimitUntil > Date.now(),
+      'rate limit window should be set'
+    );
   } finally {
     global.fetch = originalFetch;
   }
@@ -65,12 +76,20 @@ test('lifecycle hello: suppresses call while rate-limit window is active', async
   try {
     const mf = mockFetch(() => responseFromJson({ status: 200, json: {} }));
     global.fetch = mf;
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store: makeStore(), logger: silentLogger() });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store: makeStore(),
+      logger: silentLogger(),
+    });
     mgr._helloRateLimitUntil = Date.now() + 60_000;
     const result = await mgr.hello();
     assert.strictEqual(result.ok, false);
     assert.strictEqual(result.error, 'hello_rate_limit_active');
-    assert.strictEqual(mf.calls.length, 0, 'no network call should be made while rate-limited');
+    assert.strictEqual(
+      mf.calls.length,
+      0,
+      'no network call should be made while rate-limited'
+    );
   } finally {
     global.fetch = originalFetch;
   }
@@ -79,25 +98,42 @@ test('lifecycle hello: suppresses call while rate-limit window is active', async
 test('lifecycle reAuthenticate: breaks and sets backoff when hub rotates without returning secret', async () => {
   const originalFetch = global.fetch;
   try {
-    const mf = mockFetch(() => responseFromJson({
-      status: 200,
-      json: { payload: {} },
-    }));
+    const mf = mockFetch(() =>
+      responseFromJson({
+        status: 200,
+        json: { payload: {} },
+      })
+    );
     global.fetch = mf;
     const store = makeStore();
     store.setState('node_id', 'node_test');
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store, logger: silentLogger() });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store,
+      logger: silentLogger(),
+    });
     const result = await mgr.reAuthenticate();
     assert.strictEqual(result, false);
-    assert.strictEqual(mf.calls.length, 1, 'should break after first missing-secret response, not retry');
-    assert.ok(mgr._reauthBackoffUntil > Date.now(), '30-minute backoff should be set');
+    assert.strictEqual(
+      mf.calls.length,
+      1,
+      'should break after first missing-secret response, not retry'
+    );
+    assert.ok(
+      mgr._reauthBackoffUntil > Date.now(),
+      '30-minute backoff should be set'
+    );
   } finally {
     global.fetch = originalFetch;
   }
 });
 
 test('lifecycle reAuthenticate: suppresses re-entry while backoff window is active', async () => {
-  const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store: makeStore(), logger: silentLogger() });
+  const mgr = new LifecycleManager({
+    hubUrl: 'https://example.test',
+    store: makeStore(),
+    logger: silentLogger(),
+  });
   mgr._reauthBackoffUntil = Date.now() + 30 * 60_000;
   const result = await mgr.reAuthenticate();
   assert.strictEqual(result, false);
@@ -106,16 +142,26 @@ test('lifecycle reAuthenticate: suppresses re-entry while backoff window is acti
 test('lifecycle reAuthenticate: breaks on hello_rate_limited without retrying', async () => {
   const originalFetch = global.fetch;
   try {
-    const mf = mockFetch(() => responseFromJson({
-      status: 429,
-      json: { error: 'hello_rate_limit: max 60/hour per IP' },
-      headers: { 'retry-after': '60' },
-    }));
+    const mf = mockFetch(() =>
+      responseFromJson({
+        status: 429,
+        json: { error: 'hello_rate_limit: max 60/hour per IP' },
+        headers: { 'retry-after': '60' },
+      })
+    );
     global.fetch = mf;
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store: makeStore(), logger: silentLogger() });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store: makeStore(),
+      logger: silentLogger(),
+    });
     const result = await mgr.reAuthenticate();
     assert.strictEqual(result, false);
-    assert.strictEqual(mf.calls.length, 1, 'should break on rate-limit, not retry second attempt');
+    assert.strictEqual(
+      mf.calls.length,
+      1,
+      'should break on rate-limit, not retry second attempt'
+    );
     assert.ok(mgr._helloRateLimitUntil > Date.now());
   } finally {
     global.fetch = originalFetch;
@@ -129,19 +175,34 @@ test('lifecycle _shouldUpgrade: handles prerelease minimum versions (community P
   // shipped PROXY_PROTOCOL_VERSION rather than a hard-coded string so this
   // test keeps working across version bumps.
   const { PROXY_PROTOCOL_VERSION } = require('../src/proxy/mailbox/store');
-  const [maj, min, pat] = PROXY_PROTOCOL_VERSION.split('.').map(p => parseInt(p, 10));
+  const [maj, min, pat] = PROXY_PROTOCOL_VERSION.split('.').map(p =>
+    parseInt(p, 10)
+  );
 
-  const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store: makeStore(), logger: silentLogger() });
+  const mgr = new LifecycleManager({
+    hubUrl: 'https://example.test',
+    store: makeStore(),
+    logger: silentLogger(),
+  });
 
   // A prerelease tag on the *same* version must not force an upgrade.
-  assert.strictEqual(mgr._shouldUpgrade(`${maj}.${min}.${pat}-beta.1`), false,
-    'same version with prerelease tag must not trigger upgrade');
+  assert.strictEqual(
+    mgr._shouldUpgrade(`${maj}.${min}.${pat}-beta.1`),
+    false,
+    'same version with prerelease tag must not trigger upgrade'
+  );
 
   // A prerelease minimum one patch ahead must still trigger upgrade.
-  assert.strictEqual(mgr._shouldUpgrade(`${maj}.${min}.${pat + 1}-beta.1`), true,
-    'higher patch with prerelease tag must trigger upgrade');
+  assert.strictEqual(
+    mgr._shouldUpgrade(`${maj}.${min}.${pat + 1}-beta.1`),
+    true,
+    'higher patch with prerelease tag must trigger upgrade'
+  );
 
   // A prerelease minimum one minor ahead must still trigger upgrade.
-  assert.strictEqual(mgr._shouldUpgrade(`${maj}.${min + 1}.0-beta.1`), true,
-    'higher minor with prerelease tag must trigger upgrade');
+  assert.strictEqual(
+    mgr._shouldUpgrade(`${maj}.${min + 1}.0-beta.1`),
+    true,
+    'higher minor with prerelease tag must trigger upgrade'
+  );
 });

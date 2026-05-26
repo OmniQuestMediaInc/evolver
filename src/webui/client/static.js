@@ -10,7 +10,9 @@ const { getStylesCss } = require('./stylesCss');
 let _vendorEchartsCache = null;
 function getVendorEcharts() {
   if (!_vendorEchartsCache) {
-    _vendorEchartsCache = fs.readFileSync(path.join(__dirname, 'vendor', 'echarts.min.js'));
+    _vendorEchartsCache = fs.readFileSync(
+      path.join(__dirname, 'vendor', 'echarts.min.js')
+    );
   }
   return _vendorEchartsCache;
 }

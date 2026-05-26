@@ -53,7 +53,8 @@ function _readLedger() {
     if (!fs.existsSync(p)) return _emptyLedger();
     const raw = fs.readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || !parsed.spawned) return _emptyLedger();
+    if (!parsed || typeof parsed !== 'object' || !parsed.spawned)
+      return _emptyLedger();
     return parsed;
   } catch (_) {
     return _emptyLedger();
@@ -82,7 +83,8 @@ function _isEligible(task) {
   if (!task || typeof task !== 'object') return false;
   if (!task.atp_order_id) return false;
   if (task.result_asset_id) return false;
-  if (task.status && task.status !== 'claimed' && task.status !== 'open') return false;
+  if (task.status && task.status !== 'claimed' && task.status !== 'open')
+    return false;
   if (!task.id) return false;
   return true;
 }
@@ -102,17 +104,24 @@ function _clipQuestion(q) {
 }
 
 function _answerFilePath(taskId) {
-  const safe = String(taskId || 'task').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 64);
+  const safe = String(taskId || 'task')
+    .replace(/[^a-zA-Z0-9_\-]/g, '_')
+    .slice(0, 64);
   return path.join(getMemoryDir(), 'atp_answer_' + safe + '.md');
 }
 
 function _buildSpawnTask(task, opts) {
-  const capabilities = Array.isArray(task.capabilities) ? task.capabilities.slice(0, 8) : [];
+  const capabilities = Array.isArray(task.capabilities)
+    ? task.capabilities.slice(0, 8)
+    : [];
   const signalsCsv = task.signals ? String(task.signals) : '';
   const answerPath = _answerFilePath(task.id);
-  const question = _clipQuestion(task.user_question_body || task.description || task.title);
+  const question = _clipQuestion(
+    task.user_question_body || task.description || task.title
+  );
 
-  const evolverExec = opts && opts.evolverExec ? opts.evolverExec : 'node index.js';
+  const evolverExec =
+    opts && opts.evolverExec ? opts.evolverExec : 'node index.js';
 
   const lines = [
     'You are an ATP merchant sub-agent. A buyer has paid credits for your node to answer their request.',
@@ -121,7 +130,8 @@ function _buildSpawnTask(task, opts) {
     '- Task ID: ' + task.id,
     '- ATP Order ID: ' + task.atp_order_id,
     '- Title: ' + String(task.title || '(no title)').slice(0, 200),
-    '- Capabilities requested: ' + (capabilities.length ? capabilities.join(', ') : '(none)'),
+    '- Capabilities requested: ' +
+      (capabilities.length ? capabilities.join(', ') : '(none)'),
     '- Signals: ' + (signalsCsv || '(none)'),
     '',
     '# Buyer question',
@@ -138,8 +148,11 @@ function _buildSpawnTask(task, opts) {
     '     ' + evolverExec + ' atp-complete \\',
     '       --task-id=' + task.id + ' \\',
     '       --order-id=' + task.atp_order_id + ' \\',
-    '       --answer-file=' + answerPath +
-      (capabilities.length ? ' \\\n       --capabilities=' + capabilities.join(',') : '') +
+    '       --answer-file=' +
+      answerPath +
+      (capabilities.length
+        ? ' \\\n       --capabilities=' + capabilities.join(',')
+        : '') +
       (signalsCsv ? ' \\\n       --signals=' + signalsCsv : ''),
     '4. If atp-complete prints "[ATP-Complete] OK asset_id=...", you are done.',
     '   If it prints "FAILED", read the stage= field. Safe to retry the same command.',
@@ -178,9 +191,12 @@ async function pickOne(opts) {
   }
   if (!listResult || !listResult.ok) return null;
 
-  const tasks = (listResult.data && Array.isArray(listResult.data.tasks))
-    ? listResult.data.tasks
-    : (Array.isArray(listResult.data) ? listResult.data : []);
+  const tasks =
+    listResult.data && Array.isArray(listResult.data.tasks)
+      ? listResult.data.tasks
+      : Array.isArray(listResult.data)
+        ? listResult.data
+        : [];
   if (!tasks.length) return null;
 
   const ledger = _readLedger();

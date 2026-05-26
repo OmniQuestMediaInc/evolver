@@ -42,7 +42,11 @@ describe('adaptGeneFromLearning', () => {
     adaptGeneFromLearning({
       gene,
       outcomeStatus: 'success',
-      learningSignals: ['problem:performance', 'action:optimize', 'area:orchestration'],
+      learningSignals: [
+        'problem:performance',
+        'action:optimize',
+        'area:orchestration',
+      ],
       failureMode: { mode: 'none', reasonClass: null, retryable: false },
     });
     assert.ok(gene.signals_match.includes('problem:performance'));
@@ -77,7 +81,12 @@ describe('buildSoftFailureLearningSignals', () => {
       failureReason: 'validation_failed: npm test => latency remained high',
       violations: [],
       validationResults: [
-        { ok: false, cmd: 'npm test', stderr: 'latency remained high', stdout: '' },
+        {
+          ok: false,
+          cmd: 'npm test',
+          stderr: 'latency remained high',
+          stdout: '',
+        },
       ],
     });
     assert.ok(tags.includes('problem:performance'));

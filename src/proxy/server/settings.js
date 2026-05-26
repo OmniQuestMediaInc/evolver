@@ -61,4 +61,13 @@ function getProxyUrl() {
   return settings.proxy?.url || null;
 }
 
-module.exports = { readSettings, writeSettings, clearSettings, clearIfStale, isStaleProxy, getProxyUrl, SETTINGS_DIR, SETTINGS_FILE };
+module.exports = {
+  readSettings,
+  writeSettings,
+  clearSettings,
+  clearIfStale,
+  isStaleProxy,
+  getProxyUrl,
+  SETTINGS_DIR,
+  SETTINGS_FILE,
+};

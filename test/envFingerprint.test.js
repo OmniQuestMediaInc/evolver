@@ -1,6 +1,10 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { captureEnvFingerprint, envFingerprintKey, isSameEnvClass } = require('../src/gep/envFingerprint');
+const {
+  captureEnvFingerprint,
+  envFingerprintKey,
+  isSameEnvClass,
+} = require('../src/gep/envFingerprint');
 
 describe('captureEnvFingerprint', function () {
   it('returns an object with expected fields', function () {

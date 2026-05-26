@@ -39,7 +39,7 @@ function extractCapsule(msg) {
   // buildPublishBundle wraps assets as [gene, capsule, (event)]
   const assets = msg.payload && msg.payload.assets;
   assert.ok(Array.isArray(assets), 'bundle must have assets array');
-  return assets.find((a) => a && a.type === 'Capsule');
+  return assets.find(a => a && a.type === 'Capsule');
 }
 
 describe('buildPublishBundle: execution_trace guard', () => {
@@ -58,11 +58,17 @@ describe('buildPublishBundle: execution_trace guard', () => {
     assert.equal('execution_trace' in capsule, false);
     const msg = buildPublishBundle({ gene: makeGene(), capsule });
     const c = extractCapsule(msg);
-    assert.ok(Array.isArray(c.execution_trace), 'execution_trace must be array');
+    assert.ok(
+      Array.isArray(c.execution_trace),
+      'execution_trace must be array'
+    );
     assert.ok(c.execution_trace.length >= 1, 'must have at least one step');
     const step = c.execution_trace[0];
     assert.equal(typeof step.step, 'number');
-    assert.ok(['build', 'validate', 'canary'].includes(step.stage), 'stage must be build|validate|canary');
+    assert.ok(
+      ['build', 'validate', 'canary'].includes(step.stage),
+      'stage must be build|validate|canary'
+    );
     assert.equal(typeof step.cmd, 'string');
     assert.equal(typeof step.exit, 'number');
   });
@@ -83,10 +89,14 @@ describe('buildPublishBundle: execution_trace guard', () => {
       const capsule = makeCapsule({ execution_trace: badValue });
       const msg = buildPublishBundle({ gene: makeGene(), capsule });
       const c = extractCapsule(msg);
-      assert.ok(Array.isArray(c.execution_trace),
-        'expected array replacement for ' + JSON.stringify(badValue));
-      assert.ok(c.execution_trace.length >= 1,
-        'expected non-empty replacement for ' + JSON.stringify(badValue));
+      assert.ok(
+        Array.isArray(c.execution_trace),
+        'expected array replacement for ' + JSON.stringify(badValue)
+      );
+      assert.ok(
+        c.execution_trace.length >= 1,
+        'expected non-empty replacement for ' + JSON.stringify(badValue)
+      );
     }
   });
 
@@ -103,24 +113,41 @@ describe('buildPublishBundle: execution_trace guard', () => {
       },
     });
     const c = extractCapsule(msg);
-    assert.ok(c.execution_trace.length >= 2, 'should emit one step per validation cmd');
-    const cmds = c.execution_trace.map((s) => s.cmd);
-    assert.ok(cmds.some((x) => x.includes('node --test')), 'missing node --test step');
-    assert.ok(cmds.some((x) => x.includes('npm run lint')), 'missing npm run lint step');
-    const failingStep = c.execution_trace.find((s) => s.cmd.includes('npm run lint'));
+    assert.ok(
+      c.execution_trace.length >= 2,
+      'should emit one step per validation cmd'
+    );
+    const cmds = c.execution_trace.map(s => s.cmd);
+    assert.ok(
+      cmds.some(x => x.includes('node --test')),
+      'missing node --test step'
+    );
+    assert.ok(
+      cmds.some(x => x.includes('npm run lint')),
+      'missing npm run lint step'
+    );
+    const failingStep = c.execution_trace.find(s =>
+      s.cmd.includes('npm run lint')
+    );
     assert.equal(failingStep.exit, 1, 'failing validation must map to exit=1');
   });
 
   it('fallback step uses outcome.status to set exit code', () => {
     const okCapsule = makeCapsule({ outcome: { status: 'success', score: 1 } });
     delete okCapsule.blast_radius;
-    const ok = extractCapsule(buildPublishBundle({ gene: makeGene(), capsule: okCapsule }));
+    const ok = extractCapsule(
+      buildPublishBundle({ gene: makeGene(), capsule: okCapsule })
+    );
     assert.equal(ok.execution_trace.length, 1);
     assert.equal(ok.execution_trace[0].exit, 0);
 
-    const failCapsule = makeCapsule({ outcome: { status: 'failed', score: 0 } });
+    const failCapsule = makeCapsule({
+      outcome: { status: 'failed', score: 0 },
+    });
     delete failCapsule.blast_radius;
-    const fail = extractCapsule(buildPublishBundle({ gene: makeGene(), capsule: failCapsule }));
+    const fail = extractCapsule(
+      buildPublishBundle({ gene: makeGene(), capsule: failCapsule })
+    );
     assert.equal(fail.execution_trace.length, 1);
     assert.equal(fail.execution_trace[0].exit, 1);
   });
@@ -141,7 +168,10 @@ describe('buildPublish: execution_trace guard (single-asset publish)', () => {
     const capsule = makeCapsule({});
     const msg = buildPublish({ asset: capsule });
     const sent = unwrapAssetFromMessage(msg) || msg.payload.asset || capsule;
-    assert.ok(Array.isArray(sent.execution_trace), 'execution_trace must be array');
+    assert.ok(
+      Array.isArray(sent.execution_trace),
+      'execution_trace must be array'
+    );
     assert.ok(sent.execution_trace.length >= 1);
   });
 

@@ -16,7 +16,10 @@ const DEFAULT_DATA_DIR = path.join(os.homedir(), '.evomap', 'mailbox');
 
 class EvoMapProxy {
   constructor(opts = {}) {
-    this.hubUrl = (opts.hubUrl || process.env.A2A_HUB_URL || '').replace(/\/+$/, '');
+    this.hubUrl = (opts.hubUrl || process.env.A2A_HUB_URL || '').replace(
+      /\/+$/,
+      ''
+    );
     this.dataDir = opts.dataDir || opts.dbPath || DEFAULT_DATA_DIR;
     this.port = opts.port;
     this.logger = opts.logger || console;
@@ -42,7 +45,8 @@ class EvoMapProxy {
       hubUrl: this.hubUrl,
       store: this.store,
       logger: this.logger,
-      getTaskMeta: () => this.taskMonitor ? this.taskMonitor.getHeartbeatMeta() : {},
+      getTaskMeta: () =>
+        this.taskMonitor ? this.taskMonitor.getHeartbeatMeta() : {},
     });
 
     this.taskMonitor = new TaskMonitor({
@@ -76,21 +80,27 @@ class EvoMapProxy {
       logger: this.logger,
       onAuthError: () => this.lifecycle.reAuthenticate(),
       onInboundReceived: () => {
-        try { this.skillUpdater?.pollAndApply(); } catch (e) {
-          this.logger?.warn?.('[proxy] skillUpdater.pollAndApply failed:', e.message);
+        try {
+          this.skillUpdater?.pollAndApply();
+        } catch (e) {
+          this.logger?.warn?.(
+            '[proxy] skillUpdater.pollAndApply failed:',
+            e.message
+          );
         }
       },
     });
 
     const proxyHandlers = {
-      assetFetch: (body) => this._proxyHttp('/a2a/fetch', body),
-      assetSearch: (body) => this._proxyHttp('/a2a/assets/search', body),
-      assetValidate: (body) => this._proxyHttp('/a2a/validate', body),
+      assetFetch: body => this._proxyHttp('/a2a/fetch', body),
+      assetSearch: body => this._proxyHttp('/a2a/assets/search', body),
+      assetValidate: body => this._proxyHttp('/a2a/validate', body),
       // ATP passthrough (#460 Bug 2): merchant/consumer flows that used to call
       // hub directly via src/atp/hubClient.js must route through the proxy when
       // EVOMAP_PROXY=1 so proxy sees the transaction (for audit + offline queue).
       atpPost: (endpoint, body) => this._proxyHttp(endpoint, body),
-      atpGet: (endpoint, query) => this._proxyHttp(endpoint, null, { method: 'GET', query }),
+      atpGet: (endpoint, query) =>
+        this._proxyHttp(endpoint, null, { method: 'GET', query }),
     };
 
     const routes = buildRoutes(this.store, proxyHandlers, this.taskMonitor, {
@@ -118,7 +128,7 @@ class EvoMapProxy {
     for (const key of OUTBOUND_ROUTES) {
       const original = routes[key];
       if (!original) continue;
-      routes[key] = async (ctx) => {
+      routes[key] = async ctx => {
         const result = await original(ctx);
         this.sync.notifyNewOutbound();
         return result;
@@ -137,7 +147,9 @@ class EvoMapProxy {
       this.lifecycle.startHeartbeatLoop();
       this.sync.start();
     } else {
-      this.logger.warn('[proxy] No A2A_HUB_URL set, running in offline/local mode');
+      this.logger.warn(
+        '[proxy] No A2A_HUB_URL set, running in offline/local mode'
+      );
     }
 
     this._started = true;
@@ -164,10 +176,12 @@ class EvoMapProxy {
   }
 
   async _proxyHttp(path, body, opts = {}) {
-    if (!this.hubUrl) throw Object.assign(new Error('Hub not configured'), { statusCode: 503 });
+    if (!this.hubUrl)
+      throw Object.assign(new Error('Hub not configured'), { statusCode: 503 });
 
     const method = (opts.method || 'POST').toUpperCase();
-    const query = opts.query && typeof opts.query === 'object' ? opts.query : null;
+    const query =
+      opts.query && typeof opts.query === 'object' ? opts.query : null;
     const timeoutMs = opts.timeoutMs || 30_000;
 
     let fullPath = path;
@@ -206,17 +220,24 @@ class EvoMapProxy {
         const retry = await fetch(endpoint, retryInit);
         if (!retry.ok) {
           const text = await retry.text().catch(() => '');
-          throw Object.assign(new Error(`Hub ${retry.status}: ${text}`), { statusCode: retry.status });
+          throw Object.assign(new Error(`Hub ${retry.status}: ${text}`), {
+            statusCode: retry.status,
+          });
         }
         return retry.json();
       }
       const text = await res.text().catch(() => '');
-      throw Object.assign(new Error(`Hub ${res.status} (re-auth failed): ${text}`), { statusCode: res.status });
+      throw Object.assign(
+        new Error(`Hub ${res.status} (re-auth failed): ${text}`),
+        { statusCode: res.status }
+      );
     }
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw Object.assign(new Error(`Hub ${res.status}: ${text}`), { statusCode: res.status });
+      throw Object.assign(new Error(`Hub ${res.status}: ${text}`), {
+        statusCode: res.status,
+      });
     }
 
     return res.json();

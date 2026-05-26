@@ -27,23 +27,25 @@ function assertHubShape(trace, { outcomeSuccess }) {
     assert.equal(typeof step.cmd, 'string', 'step.cmd must be string');
     assert.ok(step.cmd.trim().length > 0, 'step.cmd must be non-empty');
   }
-  const hasValidationStage = trace.some((s) => {
+  const hasValidationStage = trace.some(s => {
     const stage = String(s.stage || '').toLowerCase();
     const cmd = String(s.cmd || '').toLowerCase();
-    return VALIDATION_KEYWORDS.some((kw) => stage.includes(kw) || cmd.includes(kw));
+    return VALIDATION_KEYWORDS.some(
+      kw => stage.includes(kw) || cmd.includes(kw)
+    );
   });
   assert.ok(
     hasValidationStage,
-    'trace must include at least one validate/verify/check/test step',
+    'trace must include at least one validate/verify/check/test step'
   );
   if (outcomeSuccess) {
     const hasNonZeroExit = trace.some(
-      (s) => typeof s.exit === 'number' && s.exit !== 0,
+      s => typeof s.exit === 'number' && s.exit !== 0
     );
     assert.equal(
       hasNonZeroExit,
       false,
-      'success outcome must not contain non-zero exits',
+      'success outcome must not contain non-zero exits'
     );
   }
 }
@@ -84,7 +86,7 @@ describe('buildCapsuleTraceSteps - Hub shape contract', () => {
       outcomeStatus: 'failed',
     });
     assertHubShape(trace, { outcomeSuccess: false });
-    const validateStep = trace.find((s) => s.stage === 'validate');
+    const validateStep = trace.find(s => s.stage === 'validate');
     assert.ok(validateStep, 'validate step present');
     assert.equal(validateStep.exit, 1);
   });
@@ -128,7 +130,7 @@ describe('buildCapsuleTraceSteps - Hub shape contract', () => {
       outcomeStatus: 'success',
     });
     assertHubShape(trace, { outcomeSuccess: true });
-    const cmds = trace.map((s) => s.cmd);
+    const cmds = trace.map(s => s.cmd);
     assert.ok(cmds.includes('npm test'));
     assert.ok(!cmds.includes(''));
     assert.ok(!cmds.includes('   '));
@@ -142,7 +144,7 @@ describe('buildCapsuleTraceSteps - Hub shape contract', () => {
       canary: null,
       outcomeStatus: 'success',
     });
-    const validateStep = trace.find((s) => s.cmd.startsWith('npm test'));
+    const validateStep = trace.find(s => s.cmd.startsWith('npm test'));
     assert.ok(validateStep);
     assert.ok(validateStep.cmd.length <= 200, 'cmd truncated');
   });
@@ -155,7 +157,7 @@ describe('buildCapsuleTraceSteps - Hub shape contract', () => {
       outcomeStatus: 'failed',
     });
     assertHubShape(trace, { outcomeSuccess: false });
-    const canaryStep = trace.find((s) => s.stage === 'canary');
+    const canaryStep = trace.find(s => s.stage === 'canary');
     assert.ok(canaryStep);
     assert.equal(canaryStep.exit, 1);
   });

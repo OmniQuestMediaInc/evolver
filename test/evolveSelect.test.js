@@ -39,7 +39,11 @@ function teardownTmpEnv(tmpDir, origEnv) {
     if (v !== undefined) process.env[k] = v;
     else delete process.env[k];
   }
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) { /* best-effort */ }
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch (_) {
+    /* best-effort */
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -47,7 +51,11 @@ function teardownTmpEnv(tmpDir, origEnv) {
 // ---------------------------------------------------------------------------
 describe('computeAdaptiveStrategyPolicy', () => {
   it('returns an object with expected shape', () => {
-    const policy = select.computeAdaptiveStrategyPolicy({ recentEvents: [], selectedGene: null, signals: [] });
+    const policy = select.computeAdaptiveStrategyPolicy({
+      recentEvents: [],
+      selectedGene: null,
+      signals: [],
+    });
     assert.ok(typeof policy.name === 'string');
     assert.ok(typeof policy.forceInnovate === 'boolean');
     assert.ok(typeof policy.cautiousExecution === 'boolean');
@@ -56,7 +64,10 @@ describe('computeAdaptiveStrategyPolicy', () => {
   });
 
   it('forces innovation after 3+ consecutive repair events', () => {
-    const tail = Array.from({ length: 3 }, () => ({ intent: 'repair', outcome: { status: 'failed' } }));
+    const tail = Array.from({ length: 3 }, () => ({
+      intent: 'repair',
+      outcome: { status: 'failed' },
+    }));
     const policy = select.computeAdaptiveStrategyPolicy({
       recentEvents: tail,
       selectedGene: null,
@@ -66,7 +77,10 @@ describe('computeAdaptiveStrategyPolicy', () => {
   });
 
   it('does not force innovation when log_error present even with repair streak', () => {
-    const tail = Array.from({ length: 3 }, () => ({ intent: 'repair', outcome: { status: 'failed' } }));
+    const tail = Array.from({ length: 3 }, () => ({
+      intent: 'repair',
+      outcome: { status: 'failed' },
+    }));
     const policy = select.computeAdaptiveStrategyPolicy({
       recentEvents: tail,
       selectedGene: null,
@@ -89,7 +103,10 @@ describe('computeAdaptiveStrategyPolicy', () => {
   });
 
   it('caps blastRadiusMaxFiles at 6 when cautiousExecution', () => {
-    const tail = Array.from({ length: 3 }, () => ({ intent: 'optimize', outcome: { status: 'failed' } }));
+    const tail = Array.from({ length: 3 }, () => ({
+      intent: 'optimize',
+      outcome: { status: 'failed' },
+    }));
     const policy = select.computeAdaptiveStrategyPolicy({
       recentEvents: tail,
       selectedGene: { constraints: { max_files: 20 } },
@@ -110,8 +127,12 @@ describe('computeAdaptiveStrategyPolicy', () => {
 // ---------------------------------------------------------------------------
 describe('selectAndMutate', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   const baseCtx = {
     genes: [],
@@ -164,7 +185,10 @@ describe('selectAndMutate', () => {
   });
 
   it('sets mutationInnovateMode true when IS_RANDOM_DRIFT is true', async () => {
-    const result = await select.selectAndMutate({ ...baseCtx, IS_RANDOM_DRIFT: true });
+    const result = await select.selectAndMutate({
+      ...baseCtx,
+      IS_RANDOM_DRIFT: true,
+    });
     assert.equal(result.mutationInnovateMode, true);
   });
 
@@ -182,7 +206,10 @@ describe('selectAndMutate', () => {
 
   it('mutation object is always present', async () => {
     const result = await select.selectAndMutate(baseCtx);
-    assert.ok(result.mutation !== null && result.mutation !== undefined, 'mutation is mandatory');
+    assert.ok(
+      result.mutation !== null && result.mutation !== undefined,
+      'mutation is mandatory'
+    );
   });
 
   // Regression: tests must not pollute the developer's real memory_graph.jsonl
@@ -192,8 +219,13 @@ describe('selectAndMutate', () => {
   it('writes to the redirected tmp memory graph, not the real one', async () => {
     await select.selectAndMutate(baseCtx);
     const tmpGraphPath = process.env.MEMORY_GRAPH_PATH;
-    assert.ok(tmpGraphPath && tmpGraphPath.startsWith(os.tmpdir()),
-      'MEMORY_GRAPH_PATH must point inside os.tmpdir()');
-    assert.ok(fs.existsSync(tmpGraphPath), 'tmp memory_graph.jsonl should be created by the call');
+    assert.ok(
+      tmpGraphPath && tmpGraphPath.startsWith(os.tmpdir()),
+      'MEMORY_GRAPH_PATH must point inside os.tmpdir()'
+    );
+    assert.ok(
+      fs.existsSync(tmpGraphPath),
+      'tmp memory_graph.jsonl should be created by the call'
+    );
   });
 });

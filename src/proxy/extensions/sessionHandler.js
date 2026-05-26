@@ -20,8 +20,13 @@ class SessionHandler {
       payload: {
         title,
         description: description || '',
-        invite_node_ids: Array.isArray(inviteNodeIds) ? inviteNodeIds.slice(0, 10) : [],
-        max_participants: Math.max(2, Math.min(20, Number(maxParticipants) || 5)),
+        invite_node_ids: Array.isArray(inviteNodeIds)
+          ? inviteNodeIds.slice(0, 10)
+          : [],
+        max_participants: Math.max(
+          2,
+          Math.min(20, Number(maxParticipants) || 5)
+        ),
         created_at: new Date().toISOString(),
       },
       priority: 'high',
@@ -59,7 +64,8 @@ class SessionHandler {
 
     const safePayload = payload && typeof payload === 'object' ? payload : {};
     const serialized = JSON.stringify(safePayload);
-    if (serialized.length > 16000) throw new Error('payload too large (max 16KB)');
+    if (serialized.length > 16000)
+      throw new Error('payload too large (max 16KB)');
 
     return this.store.send({
       type: 'session_message',
@@ -99,7 +105,8 @@ class SessionHandler {
     if (!sessionId) throw new Error('sessionId is required');
     if (!taskId) throw new Error('taskId is required');
 
-    const safeSummary = typeof summary === 'string' ? summary.slice(0, 200) : '';
+    const safeSummary =
+      typeof summary === 'string' ? summary.slice(0, 200) : '';
 
     return this.store.send({
       type: 'session_submit',

@@ -41,7 +41,9 @@ function _ledgerPath() {
 }
 
 function _isEnabled() {
-  const raw = (process.env.EVOLVER_ATP_AUTODELIVER || 'on').toLowerCase().trim();
+  const raw = (process.env.EVOLVER_ATP_AUTODELIVER || 'on')
+    .toLowerCase()
+    .trim();
   return raw !== 'off' && raw !== '0' && raw !== 'false';
 }
 
@@ -55,7 +57,8 @@ function _readLedger() {
     if (!fs.existsSync(p)) return _emptyLedger();
     const raw = fs.readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || !parsed.submitted) return _emptyLedger();
+    if (!parsed || typeof parsed !== 'object' || !parsed.submitted)
+      return _emptyLedger();
     return parsed;
   } catch (_) {
     return _emptyLedger();
@@ -115,14 +118,24 @@ async function _tick() {
       // Only deliver once the task has a result asset (i.e. solidify finished).
       if (!task.result_asset_id) continue;
       // Don't try to deliver on already-terminal statuses.
-      if (task.status && task.status !== 'claimed' && task.status !== 'completed') continue;
+      if (
+        task.status &&
+        task.status !== 'claimed' &&
+        task.status !== 'completed'
+      )
+        continue;
 
       const proofPayload = _buildProofPayload(task);
       const resp = await hubClient.submitDelivery(orderId, proofPayload);
       if (resp && resp.ok) {
         ledger.submitted[orderId] = Date.now();
         wroteLedger = true;
-        console.log('[ATP-AutoDeliver] Delivered order=' + orderId + ' asset=' + (task.result_asset_id || 'none'));
+        console.log(
+          '[ATP-AutoDeliver] Delivered order=' +
+            orderId +
+            ' asset=' +
+            (task.result_asset_id || 'none')
+        );
       } else {
         // Record terminal-ish errors in the ledger so we do not hammer the
         // same order every minute. Everything else (transient network) is
@@ -134,13 +147,23 @@ async function _tick() {
           ledger.submitted[orderId] = -Date.now();
           wroteLedger = true;
         }
-        console.log('[ATP-AutoDeliver] Delivery failed order=' + orderId + ' status=' + (status || 'n/a') + ' err=' + String(err).slice(0, 120));
+        console.log(
+          '[ATP-AutoDeliver] Delivery failed order=' +
+            orderId +
+            ' status=' +
+            (status || 'n/a') +
+            ' err=' +
+            String(err).slice(0, 120)
+        );
       }
     }
 
     if (wroteLedger) _writeLedger(ledger);
   } catch (err) {
-    console.log('[ATP-AutoDeliver] Tick threw (non-fatal): ' + (err && err.message || err));
+    console.log(
+      '[ATP-AutoDeliver] Tick threw (non-fatal): ' +
+        ((err && err.message) || err)
+    );
   } finally {
     _inflight = false;
   }
@@ -149,15 +172,23 @@ async function _tick() {
 function start(opts) {
   if (_started) return;
   if (!_isEnabled()) return;
-  const requested = Number((opts && opts.pollMs) || process.env.ATP_AUTODELIVER_POLL_MS || DEFAULT_POLL_MS);
+  const requested = Number(
+    (opts && opts.pollMs) ||
+      process.env.ATP_AUTODELIVER_POLL_MS ||
+      DEFAULT_POLL_MS
+  );
   _pollMs = Math.max(MIN_POLL_MS, Math.floor(requested) || DEFAULT_POLL_MS);
   _started = true;
   _pollInterval = setInterval(function () {
-    _tick().catch(function () { /* swallowed in _tick */ });
+    _tick().catch(function () {
+      /* swallowed in _tick */
+    });
   }, _pollMs);
   // Do not await -- fire the first tick asynchronously so start() returns
   // immediately. This matches the autoBuyer start() semantics.
-  _tick().catch(function () { /* swallowed in _tick */ });
+  _tick().catch(function () {
+    /* swallowed in _tick */
+  });
   console.log('[ATP-AutoDeliver] Started (pollMs=' + _pollMs + ')');
 }
 

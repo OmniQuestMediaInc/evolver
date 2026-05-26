@@ -26,10 +26,14 @@ function makeStore(initial = {}) {
   const state = { ...initial };
   const inbound = [];
   return {
-    getState: (k) => (state[k] !== undefined ? state[k] : null),
-    setState: (k, v) => { state[k] = v; },
+    getState: k => (state[k] !== undefined ? state[k] : null),
+    setState: (k, v) => {
+      state[k] = v;
+    },
     countPending: () => 0,
-    writeInbound: (event) => { inbound.push(event); },
+    writeInbound: event => {
+      inbound.push(event);
+    },
     writeInboundBatch: () => {},
     _state: state,
     _inbound: inbound,
@@ -60,7 +64,7 @@ function responseFromJson({ status = 200, json = {}, headers = {} } = {}) {
   return {
     ok: status >= 200 && status < 300,
     status,
-    headers: { get: (k) => headers[k.toLowerCase()] || headers[k] || null },
+    headers: { get: k => headers[k.toLowerCase()] || headers[k] || null },
     json: async () => json,
     text: async () => JSON.stringify(json),
   };
@@ -72,20 +76,36 @@ test('nodeSecret getter: env var wins over stale store value and rewrites store'
     process.env.A2A_NODE_SECRET = VALID_HEX64_A;
     const store = makeStore({ node_secret: VALID_HEX64_B });
     const logger = silentLogger();
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store, logger });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store,
+      logger,
+    });
 
     const resolved = mgr.nodeSecret;
 
-    assert.strictEqual(resolved, VALID_HEX64_A, 'env value should win on conflict');
-    assert.strictEqual(store.getState('node_secret'), VALID_HEX64_A, 'store should be re-synced');
+    assert.strictEqual(
+      resolved,
+      VALID_HEX64_A,
+      'env value should win on conflict'
+    );
+    assert.strictEqual(
+      store.getState('node_secret'),
+      VALID_HEX64_A,
+      'store should be re-synced'
+    );
     assert.ok(
-      logger._calls.warn.some((m) => m.includes('A2A_NODE_SECRET env var differs')),
+      logger._calls.warn.some(m =>
+        m.includes('A2A_NODE_SECRET env var differs')
+      ),
       'should warn the operator exactly once'
     );
 
     // Second access must NOT log again -- prevents log flooding on every header build.
     mgr.nodeSecret;
-    const warnCount = logger._calls.warn.filter((m) => m.includes('A2A_NODE_SECRET env var differs')).length;
+    const warnCount = logger._calls.warn.filter(m =>
+      m.includes('A2A_NODE_SECRET env var differs')
+    ).length;
     assert.strictEqual(warnCount, 1, 'override warning should be one-shot');
   } finally {
     if (original === undefined) delete process.env.A2A_NODE_SECRET;
@@ -98,10 +118,18 @@ test('nodeSecret getter: malformed env var falls back to store', () => {
   try {
     process.env.A2A_NODE_SECRET = 'not-a-real-hex64-secret';
     const store = makeStore({ node_secret: VALID_HEX64_B });
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store, logger: silentLogger() });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store,
+      logger: silentLogger(),
+    });
 
     assert.strictEqual(mgr.nodeSecret, VALID_HEX64_B);
-    assert.strictEqual(store.getState('node_secret'), VALID_HEX64_B, 'store untouched on malformed env');
+    assert.strictEqual(
+      store.getState('node_secret'),
+      VALID_HEX64_B,
+      'store untouched on malformed env'
+    );
   } finally {
     if (original === undefined) delete process.env.A2A_NODE_SECRET;
     else process.env.A2A_NODE_SECRET = original;
@@ -114,10 +142,18 @@ test('nodeSecret getter: identical env and store values do not log', () => {
     process.env.A2A_NODE_SECRET = VALID_HEX64_A;
     const store = makeStore({ node_secret: VALID_HEX64_A });
     const logger = silentLogger();
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store, logger });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store,
+      logger,
+    });
 
     assert.strictEqual(mgr.nodeSecret, VALID_HEX64_A);
-    assert.strictEqual(logger._calls.warn.length, 0, 'no warning when values agree');
+    assert.strictEqual(
+      logger._calls.warn.length,
+      0,
+      'no warning when values agree'
+    );
   } finally {
     if (original === undefined) delete process.env.A2A_NODE_SECRET;
     else process.env.A2A_NODE_SECRET = original;
@@ -129,7 +165,10 @@ test('reAuthenticate: drops cached secret and retries unauthenticated when hub r
   const originalFetch = global.fetch;
   try {
     delete process.env.A2A_NODE_SECRET;
-    const store = makeStore({ node_id: 'node_test', node_secret: VALID_HEX64_A });
+    const store = makeStore({
+      node_id: 'node_test',
+      node_secret: VALID_HEX64_A,
+    });
     let secondHelloAuthHeader;
 
     const mf = mockFetch((nthCall, opts) => {
@@ -137,34 +176,66 @@ test('reAuthenticate: drops cached secret and retries unauthenticated when hub r
         // attempt 1: rotate hello with current bearer -> rejected
         return responseFromJson({
           status: 200,
-          json: { payload: { status: 'rejected', reason: 'node_id_already_claimed: belongs to another user' } },
+          json: {
+            payload: {
+              status: 'rejected',
+              reason: 'node_id_already_claimed: belongs to another user',
+            },
+          },
         });
       }
       if (nthCall === 2) {
-        secondHelloAuthHeader = opts?.headers ? opts.headers.Authorization : 'NO_HEADERS';
+        secondHelloAuthHeader = opts?.headers
+          ? opts.headers.Authorization
+          : 'NO_HEADERS';
         // attempt 2: bearer was dropped, hub still rejects (truly disowned)
         return responseFromJson({
           status: 200,
-          json: { payload: { status: 'rejected', reason: 'node_id_already_claimed: belongs to another user' } },
+          json: {
+            payload: {
+              status: 'rejected',
+              reason: 'node_id_already_claimed: belongs to another user',
+            },
+          },
         });
       }
-      return responseFromJson({ status: 500, json: { error: 'unexpected_extra_call' } });
+      return responseFromJson({
+        status: 500,
+        json: { error: 'unexpected_extra_call' },
+      });
     });
     global.fetch = mf;
 
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store, logger: silentLogger() });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store,
+      logger: silentLogger(),
+    });
     const result = await mgr.reAuthenticate();
 
     assert.strictEqual(result, false);
-    assert.strictEqual(mf.calls.length, 2, 'should attempt twice (once with bearer, once without)');
+    assert.strictEqual(
+      mf.calls.length,
+      2,
+      'should attempt twice (once with bearer, once without)'
+    );
     assert.ok(
       secondHelloAuthHeader === undefined,
       `second hello must NOT carry an Authorization header (got: ${JSON.stringify(secondHelloAuthHeader)})`
     );
-    assert.strictEqual(store.getState('node_secret'), '', 'cached secret must be cleared');
-    assert.ok(mgr._reauthBackoffUntil > Date.now(), '30-min backoff still set after manual reset path');
+    assert.strictEqual(
+      store.getState('node_secret'),
+      '',
+      'cached secret must be cleared'
+    );
     assert.ok(
-      store._inbound.some((e) => e?.payload?.action === 'manual_secret_reset_required'),
+      mgr._reauthBackoffUntil > Date.now(),
+      '30-min backoff still set after manual reset path'
+    );
+    assert.ok(
+      store._inbound.some(
+        e => e?.payload?.action === 'manual_secret_reset_required'
+      ),
       'should emit manual_secret_reset_required system event'
     );
   } finally {
@@ -190,7 +261,10 @@ test('reAuthenticate: env var does NOT undo a successful rotation during verific
   const originalFetch = global.fetch;
   try {
     process.env.A2A_NODE_SECRET = VALID_HEX64_Y;
-    const store = makeStore({ node_id: 'node_test', node_secret: VALID_HEX64_X });
+    const store = makeStore({
+      node_id: 'node_test',
+      node_secret: VALID_HEX64_X,
+    });
 
     const seenAuthHeaders = [];
     const mf = mockFetch((nthCall, opts) => {
@@ -198,18 +272,32 @@ test('reAuthenticate: env var does NOT undo a successful rotation during verific
       if (nthCall === 1) {
         return responseFromJson({
           status: 200,
-          json: { payload: { status: 'acknowledged', node_secret: VALID_HEX64_Z, your_node_id: 'node_test' } },
+          json: {
+            payload: {
+              status: 'acknowledged',
+              node_secret: VALID_HEX64_Z,
+              your_node_id: 'node_test',
+            },
+          },
         });
       }
       return responseFromJson({ status: 200, json: { status: 'ok' } });
     });
     global.fetch = mf;
 
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store, logger: silentLogger() });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store,
+      logger: silentLogger(),
+    });
     const result = await mgr.reAuthenticate();
 
     assert.strictEqual(result, true, 're-auth must succeed');
-    assert.strictEqual(mf.calls.length, 2, 'expect hello + verification heartbeat');
+    assert.strictEqual(
+      mf.calls.length,
+      2,
+      'expect hello + verification heartbeat'
+    );
     assert.strictEqual(
       store.getState('node_secret'),
       VALID_HEX64_Z,
@@ -220,9 +308,17 @@ test('reAuthenticate: env var does NOT undo a successful rotation during verific
       `Bearer ${VALID_HEX64_Z}`,
       `verification heartbeat must use the freshly rotated secret, not the stale env var (got ${seenAuthHeaders[1]})`
     );
-    assert.strictEqual(mgr._suppressEnvSecret, true, 'env var must be suppressed after a successful rotation');
+    assert.strictEqual(
+      mgr._suppressEnvSecret,
+      true,
+      'env var must be suppressed after a successful rotation'
+    );
     // And subsequent reads should keep returning the rotated secret, not the env value.
-    assert.strictEqual(mgr.nodeSecret, VALID_HEX64_Z, 'subsequent nodeSecret reads must keep returning Z');
+    assert.strictEqual(
+      mgr.nodeSecret,
+      VALID_HEX64_Z,
+      'subsequent nodeSecret reads must keep returning Z'
+    );
   } finally {
     if (original === undefined) delete process.env.A2A_NODE_SECRET;
     else process.env.A2A_NODE_SECRET = original;
@@ -235,14 +331,23 @@ test('reAuthenticate: no manual_reset event when rotate eventually succeeds', as
   const originalFetch = global.fetch;
   try {
     delete process.env.A2A_NODE_SECRET;
-    const store = makeStore({ node_id: 'node_test', node_secret: VALID_HEX64_A });
+    const store = makeStore({
+      node_id: 'node_test',
+      node_secret: VALID_HEX64_A,
+    });
 
-    const mf = mockFetch((nthCall) => {
+    const mf = mockFetch(nthCall => {
       if (nthCall === 1) {
         // hello rotate succeeds with fresh secret
         return responseFromJson({
           status: 200,
-          json: { payload: { status: 'acknowledged', node_secret: VALID_HEX64_B, your_node_id: 'node_test' } },
+          json: {
+            payload: {
+              status: 'acknowledged',
+              node_secret: VALID_HEX64_B,
+              your_node_id: 'node_test',
+            },
+          },
         });
       }
       // heartbeat OK
@@ -250,13 +355,23 @@ test('reAuthenticate: no manual_reset event when rotate eventually succeeds', as
     });
     global.fetch = mf;
 
-    const mgr = new LifecycleManager({ hubUrl: 'https://example.test', store, logger: silentLogger() });
+    const mgr = new LifecycleManager({
+      hubUrl: 'https://example.test',
+      store,
+      logger: silentLogger(),
+    });
     const result = await mgr.reAuthenticate();
 
     assert.strictEqual(result, true);
-    assert.strictEqual(store.getState('node_secret'), VALID_HEX64_B, 'fresh secret persisted');
     assert.strictEqual(
-      store._inbound.filter((e) => e?.payload?.action === 'manual_secret_reset_required').length,
+      store.getState('node_secret'),
+      VALID_HEX64_B,
+      'fresh secret persisted'
+    );
+    assert.strictEqual(
+      store._inbound.filter(
+        e => e?.payload?.action === 'manual_secret_reset_required'
+      ).length,
       0,
       'no manual-reset event on happy recovery'
     );

@@ -102,8 +102,11 @@ describe('spawnReplacementProcess on non-Windows platforms', () => {
       )
     );
     assert.equal(result.spawned, false);
-    assert.equal(result.reason, 'spawn_error',
-      'on Linux the gate must not reject; only the spawn side should fail');
+    assert.equal(
+      result.reason,
+      'spawn_error',
+      'on Linux the gate must not reject; only the spawn side should fail'
+    );
   });
 
   it('also lets darwin through the gate', () => {
@@ -131,37 +134,57 @@ describe('index.js source-level guards (Issue #528 regression)', () => {
     // the function declaration line, then assert no other occurrence of the
     // raw spawn call exists outside it.
     const helperStart = source.indexOf('function spawnReplacementProcess(');
-    assert.ok(helperStart > 0, 'expected spawnReplacementProcess function declaration');
+    assert.ok(
+      helperStart > 0,
+      'expected spawnReplacementProcess function declaration'
+    );
     const helperEnd = source.indexOf('\nfunction ', helperStart + 1);
-    assert.ok(helperEnd > helperStart, 'expected helper to be followed by another top-level function');
+    assert.ok(
+      helperEnd > helperStart,
+      'expected helper to be followed by another top-level function'
+    );
     const before = source.slice(0, helperStart);
     const after = source.slice(helperEnd);
-    const offending = (before + after).match(/spawn\(process\.execPath,\s*\[__filename/g);
-    assert.equal(offending, null,
+    const offending = (before + after).match(
+      /spawn\(process\.execPath,\s*\[__filename/g
+    );
+    assert.equal(
+      offending,
+      null,
       'every detached respawn must go through spawnReplacementProcess; ' +
-      'found a raw spawn(process.execPath, [__filename, ...args]) outside the helper');
+        'found a raw spawn(process.execPath, [__filename, ...args]) outside the helper'
+    );
   });
 
   it('cycle hard-timeout branch goes through spawnReplacementProcess', () => {
-    assert.match(source,
+    assert.match(
+      source,
       /CYCLE_TIMEOUT[\s\S]*?spawnReplacementProcess\(\{[\s\S]*?reason: 'cycle_hard_timeout'/,
-      'CYCLE_TIMEOUT branch must call spawnReplacementProcess with reason cycle_hard_timeout');
+      'CYCLE_TIMEOUT branch must call spawnReplacementProcess with reason cycle_hard_timeout'
+    );
   });
 
   it('cycles>=max / RSS branch goes through spawnReplacementProcess', () => {
-    assert.match(source,
+    assert.match(
+      source,
       /Restarting self[\s\S]*?spawnReplacementProcess\(\{[\s\S]*?reason: 'max_cycles_or_rss'/,
-      'max_cycles branch must call spawnReplacementProcess with reason max_cycles_or_rss');
+      'max_cycles branch must call spawnReplacementProcess with reason max_cycles_or_rss'
+    );
   });
 
   it('windows_default_skip branch exits with code 1 (so supervisor respawns)', () => {
-    assert.match(source,
+    assert.match(
+      source,
       /result\.reason === 'windows_default_skip'[\s\S]*?process\.exit\(1\)/,
-      'when helper returns windows_default_skip the daemon must exit(1)');
+      'when helper returns windows_default_skip the daemon must exit(1)'
+    );
   });
 
   it('helper documents EVOLVER_SUICIDE_WINDOWS escape hatch', () => {
-    assert.match(source, /EVOLVER_SUICIDE_WINDOWS/,
-      'env var name must be referenced in source for discoverability');
+    assert.match(
+      source,
+      /EVOLVER_SUICIDE_WINDOWS/,
+      'env var name must be referenced in source for discoverability'
+    );
   });
 });

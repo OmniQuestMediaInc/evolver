@@ -47,7 +47,10 @@ function baseStubs() {
     consumeAvailableWork: () => [],
   };
   mockMods['memoryGraph'] = { tryReadMemoryGraphEvents: () => [] };
-  mockMods['validator'] = { isValidatorEnabled: () => false, runValidatorCycle: async () => ({}) };
+  mockMods['validator'] = {
+    isValidatorEnabled: () => false,
+    runValidatorCycle: async () => ({}),
+  };
   mockMods['featureFlags'] = { writeFeatureFlag: () => true };
 }
 
@@ -72,25 +75,44 @@ describe('hubCoordinate', () => {
     const result = await hubCoordinate(buildCtx());
     assert.equal(result.activeTask, null);
     assert.deepEqual(result.hubLessons, []);
-    assert.ok(result.lastHubFetchMs > 0, 'lastHubFetchMs should be updated after fetch');
+    assert.ok(
+      result.lastHubFetchMs > 0,
+      'lastHubFetchMs should be updated after fetch'
+    );
   });
 
   it('skips fetch and preserves lastHubFetchMs when skipHubCalls is true', async () => {
     baseStubs();
     let fetchCalled = false;
-    mockMods['taskReceiver'].fetchTasks = async () => { fetchCalled = true; return { tasks: [] }; };
+    mockMods['taskReceiver'].fetchTasks = async () => {
+      fetchCalled = true;
+      return { tasks: [] };
+    };
     delete require.cache[require.resolve('../src/evolve/pipeline/hub')];
     const { hubCoordinate } = require('../src/evolve/pipeline/hub');
-    const result = await hubCoordinate(buildCtx({ skipHubCalls: true, lastHubFetchMs: 12345 }));
-    assert.equal(fetchCalled, false, 'fetchTasks should not be called when skipHubCalls=true');
-    assert.equal(result.lastHubFetchMs, 12345, 'lastHubFetchMs should not change');
+    const result = await hubCoordinate(
+      buildCtx({ skipHubCalls: true, lastHubFetchMs: 12345 })
+    );
+    assert.equal(
+      fetchCalled,
+      false,
+      'fetchTasks should not be called when skipHubCalls=true'
+    );
+    assert.equal(
+      result.lastHubFetchMs,
+      12345,
+      'lastHubFetchMs should not change'
+    );
     assert.equal(result.activeTask, null);
   });
 
   it('claims best task and injects task signals', async () => {
     baseStubs();
     const fakeTask = { id: 't1', title: 'Fix bug', status: 'open' };
-    mockMods['taskReceiver'].fetchTasks = async () => ({ tasks: [fakeTask], questions_created: [] });
+    mockMods['taskReceiver'].fetchTasks = async () => ({
+      tasks: [fakeTask],
+      questions_created: [],
+    });
     mockMods['taskReceiver'].selectBestTask = () => fakeTask;
     mockMods['taskReceiver'].claimTask = async () => true;
     mockMods['taskReceiver'].taskToSignalsWithPrivacy = () => ['external_task'];
@@ -99,17 +121,25 @@ describe('hubCoordinate', () => {
     const ctx = buildCtx({ signals: ['log_error'] });
     const result = await hubCoordinate(ctx);
     assert.deepEqual(result.activeTask, fakeTask);
-    assert.ok(result.signals.includes('external_task'), 'task signals should be injected');
+    assert.ok(
+      result.signals.includes('external_task'),
+      'task signals should be injected'
+    );
   });
 
   it('injects hub event signals from consumeHubEvents', async () => {
     baseStubs();
-    mockMods['a2aProtocol'].consumeHubEvents = () => [{ type: 'knowledge_update', payload: {} }];
+    mockMods['a2aProtocol'].consumeHubEvents = () => [
+      { type: 'knowledge_update', payload: {} },
+    ];
     delete require.cache[require.resolve('../src/evolve/pipeline/hub')];
     const { hubCoordinate } = require('../src/evolve/pipeline/hub');
     const ctx = buildCtx({ signals: [] });
     const result = await hubCoordinate(ctx);
-    assert.ok(result.signals.includes('knowledge'), 'knowledge signal should be injected from hub event');
+    assert.ok(
+      result.signals.includes('knowledge'),
+      'knowledge signal should be injected from hub event'
+    );
   });
 
   it('preserves existing ctx fields in returned ctx', async () => {

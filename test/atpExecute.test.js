@@ -27,8 +27,12 @@ describe('atpExecute._buildGene', () => {
   });
 
   it('clamps capability and signal arrays', () => {
-    const manyCaps = Array.from({ length: 30 }, function (_, i) { return 'cap_' + i; });
-    const manySigs = Array.from({ length: 30 }, function (_, i) { return 'sig_' + i; });
+    const manyCaps = Array.from({ length: 30 }, function (_, i) {
+      return 'cap_' + i;
+    });
+    const manySigs = Array.from({ length: 30 }, function (_, i) {
+      return 'sig_' + i;
+    });
     const g = _buildGene(manyCaps, manySigs);
     assert.ok(g.signals_match.length <= 8, 'signals_match should be clamped');
   });
@@ -67,8 +71,16 @@ describe('atpExecute._buildCapsule', () => {
 
   it('different answers yield different capsule asset_ids', () => {
     const gene = _buildGene(['general'], []);
-    const c1 = _buildCapsule({ gene: gene, answer: 'answer one', orderId: 'p1' });
-    const c2 = _buildCapsule({ gene: gene, answer: 'answer two', orderId: 'p1' });
+    const c1 = _buildCapsule({
+      gene: gene,
+      answer: 'answer one',
+      orderId: 'p1',
+    });
+    const c2 = _buildCapsule({
+      gene: gene,
+      answer: 'answer two',
+      orderId: 'p1',
+    });
     assert.notEqual(c1.asset_id, c2.asset_id);
   });
 });
@@ -89,7 +101,9 @@ describe('atpExecute CLI-shape invariants', () => {
     const { completeAtpTask } = require('../src/atp/atpExecute');
     const missing = path.join(os.tmpdir(), 'atp-missing-' + Date.now() + '.md');
     const r = await completeAtpTask({
-      taskId: 't1', orderId: 'o1', answerFile: missing,
+      taskId: 't1',
+      orderId: 'o1',
+      answerFile: missing,
     });
     assert.equal(r.ok, false);
     assert.equal(r.stage, 'read_answer');
@@ -97,10 +111,13 @@ describe('atpExecute CLI-shape invariants', () => {
 
   it('reports read_answer stage when answer file is empty', async () => {
     const { completeAtpTask } = require('../src/atp/atpExecute');
-    const emptyFile = fs.mkdtempSync(path.join(os.tmpdir(), 'atp-exec-')) + '/empty.md';
+    const emptyFile =
+      fs.mkdtempSync(path.join(os.tmpdir(), 'atp-exec-')) + '/empty.md';
     fs.writeFileSync(emptyFile, '');
     const r = await completeAtpTask({
-      taskId: 't1', orderId: 'o1', answerFile: emptyFile,
+      taskId: 't1',
+      orderId: 'o1',
+      answerFile: emptyFile,
     });
     assert.equal(r.ok, false);
     assert.equal(r.stage, 'read_answer');

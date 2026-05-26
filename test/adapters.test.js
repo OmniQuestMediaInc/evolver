@@ -14,7 +14,9 @@ function makeTmpDir() {
 }
 
 function cleanup(dir) {
-  try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
+  try {
+    fs.rmSync(dir, { recursive: true, force: true });
+  } catch {}
 }
 
 // -- hookAdapter --
@@ -26,7 +28,9 @@ describe('hookAdapter', () => {
       try {
         fs.mkdirSync(path.join(tmp, '.cursor'), { recursive: true });
         assert.equal(hookAdapter.detectPlatform(tmp), 'cursor');
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
 
     it('detects claude-code from .claude directory', () => {
@@ -34,7 +38,9 @@ describe('hookAdapter', () => {
       try {
         fs.mkdirSync(path.join(tmp, '.claude'), { recursive: true });
         assert.equal(hookAdapter.detectPlatform(tmp), 'claude-code');
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
 
     it('detects codex from .codex directory', () => {
@@ -42,7 +48,9 @@ describe('hookAdapter', () => {
       try {
         fs.mkdirSync(path.join(tmp, '.codex'), { recursive: true });
         assert.equal(hookAdapter.detectPlatform(tmp), 'codex');
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
 
     it('returns null for unknown platform when no fallback dirs exist', () => {
@@ -55,7 +63,9 @@ describe('hookAdapter', () => {
         // If homedir has a platform dir, the function returns that.
         // We just verify the function doesn't crash and returns a valid result.
         assert.ok(result === null || typeof result === 'string');
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
   });
 
@@ -84,21 +94,28 @@ describe('hookAdapter', () => {
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         assert.equal(data.hooks.a, 1);
         assert.equal(data._evolver_managed, true);
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
 
     it('merges into existing file', () => {
       const tmp = makeTmpDir();
       try {
         const filePath = path.join(tmp, 'test.json');
-        fs.writeFileSync(filePath, JSON.stringify({ existing: true, hooks: { old: 1 } }));
+        fs.writeFileSync(
+          filePath,
+          JSON.stringify({ existing: true, hooks: { old: 1 } })
+        );
         hookAdapter.mergeJsonFile(filePath, { hooks: { new: 2 } });
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         assert.equal(data.existing, true);
         assert.equal(data.hooks.old, 1);
         assert.equal(data.hooks.new, 2);
         assert.equal(data._evolver_managed, true);
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
   });
 
@@ -107,12 +124,18 @@ describe('hookAdapter', () => {
       const tmp = makeTmpDir();
       try {
         const filePath = path.join(tmp, 'README.md');
-        const result = hookAdapter.appendSectionToFile(filePath, '<!-- marker -->', '<!-- marker -->\nHello');
+        const result = hookAdapter.appendSectionToFile(
+          filePath,
+          '<!-- marker -->',
+          '<!-- marker -->\nHello'
+        );
         assert.equal(result, true);
         const content = fs.readFileSync(filePath, 'utf8');
         assert.ok(content.includes('<!-- marker -->'));
         assert.ok(content.includes('Hello'));
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
 
     it('does not duplicate if marker exists', () => {
@@ -120,9 +143,15 @@ describe('hookAdapter', () => {
       try {
         const filePath = path.join(tmp, 'README.md');
         fs.writeFileSync(filePath, '<!-- marker -->\nExisting');
-        const result = hookAdapter.appendSectionToFile(filePath, '<!-- marker -->', '<!-- marker -->\nDuplicate');
+        const result = hookAdapter.appendSectionToFile(
+          filePath,
+          '<!-- marker -->',
+          '<!-- marker -->\nDuplicate'
+        );
         assert.equal(result, false);
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
   });
 
@@ -132,12 +161,17 @@ describe('hookAdapter', () => {
       try {
         const destDir = path.join(tmp, 'hooks');
         const evolverRoot = path.resolve(__dirname, '..');
-        const copied = hookAdapter.copyHookScripts(destDir, path.join(evolverRoot, 'src', 'adapters'));
+        const copied = hookAdapter.copyHookScripts(
+          destDir,
+          path.join(evolverRoot, 'src', 'adapters')
+        );
         assert.equal(copied.length, 3);
         for (const f of copied) {
           assert.ok(fs.existsSync(f));
         }
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
   });
 
@@ -154,7 +188,9 @@ describe('hookAdapter', () => {
         const removed = hookAdapter.removeHookScripts(hooksDir);
         assert.equal(removed, 3);
         assert.ok(fs.existsSync(path.join(hooksDir, 'user-custom.js')));
-      } finally { cleanup(tmp); }
+      } finally {
+        cleanup(tmp);
+      }
     });
   });
 });
@@ -167,16 +203,28 @@ describe('cursor adapter', () => {
     try {
       fs.mkdirSync(path.join(tmp, '.cursor'), { recursive: true });
       const evolverRoot = path.resolve(__dirname, '..');
-      const result = cursorAdapter.install({ configRoot: tmp, evolverRoot, force: true });
+      const result = cursorAdapter.install({
+        configRoot: tmp,
+        evolverRoot,
+        force: true,
+      });
       assert.equal(result.ok, true);
       assert.equal(result.platform, 'cursor');
-      const hooks = JSON.parse(fs.readFileSync(path.join(tmp, '.cursor', 'hooks.json'), 'utf8'));
+      const hooks = JSON.parse(
+        fs.readFileSync(path.join(tmp, '.cursor', 'hooks.json'), 'utf8')
+      );
       assert.ok(hooks.hooks.sessionStart);
       assert.ok(hooks.hooks.afterFileEdit);
       assert.ok(hooks.hooks.stop);
       assert.equal(hooks._evolver_managed, true);
-      assert.ok(fs.existsSync(path.join(tmp, '.cursor', 'hooks', 'evolver-session-start.js')));
-    } finally { cleanup(tmp); }
+      assert.ok(
+        fs.existsSync(
+          path.join(tmp, '.cursor', 'hooks', 'evolver-session-start.js')
+        )
+      );
+    } finally {
+      cleanup(tmp);
+    }
   });
 
   it('uninstalls hooks correctly', () => {
@@ -188,15 +236,25 @@ describe('cursor adapter', () => {
       const result = cursorAdapter.uninstall({ configRoot: tmp, evolverRoot });
       assert.equal(result.ok, true);
       assert.equal(result.removed, true);
-      assert.ok(!fs.existsSync(path.join(tmp, '.cursor', 'hooks', 'evolver-session-start.js')));
-    } finally { cleanup(tmp); }
+      assert.ok(
+        !fs.existsSync(
+          path.join(tmp, '.cursor', 'hooks', 'evolver-session-start.js')
+        )
+      );
+    } finally {
+      cleanup(tmp);
+    }
   });
 
   it('buildHooksJson returns valid structure', () => {
     const hooks = cursorAdapter.buildHooksJson('/evolver', false);
     assert.equal(hooks.version, 1);
-    assert.ok(hooks.hooks.sessionStart[0].command.includes('evolver-session-start'));
-    assert.ok(hooks.hooks.afterFileEdit[0].command.includes('evolver-signal-detect'));
+    assert.ok(
+      hooks.hooks.sessionStart[0].command.includes('evolver-session-start')
+    );
+    assert.ok(
+      hooks.hooks.afterFileEdit[0].command.includes('evolver-signal-detect')
+    );
     assert.ok(hooks.hooks.stop[0].command.includes('evolver-session-end'));
   });
 
@@ -214,17 +272,25 @@ describe('claudeCode adapter', () => {
     try {
       fs.mkdirSync(path.join(tmp, '.claude'), { recursive: true });
       const evolverRoot = path.resolve(__dirname, '..');
-      const result = claudeAdapter.install({ configRoot: tmp, evolverRoot, force: true });
+      const result = claudeAdapter.install({
+        configRoot: tmp,
+        evolverRoot,
+        force: true,
+      });
       assert.equal(result.ok, true);
       assert.equal(result.platform, 'claude-code');
-      const settings = JSON.parse(fs.readFileSync(path.join(tmp, '.claude', 'settings.json'), 'utf8'));
+      const settings = JSON.parse(
+        fs.readFileSync(path.join(tmp, '.claude', 'settings.json'), 'utf8')
+      );
       assert.ok(settings.hooks.SessionStart);
       assert.ok(settings.hooks.PostToolUse);
       assert.ok(settings.hooks.Stop);
       assert.ok(fs.existsSync(path.join(tmp, 'CLAUDE.md')));
       const claudeMd = fs.readFileSync(path.join(tmp, 'CLAUDE.md'), 'utf8');
       assert.ok(claudeMd.includes('Evolution Memory'));
-    } finally { cleanup(tmp); }
+    } finally {
+      cleanup(tmp);
+    }
   });
 
   it('uninstalls hooks and CLAUDE.md section', () => {
@@ -238,7 +304,9 @@ describe('claudeCode adapter', () => {
       assert.equal(result.removed, true);
       const claudeMd = fs.readFileSync(path.join(tmp, 'CLAUDE.md'), 'utf8');
       assert.ok(!claudeMd.includes('evolver-evolution-memory'));
-    } finally { cleanup(tmp); }
+    } finally {
+      cleanup(tmp);
+    }
   });
 
   it('buildClaudeHooks produces Claude Code HookMatcher structure', () => {
@@ -248,7 +316,10 @@ describe('claudeCode adapter', () => {
       assert.ok(Array.isArray(matchers), `${event} must be an array`);
       assert.ok(matchers.length > 0, `${event} must have matchers`);
       for (const matcher of matchers) {
-        assert.ok(Array.isArray(matcher.hooks), `${event} matcher must have .hooks array`);
+        assert.ok(
+          Array.isArray(matcher.hooks),
+          `${event} matcher must have .hooks array`
+        );
         for (const cmd of matcher.hooks) {
           assert.equal(cmd.type, 'command');
           assert.equal(typeof cmd.command, 'string');
@@ -268,16 +339,27 @@ describe('codex adapter', () => {
     try {
       fs.mkdirSync(path.join(tmp, '.codex'), { recursive: true });
       const evolverRoot = path.resolve(__dirname, '..');
-      const result = codexAdapter.install({ configRoot: tmp, evolverRoot, force: true });
+      const result = codexAdapter.install({
+        configRoot: tmp,
+        evolverRoot,
+        force: true,
+      });
       assert.equal(result.ok, true);
       assert.equal(result.platform, 'codex');
-      const hooks = JSON.parse(fs.readFileSync(path.join(tmp, '.codex', 'hooks.json'), 'utf8'));
+      const hooks = JSON.parse(
+        fs.readFileSync(path.join(tmp, '.codex', 'hooks.json'), 'utf8')
+      );
       assert.ok(hooks.hooks.SessionStart);
       assert.ok(hooks.hooks.Stop);
-      const toml = fs.readFileSync(path.join(tmp, '.codex', 'config.toml'), 'utf8');
+      const toml = fs.readFileSync(
+        path.join(tmp, '.codex', 'config.toml'),
+        'utf8'
+      );
       assert.ok(toml.includes('codex_hooks = true'));
       assert.ok(fs.existsSync(path.join(tmp, 'AGENTS.md')));
-    } finally { cleanup(tmp); }
+    } finally {
+      cleanup(tmp);
+    }
   });
 
   it('ensureConfigToml adds feature flag', () => {
@@ -292,7 +374,9 @@ describe('codex adapter', () => {
       assert.ok(toml.includes('codex_hooks = true'));
       const noChange = codexAdapter.ensureConfigToml(codexDir);
       assert.equal(noChange, false);
-    } finally { cleanup(tmp); }
+    } finally {
+      cleanup(tmp);
+    }
   });
 
   it('uninstalls hooks and AGENTS.md section', () => {
@@ -306,6 +390,8 @@ describe('codex adapter', () => {
       assert.equal(result.removed, true);
       const agentsMd = fs.readFileSync(path.join(tmp, 'AGENTS.md'), 'utf8');
       assert.ok(!agentsMd.includes('evolver-evolution-memory'));
-    } finally { cleanup(tmp); }
+    } finally {
+      cleanup(tmp);
+    }
   });
 });

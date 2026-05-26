@@ -50,12 +50,14 @@ function _readAnswer(answerFile) {
 }
 
 function _buildGene(capabilities, signals) {
-  const caps = Array.isArray(capabilities) && capabilities.length > 0
-    ? capabilities.slice(0, 8)
-    : ['general'];
-  const sig = Array.isArray(signals) && signals.length > 0
-    ? signals.slice(0, 8)
-    : ['atp_task'];
+  const caps =
+    Array.isArray(capabilities) && capabilities.length > 0
+      ? capabilities.slice(0, 8)
+      : ['general'];
+  const sig =
+    Array.isArray(signals) && signals.length > 0
+      ? signals.slice(0, 8)
+      : ['atp_task'];
   const gene = {
     type: 'Gene',
     schema_version: '1.0',
@@ -77,23 +79,46 @@ function _buildGene(capabilities, signals) {
   return gene;
 }
 
-function _buildCapsule({ gene, answer, summary, orderId, taskId, capabilities, signals }) {
+function _buildCapsule({
+  gene,
+  answer,
+  summary,
+  orderId,
+  taskId,
+  capabilities,
+  signals,
+}) {
   const caps = Array.isArray(capabilities) ? capabilities.slice(0, 8) : [];
-  const sig = Array.isArray(signals) && signals.length > 0 ? signals.slice(0, 8) : ['atp_task'];
+  const sig =
+    Array.isArray(signals) && signals.length > 0
+      ? signals.slice(0, 8)
+      : ['atp_task'];
   const confidence = 0.9; // merchant self-attested; buyer verify may override
-  const capsuleSummary = String(summary || '').trim()
-    || 'ATP merchant delivery for order ' + String(orderId || '').slice(0, 24);
+  const capsuleSummary =
+    String(summary || '').trim() ||
+    'ATP merchant delivery for order ' + String(orderId || '').slice(0, 24);
   const capsule = {
     type: 'Capsule',
     schema_version: '1.0',
-    id: 'capsule_atp_' + String(orderId || taskId || Date.now()).replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 40),
+    id:
+      'capsule_atp_' +
+      String(orderId || taskId || Date.now())
+        .replace(/[^a-zA-Z0-9_\-]/g, '_')
+        .slice(0, 40),
     trigger: sig,
     gene: gene.id,
     summary: capsuleSummary.slice(0, 200),
     confidence,
-    blast_radius: { files: 0, lines: Math.min(1000, answer.split('\n').length) },
+    blast_radius: {
+      files: 0,
+      lines: Math.min(1000, answer.split('\n').length),
+    },
     outcome: { status: 'success', score: confidence },
-    env_fingerprint: { platform: process.platform, arch: process.arch, runtime: 'evolver-atp' },
+    env_fingerprint: {
+      platform: process.platform,
+      arch: process.arch,
+      runtime: 'evolver-atp',
+    },
     content: answer,
     source_type: 'atp_task_executor',
     atp: {
@@ -125,8 +150,11 @@ function _postJson(urlStr, body, timeoutMs) {
     const lib = isHttps ? https : http;
     const payload = JSON.stringify(body || {});
     const headers = Object.assign(
-      { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
-      buildHubHeaders() || {},
+      {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+      },
+      buildHubHeaders() || {}
     );
     const req = lib.request(
       {
@@ -139,21 +167,36 @@ function _postJson(urlStr, body, timeoutMs) {
       },
       function (res) {
         const chunks = [];
-        res.on('data', function (c) { chunks.push(c); });
+        res.on('data', function (c) {
+          chunks.push(c);
+        });
         res.on('end', function () {
           const text = Buffer.concat(chunks).toString('utf8');
           let data = null;
-          try { data = text ? JSON.parse(text) : null; } catch (e) { data = { raw: text }; }
+          try {
+            data = text ? JSON.parse(text) : null;
+          } catch (e) {
+            data = { raw: text };
+          }
           if (res.statusCode >= 200 && res.statusCode < 300) {
             resolve({ ok: true, status: res.statusCode, data });
           } else {
-            resolve({ ok: false, status: res.statusCode, data, error: 'http_' + res.statusCode });
+            resolve({
+              ok: false,
+              status: res.statusCode,
+              data,
+              error: 'http_' + res.statusCode,
+            });
           }
         });
-      },
+      }
     );
-    req.on('timeout', function () { req.destroy(new Error('timeout')); });
-    req.on('error', function (err) { resolve({ ok: false, error: err.message }); });
+    req.on('timeout', function () {
+      req.destroy(new Error('timeout'));
+    });
+    req.on('error', function (err) {
+      resolve({ ok: false, error: err.message });
+    });
     req.write(payload);
     req.end();
   });
@@ -171,9 +214,13 @@ async function _ensureNodeSecret() {
 
 async function _publishBundle(gene, capsule) {
   const nodeSecret = getHubNodeSecret();
-  if (!nodeSecret) return { ok: false, error: 'missing_node_secret_after_hello' };
+  if (!nodeSecret)
+    return { ok: false, error: 'missing_node_secret_after_hello' };
   const signatureInput = [gene.asset_id, capsule.asset_id].sort().join('|');
-  const signature = crypto.createHmac('sha256', nodeSecret).update(signatureInput).digest('hex');
+  const signature = crypto
+    .createHmac('sha256', nodeSecret)
+    .update(signatureInput)
+    .digest('hex');
   const msg = {
     protocol: 'gep-a2a',
     protocol_version: '1.0.0',
@@ -189,11 +236,15 @@ async function _publishBundle(gene, capsule) {
 async function _completeTaskOnHub(taskId, assetId) {
   const base = String(getHubUrl() || '').replace(/\/+$/, '');
   if (!base) return { ok: false, error: 'hub_url_missing' };
-  return _postJson(base + '/a2a/task/complete', {
-    task_id: taskId,
-    asset_id: assetId,
-    node_id: getNodeId(),
-  }, PUBLISH_TIMEOUT_MS);
+  return _postJson(
+    base + '/a2a/task/complete',
+    {
+      task_id: taskId,
+      asset_id: assetId,
+      node_id: getNodeId(),
+    },
+    PUBLISH_TIMEOUT_MS
+  );
 }
 
 /**
@@ -213,7 +264,11 @@ async function completeAtpTask(opts) {
   const orderId = opts && opts.orderId;
   const answerFile = opts && opts.answerFile;
   if (!taskId || !orderId || !answerFile) {
-    return { ok: false, stage: 'input', error: 'taskId, orderId, answerFile are required' };
+    return {
+      ok: false,
+      stage: 'input',
+      error: 'taskId, orderId, answerFile are required',
+    };
   }
 
   let answer;
@@ -225,7 +280,11 @@ async function completeAtpTask(opts) {
 
   const handshakeOk = await _ensureNodeSecret();
   if (!handshakeOk) {
-    return { ok: false, stage: 'hello', error: 'failed to register with hub; node_secret missing' };
+    return {
+      ok: false,
+      stage: 'hello',
+      error: 'failed to register with hub; node_secret missing',
+    };
   }
 
   const gene = _buildGene(opts.capabilities, opts.signals);
@@ -241,17 +300,32 @@ async function completeAtpTask(opts) {
 
   const pub = await _publishBundle(gene, capsule);
   if (!pub.ok) {
-    return { ok: false, stage: 'publish', error: pub.error || 'publish_failed', details: pub };
+    return {
+      ok: false,
+      stage: 'publish',
+      error: pub.error || 'publish_failed',
+      details: pub,
+    };
   }
   const decision = pub.data && pub.data.payload && pub.data.payload.decision;
   if (decision && decision !== 'accept') {
     const reason = pub.data.payload.reason || 'unknown';
-    return { ok: false, stage: 'publish', error: 'publish_rejected: ' + reason, details: pub.data };
+    return {
+      ok: false,
+      stage: 'publish',
+      error: 'publish_rejected: ' + reason,
+      details: pub.data,
+    };
   }
 
   const complete = await _completeTaskOnHub(taskId, capsule.asset_id);
   if (!complete.ok) {
-    return { ok: false, stage: 'complete', error: complete.error || 'complete_failed', details: complete };
+    return {
+      ok: false,
+      stage: 'complete',
+      error: complete.error || 'complete_failed',
+      details: complete,
+    };
   }
 
   const proofPayload = {
@@ -274,7 +348,11 @@ async function completeAtpTask(opts) {
     };
   }
 
-  return { ok: true, assetId: capsule.asset_id, deliveryId: delivery.data && delivery.data.proof_id };
+  return {
+    ok: true,
+    assetId: capsule.asset_id,
+    deliveryId: delivery.data && delivery.data.proof_id,
+  };
 }
 
 module.exports = {

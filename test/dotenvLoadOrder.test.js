@@ -31,10 +31,10 @@ describe('index.js dotenv load order (regression #460)', () => {
     assert.ok(evolveLine >= 0, 'expected require("./src/evolve") in index.js');
     assert.ok(
       dotenvLine < evolveLine,
-      'dotenv.config must appear BEFORE require("./src/evolve"), otherwise '
-        + 'a2aProtocol reads A2A_NODE_SECRET before .env is loaded and may '
-        + 'cache a stale secret (cf GitHub issue #460). '
-        + `Currently: dotenv at line ${dotenvLine + 1}, evolve at line ${evolveLine + 1}.`
+      'dotenv.config must appear BEFORE require("./src/evolve"), otherwise ' +
+        'a2aProtocol reads A2A_NODE_SECRET before .env is loaded and may ' +
+        'cache a stale secret (cf GitHub issue #460). ' +
+        `Currently: dotenv at line ${dotenvLine + 1}, evolve at line ${evolveLine + 1}.`
     );
   });
 
@@ -42,7 +42,10 @@ describe('index.js dotenv load order (regression #460)', () => {
     const dotenvLine = firstMatch(/require\(['"]dotenv['"]\)\.config/);
     const firstSrcRequireLine = firstMatch(/require\(['"]\.\/src\//);
     assert.ok(dotenvLine >= 0, 'expected dotenv.config call in index.js');
-    assert.ok(firstSrcRequireLine >= 0, 'expected at least one require("./src/...") in index.js');
+    assert.ok(
+      firstSrcRequireLine >= 0,
+      'expected at least one require("./src/...") in index.js'
+    );
     // The only ./src/* require allowed before dotenv is ./src/gep/paths,
     // which is needed to resolve the .env file location and has zero
     // side effects on env-sensitive modules.
@@ -51,9 +54,9 @@ describe('index.js dotenv load order (regression #460)', () => {
       assert.match(
         firstLine,
         /require\(['"]\.\/src\/gep\/paths['"]\)/,
-        `line ${firstSrcRequireLine + 1} requires a ./src/* module before `
-          + 'dotenv.config, which risks caching stale secrets (cf #460). '
-          + 'Only ./src/gep/paths is allowed there (for resolving .env path).'
+        `line ${firstSrcRequireLine + 1} requires a ./src/* module before ` +
+          'dotenv.config, which risks caching stale secrets (cf #460). ' +
+          'Only ./src/gep/paths is allowed there (for resolving .env path).'
       );
     }
   });

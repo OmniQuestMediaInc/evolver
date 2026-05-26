@@ -1,4 +1,11 @@
-const { describe, it, before, after, beforeEach, afterEach } = require('node:test');
+const {
+  describe,
+  it,
+  before,
+  after,
+  beforeEach,
+  afterEach,
+} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
@@ -54,7 +61,11 @@ describe('consumeHubEvents / getHubEvents', () => {
     global.fetch = async (url, opts) => {
       if (url.includes('/a2a/events/poll')) {
         pollCalled = true;
-        return { ok: true, status: 200, json: async () => ({ events: fakeEvents }) };
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ events: fakeEvents }),
+        };
       }
       return {
         ok: true,
@@ -72,7 +83,10 @@ describe('consumeHubEvents / getHubEvents', () => {
     // give it a tick to settle
     await new Promise(r => setTimeout(r, 100));
 
-    assert.ok(pollCalled, 'should call /a2a/events/poll when has_pending_events is true');
+    assert.ok(
+      pollCalled,
+      'should call /a2a/events/poll when has_pending_events is true'
+    );
 
     const buffered = getHubEvents();
     assert.ok(buffered.length >= 2, 'should buffer the fetched events');
@@ -80,20 +94,32 @@ describe('consumeHubEvents / getHubEvents', () => {
     assert.equal(buffered[buffered.length - 1].type, 'task_available');
 
     const consumed = consumeHubEvents();
-    assert.ok(consumed.length >= 2, 'consumeHubEvents should return buffered events');
+    assert.ok(
+      consumed.length >= 2,
+      'consumeHubEvents should return buffered events'
+    );
 
     const afterConsume = getHubEvents();
-    assert.equal(afterConsume.length, 0, 'buffer should be empty after consume');
+    assert.equal(
+      afterConsume.length,
+      0,
+      'buffer should be empty after consume'
+    );
   });
 
   it('does not call events/poll when has_pending_events is falsy', async () => {
     let pollCalled = false;
-    global.fetch = async (url) => {
+    global.fetch = async url => {
       if (url.includes('/a2a/events/poll')) {
         pollCalled = true;
         return { ok: true, status: 200, json: async () => ({ events: [] }) };
       }
-      return { ok: true, status: 200, json: async () => ({ status: 'ok' }), text: async () => '' };
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ status: 'ok' }),
+        text: async () => '',
+      };
     };
 
     const logPath = path.join(tmpDir, 'evolver_loop.log');
@@ -102,16 +128,28 @@ describe('consumeHubEvents / getHubEvents', () => {
     await sendHeartbeat();
     await new Promise(r => setTimeout(r, 100));
 
-    assert.ok(!pollCalled, 'should NOT call /a2a/events/poll when has_pending_events is absent');
+    assert.ok(
+      !pollCalled,
+      'should NOT call /a2a/events/poll when has_pending_events is absent'
+    );
   });
 
   it('handles poll returning events in payload.events format', async () => {
     const fakeEvents = [{ type: 'council_invite', payload: {} }];
-    global.fetch = async (url) => {
+    global.fetch = async url => {
       if (url.includes('/a2a/events/poll')) {
-        return { ok: true, status: 200, json: async () => ({ payload: { events: fakeEvents } }) };
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ payload: { events: fakeEvents } }),
+        };
       }
-      return { ok: true, status: 200, json: async () => ({ status: 'ok', has_pending_events: true }), text: async () => '' };
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ status: 'ok', has_pending_events: true }),
+        text: async () => '',
+      };
     };
 
     const logPath = path.join(tmpDir, 'evolver_loop.log');
@@ -122,6 +160,9 @@ describe('consumeHubEvents / getHubEvents', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const events = consumeHubEvents();
-    assert.ok(events.some(e => e.type === 'council_invite'), 'should parse payload.events format');
+    assert.ok(
+      events.some(e => e.type === 'council_invite'),
+      'should parse payload.events format'
+    );
   });
 });

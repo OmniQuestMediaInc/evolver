@@ -2,7 +2,11 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { createCapsule, validateCapsule, VALID_OUTCOME_STATUSES } = require('../src/gep/schemas/capsule');
+const {
+  createCapsule,
+  validateCapsule,
+  VALID_OUTCOME_STATUSES,
+} = require('../src/gep/schemas/capsule');
 
 describe('createCapsule', () => {
   it('returns a fully-formed Capsule with all defaults when called with empty object', () => {
@@ -37,7 +41,12 @@ describe('createCapsule', () => {
   });
 
   it('is idempotent — createCapsule(createCapsule(x)) equals createCapsule(x)', () => {
-    const input = { id: 'cap2', summary: 'ok', outcome: { status: 'success', score: 0.8 }, trigger: ['err'] };
+    const input = {
+      id: 'cap2',
+      summary: 'ok',
+      outcome: { status: 'success', score: 0.8 },
+      trigger: ['err'],
+    };
     const once = createCapsule(input);
     const twice = createCapsule(once);
     assert.deepEqual(once, twice);
@@ -108,7 +117,11 @@ describe('createCapsule', () => {
     c1.trigger.push('signal_a');
     c1.execution_trace.push({ step: 'run' });
     assert.deepEqual(c2.trigger, [], 'trigger should be independent');
-    assert.deepEqual(c2.execution_trace, [], 'execution_trace should be independent');
+    assert.deepEqual(
+      c2.execution_trace,
+      [],
+      'execution_trace should be independent'
+    );
   });
 
   it('returns independent array instances even when partial provides arrays', () => {
@@ -116,12 +129,24 @@ describe('createCapsule', () => {
     const c1 = createCapsule({ trigger: shared });
     const c2 = createCapsule({ trigger: shared });
     c1.trigger.push('new_signal');
-    assert.equal(c2.trigger.length, 1, 'trigger arrays should not share references');
-    assert.equal(shared.length, 1, 'original partial array should not be mutated');
+    assert.equal(
+      c2.trigger.length,
+      1,
+      'trigger arrays should not share references'
+    );
+    assert.equal(
+      shared.length,
+      1,
+      'original partial array should not be mutated'
+    );
   });
 
   it('passes through extra fields not in defaults (e.g. diff_snapshot, failure_reason)', () => {
-    const c = createCapsule({ id: 'f1', diff_snapshot: 'diff', failure_reason: 'timeout' });
+    const c = createCapsule({
+      id: 'f1',
+      diff_snapshot: 'diff',
+      failure_reason: 'timeout',
+    });
     assert.equal(c.diff_snapshot, 'diff');
     assert.equal(c.failure_reason, 'timeout');
   });
@@ -147,42 +172,79 @@ describe('validateCapsule', () => {
   });
 
   it('throws when type is not "Capsule"', () => {
-    assert.throws(() => validateCapsule(validCapsule({ type: 'Gene' })), /type must be "Capsule"/);
+    assert.throws(
+      () => validateCapsule(validCapsule({ type: 'Gene' })),
+      /type must be "Capsule"/
+    );
   });
 
   it('throws when id is missing', () => {
-    assert.throws(() => validateCapsule(validCapsule({ id: null })), /id is required/);
+    assert.throws(
+      () => validateCapsule(validCapsule({ id: null })),
+      /id is required/
+    );
   });
 
   it('throws when id is empty string', () => {
-    assert.throws(() => validateCapsule(validCapsule({ id: '' })), /id is required/);
+    assert.throws(
+      () => validateCapsule(validCapsule({ id: '' })),
+      /id is required/
+    );
   });
 
   it('throws when outcome is missing', () => {
     assert.throws(
-      () => validateCapsule({ type: 'Capsule', id: 'c1', outcome: null, trigger: [], execution_trace: [] }),
-      /outcome must be an object/,
+      () =>
+        validateCapsule({
+          type: 'Capsule',
+          id: 'c1',
+          outcome: null,
+          trigger: [],
+          execution_trace: [],
+        }),
+      /outcome must be an object/
     );
   });
 
   it('throws when outcome.status is invalid', () => {
     assert.throws(
-      () => validateCapsule({ type: 'Capsule', id: 'c1', outcome: { status: 'pending', score: 0 }, trigger: [], execution_trace: [] }),
-      /outcome\.status must be one of/,
+      () =>
+        validateCapsule({
+          type: 'Capsule',
+          id: 'c1',
+          outcome: { status: 'pending', score: 0 },
+          trigger: [],
+          execution_trace: [],
+        }),
+      /outcome\.status must be one of/
     );
   });
 
   it('throws when trigger is not an array', () => {
     assert.throws(
-      () => validateCapsule({ type: 'Capsule', id: 'c1', outcome: { status: 'success', score: 0.8 }, trigger: 'oops', execution_trace: [] }),
-      /trigger must be an array/,
+      () =>
+        validateCapsule({
+          type: 'Capsule',
+          id: 'c1',
+          outcome: { status: 'success', score: 0.8 },
+          trigger: 'oops',
+          execution_trace: [],
+        }),
+      /trigger must be an array/
     );
   });
 
   it('throws when execution_trace is not an array', () => {
     assert.throws(
-      () => validateCapsule({ type: 'Capsule', id: 'c1', outcome: { status: 'success', score: 0.8 }, trigger: [], execution_trace: 'oops' }),
-      /execution_trace must be an array/,
+      () =>
+        validateCapsule({
+          type: 'Capsule',
+          id: 'c1',
+          outcome: { status: 'success', score: 0.8 },
+          trigger: [],
+          execution_trace: 'oops',
+        }),
+      /execution_trace must be an array/
     );
   });
 

@@ -30,7 +30,10 @@ describe('clamp01', () => {
 
 describe('buildMutation', () => {
   it('returns a valid Mutation object', () => {
-    const m = buildMutation({ signals: ['log_error'], selectedGene: { id: 'gene_repair' } });
+    const m = buildMutation({
+      signals: ['log_error'],
+      selectedGene: { id: 'gene_repair' },
+    });
     assert.ok(isValidMutation(m));
     assert.equal(m.type, 'Mutation');
     assert.ok(m.id.startsWith('mut_'));
@@ -42,7 +45,10 @@ describe('buildMutation', () => {
   });
 
   it('selects innovate category when drift enabled', () => {
-    const m = buildMutation({ signals: ['stable_success_plateau'], driftEnabled: true });
+    const m = buildMutation({
+      signals: ['stable_success_plateau'],
+      driftEnabled: true,
+    });
     assert.equal(m.category, 'innovate');
   });
 
@@ -52,7 +58,11 @@ describe('buildMutation', () => {
   });
 
   it('downgrades innovate to optimize for high-risk personality', () => {
-    const highRiskPersonality = { rigor: 0.3, risk_tolerance: 0.8, creativity: 0.5 };
+    const highRiskPersonality = {
+      rigor: 0.3,
+      risk_tolerance: 0.8,
+      creativity: 0.5,
+    };
     const m = buildMutation({
       signals: ['user_feature_request'],
       personalityState: highRiskPersonality,
@@ -62,7 +72,11 @@ describe('buildMutation', () => {
   });
 
   it('caps risk_level to medium when personality disallows high risk', () => {
-    const conservativePersonality = { rigor: 0.5, risk_tolerance: 0.6, creativity: 0.5 };
+    const conservativePersonality = {
+      rigor: 0.5,
+      risk_tolerance: 0.6,
+      creativity: 0.5,
+    };
     const m = buildMutation({
       signals: ['stable_success_plateau'],
       driftEnabled: true,
@@ -86,10 +100,17 @@ describe('isValidMutation', () => {
   });
 
   it('returns false for invalid category', () => {
-    assert.ok(!isValidMutation({
-      type: 'Mutation', id: 'x', category: 'destroy',
-      trigger_signals: [], target: 't', expected_effect: 'e', risk_level: 'low',
-    }));
+    assert.ok(
+      !isValidMutation({
+        type: 'Mutation',
+        id: 'x',
+        category: 'destroy',
+        trigger_signals: [],
+        target: 't',
+        expected_effect: 'e',
+        risk_level: 'low',
+      })
+    );
   });
 });
 
@@ -103,9 +124,12 @@ describe('normalizeMutation', () => {
 
   it('preserves valid fields', () => {
     const m = normalizeMutation({
-      id: 'mut_custom', category: 'repair',
-      trigger_signals: ['log_error'], target: 'file.js',
-      expected_effect: 'fix bug', risk_level: 'medium',
+      id: 'mut_custom',
+      category: 'repair',
+      trigger_signals: ['log_error'],
+      target: 'file.js',
+      expected_effect: 'fix bug',
+      risk_level: 'medium',
     });
     assert.equal(m.id, 'mut_custom');
     assert.equal(m.category, 'repair');

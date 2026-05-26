@@ -31,7 +31,11 @@ function makeTmpRepo({ pkgName, initGit = false } = {}) {
 }
 
 function rmTmp(p) {
-  try { fs.rmSync(p, { recursive: true, force: true }); } catch (_) { /* ignore */ }
+  try {
+    fs.rmSync(p, { recursive: true, force: true });
+  } catch (_) {
+    /* ignore */
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -42,21 +46,27 @@ describe('isInsideEvolverRepo', () => {
     const tmp = makeTmpRepo({ pkgName: '@evomap/evolver' });
     try {
       assert.equal(isInsideEvolverRepo(tmp), true);
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 
   it('returns false for any other package name', () => {
     const tmp = makeTmpRepo({ pkgName: 'some-user-project' });
     try {
       assert.equal(isInsideEvolverRepo(tmp), false);
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 
   it('returns false when package.json is missing', () => {
     const tmp = makeTmpRepo();
     try {
       assert.equal(isInsideEvolverRepo(tmp), false);
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 
   it('returns false when package.json is malformed', () => {
@@ -64,7 +74,9 @@ describe('isInsideEvolverRepo', () => {
     fs.writeFileSync(path.join(tmp, 'package.json'), '{not valid json');
     try {
       assert.equal(isInsideEvolverRepo(tmp), false);
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 });
 
@@ -76,7 +88,9 @@ describe('buildHostAwareValidation', () => {
       assert.ok(Array.isArray(v));
       assert.ok(v.some(c => c.includes('validate-modules.js')));
       assert.ok(v.some(c => c.includes('validate-suite.js')));
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 
   it('returns a portable single-command fallback in non-evolver host repos', () => {
@@ -84,7 +98,9 @@ describe('buildHostAwareValidation', () => {
     try {
       const v = buildHostAwareValidation(tmp);
       assert.deepEqual(v, ['git diff --check']);
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 });
 
@@ -147,7 +163,9 @@ describe('rollbackNewUntrackedFiles mtime guard', () => {
         'cycle-produced file should be deleted'
       );
       assert.deepEqual(result.deleted, ['evolver-output.txt']);
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 
   it('falls back to baseline-only filter when cycleStartedAt is omitted', () => {
@@ -163,7 +181,9 @@ describe('rollbackNewUntrackedFiles mtime guard', () => {
       assert.equal(fs.existsSync(path.join(tmp, 'a.txt')), true);
       assert.equal(fs.existsSync(path.join(tmp, 'b.txt')), false);
       assert.deepEqual(result.deleted, ['b.txt']);
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 
   it('accepts ISO string for cycleStartedAt (matches dispatch.js last_run.created_at)', async () => {
@@ -183,6 +203,8 @@ describe('rollbackNewUntrackedFiles mtime guard', () => {
 
       assert.equal(fs.existsSync(path.join(tmp, 'pre.txt')), true);
       assert.equal(fs.existsSync(path.join(tmp, 'post.txt')), false);
-    } finally { rmTmp(tmp); }
+    } finally {
+      rmTmp(tmp);
+    }
   });
 });

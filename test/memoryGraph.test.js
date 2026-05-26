@@ -46,7 +46,13 @@ describe('memoryGraph - computeSignalKey', () => {
 function setupTmpEnv() {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mg-test-'));
   const origEnv = {};
-  for (const k of ['EVOLVER_REPO_ROOT', 'MEMORY_GRAPH_PATH', 'EVOLUTION_DIR', 'OPENCLAW_WORKSPACE', 'EVOLVER_SESSION_SCOPE']) {
+  for (const k of [
+    'EVOLVER_REPO_ROOT',
+    'MEMORY_GRAPH_PATH',
+    'EVOLUTION_DIR',
+    'OPENCLAW_WORKSPACE',
+    'EVOLVER_SESSION_SCOPE',
+  ]) {
     origEnv[k] = process.env[k];
   }
   process.env.MEMORY_GRAPH_PATH = path.join(tmpDir, 'memory_graph.jsonl');
@@ -61,13 +67,19 @@ function teardownTmpEnv(tmpDir, origEnv) {
     if (v !== undefined) process.env[k] = v;
     else delete process.env[k];
   }
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch (_) {}
 }
 
 describe('memoryGraph - getMemoryAdvice', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('returns advice object with expected fields', () => {
     const advice = mg.getMemoryAdvice({
@@ -83,12 +95,20 @@ describe('memoryGraph - getMemoryAdvice', () => {
   });
 
   it('handles empty signals and genes', () => {
-    const advice = mg.getMemoryAdvice({ signals: [], genes: [], driftEnabled: false });
+    const advice = mg.getMemoryAdvice({
+      signals: [],
+      genes: [],
+      driftEnabled: false,
+    });
     assert.strictEqual(advice.preferredGeneId, null);
   });
 
   it('handles null input gracefully', () => {
-    const advice = mg.getMemoryAdvice({ signals: null, genes: null, driftEnabled: false });
+    const advice = mg.getMemoryAdvice({
+      signals: null,
+      genes: null,
+      driftEnabled: false,
+    });
     assert.strictEqual(typeof advice, 'object');
   });
 });
@@ -124,8 +144,12 @@ describe('memoryGraph - getMemoryAdvice ban respects drift mode (regression)', (
   // gene that triggered plateau detection (which forces drift on) would
   // bypass its own ban and stay in the candidate pool indefinitely.
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   const SIGNALS = ['log_error', 'recurring_error', 'repair_loop_detected'];
   const FAILED_GENE = { id: 'gene_repair_failing', type: 'Gene' };
@@ -138,8 +162,10 @@ describe('memoryGraph - getMemoryAdvice ban respects drift mode (regression)', (
       driftEnabled: false,
     });
     assert.ok(advice.bannedGeneIds instanceof Set);
-    assert.ok(advice.bannedGeneIds.has(FAILED_GENE.id),
-      'baseline: 5 failures on same key with drift OFF should ban the gene');
+    assert.ok(
+      advice.bannedGeneIds.has(FAILED_GENE.id),
+      'baseline: 5 failures on same key with drift OFF should ban the gene'
+    );
   });
 
   it('ALSO bans a saturated gene when drift is ON (the fix)', () => {
@@ -150,8 +176,10 @@ describe('memoryGraph - getMemoryAdvice ban respects drift mode (regression)', (
       driftEnabled: true,
     });
     assert.ok(advice.bannedGeneIds instanceof Set);
-    assert.ok(advice.bannedGeneIds.has(FAILED_GENE.id),
-      'fix: drift mode must not bypass ban for repeatedly failing genes');
+    assert.ok(
+      advice.bannedGeneIds.has(FAILED_GENE.id),
+      'fix: drift mode must not bypass ban for repeatedly failing genes'
+    );
   });
 
   it('does not ban a gene with healthy success rate, drift on or off', () => {
@@ -162,16 +190,22 @@ describe('memoryGraph - getMemoryAdvice ban respects drift mode (regression)', (
         genes: [{ id: 'gene_healthy', type: 'Gene' }],
         driftEnabled: drift,
       });
-      assert.ok(!advice.bannedGeneIds.has('gene_healthy'),
-        `successful gene should not be banned (driftEnabled=${drift})`);
+      assert.ok(
+        !advice.bannedGeneIds.has('gene_healthy'),
+        `successful gene should not be banned (driftEnabled=${drift})`
+      );
     }
   });
 });
 
 describe('memoryGraph - recordSignalSnapshot', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('writes a signal event to the memory graph', () => {
     const result = mg.recordSignalSnapshot({
@@ -195,8 +229,12 @@ describe('memoryGraph - recordSignalSnapshot', () => {
 
 describe('memoryGraph - recordHypothesis', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('writes a hypothesis event and returns hypothesisId + signalKey', () => {
     const result = mg.recordHypothesis({
@@ -219,8 +257,12 @@ describe('memoryGraph - recordHypothesis', () => {
 
 describe('memoryGraph - recordAttempt', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('records attempt event and returns actionId + signalKey', () => {
     const result = mg.recordAttempt({

@@ -8,15 +8,22 @@ const tmpDir = path.join(__dirname, '.tmp_qgen_test_' + process.pid);
 const stateFile = path.join(tmpDir, 'question_generator_state.json');
 
 function cleanup() {
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch (_) {}
 }
 
 // Patch paths before requiring questionGenerator
 const pathsMod = require('../src/gep/paths');
 const origGetEvolutionDir = pathsMod.getEvolutionDir;
-pathsMod.getEvolutionDir = function () { return tmpDir; };
+pathsMod.getEvolutionDir = function () {
+  return tmpDir;
+};
 
-const { generateQuestions, generateUrgentQuestions } = require('../src/gep/questionGenerator');
+const {
+  generateQuestions,
+  generateUrgentQuestions,
+} = require('../src/gep/questionGenerator');
 
 describe('questionGenerator', () => {
   beforeEach(() => {
@@ -26,19 +33,28 @@ describe('questionGenerator', () => {
 
   describe('generateQuestions (standard path)', () => {
     it('returns empty when no triggering signals', () => {
-      const qs = generateQuestions({ signals: ['stable_success_plateau'], recentEvents: [] });
+      const qs = generateQuestions({
+        signals: ['stable_success_plateau'],
+        recentEvents: [],
+      });
       assert.ok(Array.isArray(qs));
       assert.strictEqual(qs.length, 0);
     });
 
     it('generates question on recurring_error signal', () => {
       const qs = generateQuestions({
-        signals: ['recurring_error', 'recurring_errsig(3x): TypeError cannot read property'],
+        signals: [
+          'recurring_error',
+          'recurring_errsig(3x): TypeError cannot read property',
+        ],
         recentEvents: [],
         sessionTranscript: '',
       });
       assert.ok(qs.length >= 1, 'expected at least 1 question');
-      assert.ok(qs[0].question.includes('Recurring error'), 'question should mention recurring error');
+      assert.ok(
+        qs[0].question.includes('Recurring error'),
+        'question should mention recurring error'
+      );
       assert.ok(Array.isArray(qs[0].signals), 'should have signals array');
     });
 
@@ -48,17 +64,27 @@ describe('questionGenerator', () => {
         recentEvents: [],
       });
       assert.ok(qs.length >= 1, 'expected question for streak >= 3');
-      assert.ok(qs[0].question.includes('failed 3'), 'should mention streak count');
+      assert.ok(
+        qs[0].question.includes('failed 3'),
+        'should mention streak count'
+      );
     });
 
     it('generates question on hub_search_miss_with_problem', () => {
       const qs = generateQuestions({
-        signals: ['hub_search_miss_with_problem', 'log_error', 'errsig:timeout'],
+        signals: [
+          'hub_search_miss_with_problem',
+          'log_error',
+          'errsig:timeout',
+        ],
         recentEvents: [],
         sessionTranscript: 'Error: connection timeout after 5000ms',
       });
       assert.ok(qs.length >= 1, 'expected question for hub search miss');
-      assert.ok(qs[0].question.includes('No matching solution'), 'should mention no ecosystem solution');
+      assert.ok(
+        qs[0].question.includes('No matching solution'),
+        'should mention no ecosystem solution'
+      );
     });
 
     it('generates question on repair_loop_detected', () => {
@@ -71,7 +97,10 @@ describe('questionGenerator', () => {
         recentEvents: events,
       });
       assert.ok(qs.length >= 1, 'expected question for repair loop');
-      assert.ok(qs[0].question.includes('repair loop'), 'should mention repair loop');
+      assert.ok(
+        qs[0].question.includes('repair loop'),
+        'should mention repair loop'
+      );
     });
 
     it('generates question on plateau_pivot_required', () => {
@@ -84,32 +113,51 @@ describe('questionGenerator', () => {
     });
 
     it('respects rate limit', () => {
-      generateQuestions({ signals: ['recurring_error', 'recurring_errsig(3x): test'], recentEvents: [] });
-      const qs2 = generateQuestions({ signals: ['recurring_error', 'recurring_errsig(3x): test2'], recentEvents: [] });
-      assert.strictEqual(qs2.length, 0, 'second call within rate limit should return empty');
+      generateQuestions({
+        signals: ['recurring_error', 'recurring_errsig(3x): test'],
+        recentEvents: [],
+      });
+      const qs2 = generateQuestions({
+        signals: ['recurring_error', 'recurring_errsig(3x): test2'],
+        recentEvents: [],
+      });
+      assert.strictEqual(
+        qs2.length,
+        0,
+        'second call within rate limit should return empty'
+      );
     });
 
     it('returns max 3 questions', () => {
       const qs = generateQuestions({
         signals: [
-          'recurring_error', 'recurring_errsig(3x): err1',
+          'recurring_error',
+          'recurring_errsig(3x): err1',
           'capability_gap',
           'evolution_saturation',
-          'consecutive_failure_streak_5', 'ban_gene:gene_x',
-          'hub_search_miss_with_problem', 'log_error',
+          'consecutive_failure_streak_5',
+          'ban_gene:gene_x',
+          'hub_search_miss_with_problem',
+          'log_error',
           'repair_loop_detected',
           'plateau_pivot_required',
         ],
         recentEvents: [{ genes_used: ['gene_a'] }, { genes_used: ['gene_b'] }],
         sessionTranscript: 'Error: not supported feature\nTimeout detected',
       });
-      assert.ok(qs.length <= 3, 'should return at most 3 questions, got ' + qs.length);
+      assert.ok(
+        qs.length <= 3,
+        'should return at most 3 questions, got ' + qs.length
+      );
       assert.ok(qs.length >= 1, 'should return at least 1 question');
     });
 
     it('deduplicates against recent questions', () => {
       const qs1 = generateQuestions({
-        signals: ['recurring_error', 'recurring_errsig(3x): TypeError cannot read property xyz'],
+        signals: [
+          'recurring_error',
+          'recurring_errsig(3x): TypeError cannot read property xyz',
+        ],
         recentEvents: [],
       });
       assert.ok(qs1.length >= 1);
@@ -120,10 +168,17 @@ describe('questionGenerator', () => {
       fs.writeFileSync(stateFile, JSON.stringify(state));
 
       const qs2 = generateQuestions({
-        signals: ['recurring_error', 'recurring_errsig(3x): TypeError cannot read property xyz'],
+        signals: [
+          'recurring_error',
+          'recurring_errsig(3x): TypeError cannot read property xyz',
+        ],
         recentEvents: [],
       });
-      assert.strictEqual(qs2.length, 0, 'duplicate question should be filtered');
+      assert.strictEqual(
+        qs2.length,
+        0,
+        'duplicate question should be filtered'
+      );
     });
 
     it('skips infrastructure 401 errors from recurring_errsig', () => {
@@ -134,7 +189,11 @@ describe('questionGenerator', () => {
         ],
         recentEvents: [],
       });
-      assert.strictEqual(qs.length, 0, 'invalid api key storms must not become community bounties');
+      assert.strictEqual(
+        qs.length,
+        0,
+        'invalid api key storms must not become community bounties'
+      );
     });
 
     it('skips rate-limit / overloaded errors from recurring_errsig', () => {
@@ -145,16 +204,25 @@ describe('questionGenerator', () => {
         ],
         recentEvents: [],
       });
-      assert.strictEqual(qs.length, 0, '5xx overload errors must not become community bounties');
+      assert.strictEqual(
+        qs.length,
+        0,
+        '5xx overload errors must not become community bounties'
+      );
     });
 
     it('skips infrastructure errors from capability_gap transcript', () => {
       const qs = generateQuestions({
         signals: ['capability_gap'],
         recentEvents: [],
-        sessionTranscript: 'Error: fetch failed ECONNRESET while calling api.anthropic.com',
+        sessionTranscript:
+          'Error: fetch failed ECONNRESET while calling api.anthropic.com',
       });
-      assert.strictEqual(qs.length, 0, 'network errors must not turn into capability_gap bounties');
+      assert.strictEqual(
+        qs.length,
+        0,
+        'network errors must not turn into capability_gap bounties'
+      );
     });
   });
 
@@ -166,8 +234,14 @@ describe('questionGenerator', () => {
         geneId: 'gene_retry_timeout',
       });
       assert.ok(qs.length >= 1, 'expected urgent question');
-      assert.ok(qs[0].question.includes('failed validation'), 'should mention validation failure');
-      assert.ok(qs[0].question.includes('gene_retry_timeout'), 'should mention gene id');
+      assert.ok(
+        qs[0].question.includes('failed validation'),
+        'should mention validation failure'
+      );
+      assert.ok(
+        qs[0].question.includes('gene_retry_timeout'),
+        'should mention gene id'
+      );
     });
 
     it('generates question on low confidence', () => {
@@ -177,7 +251,10 @@ describe('questionGenerator', () => {
         intent: 'repair',
       });
       assert.ok(qs.length >= 1, 'expected urgent question for low confidence');
-      assert.ok(qs[0].question.includes('low confidence'), 'should mention low confidence');
+      assert.ok(
+        qs[0].question.includes('low confidence'),
+        'should mention low confidence'
+      );
       assert.ok(qs[0].question.includes('0.15'), 'should include score');
     });
 
@@ -187,7 +264,10 @@ describe('questionGenerator', () => {
         llmReviewReason: 'Potential race condition in async handler',
       });
       assert.ok(qs.length >= 1, 'expected urgent question');
-      assert.ok(qs[0].question.includes('rejected by LLM review'), 'should mention LLM rejection');
+      assert.ok(
+        qs[0].question.includes('rejected by LLM review'),
+        'should mention LLM rejection'
+      );
     });
 
     it('generates question on zero blast radius', () => {
@@ -197,7 +277,10 @@ describe('questionGenerator', () => {
         signals: ['log_error', 'errsig:connection_refused'],
       });
       assert.ok(qs.length >= 1, 'expected urgent question');
-      assert.ok(qs[0].question.includes('zero blast radius'), 'should mention zero blast radius');
+      assert.ok(
+        qs[0].question.includes('zero blast radius'),
+        'should mention zero blast radius'
+      );
     });
 
     it('generates question on task completion failure', () => {
@@ -207,13 +290,26 @@ describe('questionGenerator', () => {
         taskSignals: 'memory_leak,worker_pool',
       });
       assert.ok(qs.length >= 1, 'expected urgent question');
-      assert.ok(qs[0].question.includes('Fix memory leak'), 'should include task title');
+      assert.ok(
+        qs[0].question.includes('Fix memory leak'),
+        'should include task title'
+      );
     });
 
     it('respects urgent rate limit (5 min)', () => {
-      generateUrgentQuestions({ validationFailed: true, validationErrors: 'test error' });
-      const qs2 = generateUrgentQuestions({ validationFailed: true, validationErrors: 'test error 2' });
-      assert.strictEqual(qs2.length, 0, 'second urgent call within 5 min should return empty');
+      generateUrgentQuestions({
+        validationFailed: true,
+        validationErrors: 'test error',
+      });
+      const qs2 = generateUrgentQuestions({
+        validationFailed: true,
+        validationErrors: 'test error 2',
+      });
+      assert.strictEqual(
+        qs2.length,
+        0,
+        'second urgent call within 5 min should return empty'
+      );
     });
 
     it('returns empty when no failure indicators', () => {
@@ -227,7 +323,11 @@ describe('questionGenerator', () => {
         validationErrors: 'LLM ERROR] 401 authentication_error invalid api key',
         geneId: 'gene_any',
       });
-      assert.strictEqual(qs.length, 0, '401 during validation is a user-local issue, not a community question');
+      assert.strictEqual(
+        qs.length,
+        0,
+        '401 during validation is a user-local issue, not a community question'
+      );
     });
 
     it('skips LLM review rejections caused by rate limits', () => {
@@ -235,7 +335,11 @@ describe('questionGenerator', () => {
         llmReviewRejected: true,
         llmReviewReason: 'HTTP 429 rate limit exceeded from upstream provider',
       });
-      assert.strictEqual(qs.length, 0, '429 rate limit review rejection must not leak into bounties');
+      assert.strictEqual(
+        qs.length,
+        0,
+        '429 rate limit review rejection must not leak into bounties'
+      );
     });
 
     it('skips task completion failures caused by network errors', () => {
@@ -244,7 +348,11 @@ describe('questionGenerator', () => {
         taskTitle: 'Fetch remote recipe and solidify patch',
         taskSignals: 'log_error,ECONNRESET,fetch failed',
       });
-      assert.strictEqual(qs.length, 0, 'ECONNRESET during task execution is infra, not capability gap');
+      assert.strictEqual(
+        qs.length,
+        0,
+        'ECONNRESET during task execution is infra, not capability gap'
+      );
     });
 
     it('returns max 2 urgent questions', () => {
@@ -264,7 +372,10 @@ describe('questionGenerator', () => {
         taskTitle: 'Task X',
         taskSignals: 'sig_a',
       });
-      assert.ok(qs.length <= 2, 'should return at most 2 urgent questions, got ' + qs.length);
+      assert.ok(
+        qs.length <= 2,
+        'should return at most 2 urgent questions, got ' + qs.length
+      );
       assert.ok(qs.length >= 1, 'should return at least 1');
     });
   });

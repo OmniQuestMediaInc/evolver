@@ -6,15 +6,24 @@ const os = require('os');
 
 const mg = require('../src/gep/memoryGraph');
 const {
-  selectGene, selectMultiGeneChunk, isInplaceGene,
-  INPLACE_BLAST_MAX_FILES, INPLACE_BLAST_MAX_LINES,
+  selectGene,
+  selectMultiGeneChunk,
+  isInplaceGene,
+  INPLACE_BLAST_MAX_FILES,
+  INPLACE_BLAST_MAX_LINES,
 } = require('../src/gep/selector');
 const { buildInplaceGepPrompt } = require('../src/gep/prompt');
 
 function setupTmpEnv() {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ttt-test-'));
   const origEnv = {};
-  for (const k of ['EVOLVER_REPO_ROOT', 'MEMORY_GRAPH_PATH', 'EVOLUTION_DIR', 'OPENCLAW_WORKSPACE', 'EVOLVER_SESSION_SCOPE']) {
+  for (const k of [
+    'EVOLVER_REPO_ROOT',
+    'MEMORY_GRAPH_PATH',
+    'EVOLUTION_DIR',
+    'OPENCLAW_WORKSPACE',
+    'EVOLVER_SESSION_SCOPE',
+  ]) {
     origEnv[k] = process.env[k];
   }
   process.env.MEMORY_GRAPH_PATH = path.join(tmpDir, 'memory_graph.jsonl');
@@ -29,15 +38,21 @@ function teardownTmpEnv(tmpDir, origEnv) {
     if (v !== undefined) process.env[k] = v;
     else delete process.env[k];
   }
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch (_) {}
 }
 
 // -- Phase 1: Predictive Outcome --
 
 describe('Phase 1: computePredictiveBoost', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('returns positive boost for high-clarity actionable signals', () => {
     const result = mg.computePredictiveBoost({
@@ -87,8 +102,12 @@ describe('Phase 1: computePredictiveBoost', () => {
 
 describe('Phase 1: inferOutcomeEnhanced with predictive', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('recordOutcomeFromState includes predictive field in outcome', () => {
     mg.recordAttempt({
@@ -104,7 +123,10 @@ describe('Phase 1: inferOutcomeEnhanced with predictive', () => {
     assert.strictEqual(ev.kind, 'outcome');
     assert.ok(ev.outcome.predictive, 'outcome should have predictive field');
     assert.strictEqual(typeof ev.outcome.predictive.signal_clarity, 'number');
-    assert.strictEqual(typeof ev.outcome.predictive.frontier_touched, 'boolean');
+    assert.strictEqual(
+      typeof ev.outcome.predictive.frontier_touched,
+      'boolean'
+    );
   });
 });
 
@@ -127,12 +149,16 @@ describe('Phase 2: isInplaceGene', () => {
 describe('Phase 2: inplace gene preference in selectGene', () => {
   const GENES = [
     {
-      type: 'Gene', id: 'gene_full', category: 'repair',
+      type: 'Gene',
+      id: 'gene_full',
+      category: 'repair',
       signals_match: ['error', 'failed'],
       strategy: ['full fix'],
     },
     {
-      type: 'Gene', id: 'gene_inplace', category: 'optimize',
+      type: 'Gene',
+      id: 'gene_inplace',
+      category: 'optimize',
       execution_mode: 'inplace',
       signals_match: ['error', 'timeout'],
       strategy: ['adjust timeout'],
@@ -143,20 +169,28 @@ describe('Phase 2: inplace gene preference in selectGene', () => {
     const orig = Math.random;
     Math.random = () => 0.99;
     try {
-      const result = selectGene(GENES, ['error', 'timeout'], { preferInplace: true });
+      const result = selectGene(GENES, ['error', 'timeout'], {
+        preferInplace: true,
+      });
       assert.ok(result.selected);
       assert.strictEqual(result.selected.id, 'gene_inplace');
-    } finally { Math.random = orig; }
+    } finally {
+      Math.random = orig;
+    }
   });
 
   it('does not force inplace when preferInplace=false', () => {
     const orig = Math.random;
     Math.random = () => 0.99;
     try {
-      const result = selectGene(GENES, ['error', 'failed'], { preferInplace: false });
+      const result = selectGene(GENES, ['error', 'failed'], {
+        preferInplace: false,
+      });
       assert.ok(result.selected);
       assert.strictEqual(result.selected.id, 'gene_full');
-    } finally { Math.random = orig; }
+    } finally {
+      Math.random = orig;
+    }
   });
 });
 
@@ -165,7 +199,10 @@ describe('Phase 2: buildInplaceGepPrompt', () => {
     const prompt = buildInplaceGepPrompt({
       nowIso: new Date().toISOString(),
       signals: ['timeout_error'],
-      selectedGene: { id: 'gene_timeout_tune', strategy: ['Increase timeout to 30s'] },
+      selectedGene: {
+        id: 'gene_timeout_tune',
+        strategy: ['Increase timeout to 30s'],
+      },
       parentEventId: 'evt_123',
       cycleId: '42',
     });
@@ -197,19 +234,27 @@ describe('Phase 2: INPLACE constants', () => {
 describe('Phase 3: selectMultiGeneChunk', () => {
   const GENES = [
     {
-      type: 'Gene', id: 'gene_error_fix', category: 'repair',
+      type: 'Gene',
+      id: 'gene_error_fix',
+      category: 'repair',
       signals_match: ['error', 'exception', 'failed'],
     },
     {
-      type: 'Gene', id: 'gene_perf', category: 'optimize',
+      type: 'Gene',
+      id: 'gene_perf',
+      category: 'optimize',
       signals_match: ['latency', 'throughput', 'slow'],
     },
     {
-      type: 'Gene', id: 'gene_error_alt', category: 'repair',
+      type: 'Gene',
+      id: 'gene_error_alt',
+      category: 'repair',
       signals_match: ['error', 'crash', 'failed'],
     },
     {
-      type: 'Gene', id: 'gene_innovate', category: 'innovate',
+      type: 'Gene',
+      id: 'gene_innovate',
+      category: 'innovate',
       signals_match: ['capability_gap', 'feature_request'],
     },
   ];
@@ -218,7 +263,11 @@ describe('Phase 3: selectMultiGeneChunk', () => {
     const result = selectMultiGeneChunk({
       genes: GENES,
       signals: ['capability_gap'],
-      memoryAdvice: { bannedGeneIds: new Set(), preferredGeneId: null, totalAttempts: 0 },
+      memoryAdvice: {
+        bannedGeneIds: new Set(),
+        preferredGeneId: null,
+        totalAttempts: 0,
+      },
       driftEnabled: false,
     });
     assert.ok(result.genes.length >= 1);
@@ -229,13 +278,22 @@ describe('Phase 3: selectMultiGeneChunk', () => {
     const result = selectMultiGeneChunk({
       genes: GENES,
       signals: ['error', 'latency', 'capability_gap'],
-      memoryAdvice: { bannedGeneIds: new Set(), preferredGeneId: null, totalAttempts: 0 },
+      memoryAdvice: {
+        bannedGeneIds: new Set(),
+        preferredGeneId: null,
+        totalAttempts: 0,
+      },
       driftEnabled: false,
     });
-    assert.ok(result.genes.length >= 2, `expected >=2 genes, got ${result.genes.length}`);
+    assert.ok(
+      result.genes.length >= 2,
+      `expected >=2 genes, got ${result.genes.length}`
+    );
     const ids = result.genes.map(g => g.id);
-    assert.ok(!ids.includes('gene_error_alt') || !ids.includes('gene_error_fix'),
-      'conflicting genes should not both be selected');
+    assert.ok(
+      !ids.includes('gene_error_alt') || !ids.includes('gene_error_fix'),
+      'conflicting genes should not both be selected'
+    );
   });
 
   it('returns empty when no genes match', () => {
@@ -253,8 +311,12 @@ describe('Phase 3: selectMultiGeneChunk', () => {
 
 describe('Phase 4: checkEpochBoundary', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('triggers reset on consecutive_failure_streak_5 signal', () => {
     const result = mg.checkEpochBoundary({
@@ -287,8 +349,12 @@ describe('Phase 4: checkEpochBoundary', () => {
 
 describe('Phase 4: resetMemoryPreferences', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('writes epoch_boundary event and updates state', () => {
     const result = mg.resetMemoryPreferences({
@@ -313,8 +379,12 @@ describe('Phase 4: resetMemoryPreferences', () => {
 
 describe('Phase 4: getMemoryAdvice with epoch filtering', () => {
   let tmpDir, origEnv;
-  beforeEach(() => { ({ tmpDir, origEnv } = setupTmpEnv()); });
-  afterEach(() => { teardownTmpEnv(tmpDir, origEnv); });
+  beforeEach(() => {
+    ({ tmpDir, origEnv } = setupTmpEnv());
+  });
+  afterEach(() => {
+    teardownTmpEnv(tmpDir, origEnv);
+  });
 
   it('deprioritizes pre-epoch outcomes after reset', () => {
     mg.recordAttempt({
@@ -351,7 +421,9 @@ describe('Phase 4: getMemoryAdvice with epoch filtering', () => {
       driftEnabled: false,
     });
 
-    assert.ok(advice.preferredGeneId === 'gene_new' || advice.preferredGeneId === null,
-      `after epoch reset, gene_new should be preferred over gene_old, got: ${advice.preferredGeneId}`);
+    assert.ok(
+      advice.preferredGeneId === 'gene_new' || advice.preferredGeneId === null,
+      `after epoch reset, gene_new should be preferred over gene_old, got: ${advice.preferredGeneId}`
+    );
   });
 });

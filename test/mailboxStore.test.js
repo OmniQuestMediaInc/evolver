@@ -6,7 +6,13 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { MailboxStore, generateUUIDv7, DEFAULT_CHANNEL, SCHEMA_VERSION, PROXY_PROTOCOL_VERSION } = require('../src/proxy/mailbox/store');
+const {
+  MailboxStore,
+  generateUUIDv7,
+  DEFAULT_CHANNEL,
+  SCHEMA_VERSION,
+  PROXY_PROTOCOL_VERSION,
+} = require('../src/proxy/mailbox/store');
 
 function tmpDataDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mailbox-test-'));
@@ -15,7 +21,10 @@ function tmpDataDir() {
 describe('generateUUIDv7', () => {
   it('returns a valid UUID v7 format', () => {
     const id = generateUUIDv7();
-    assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    assert.match(
+      id,
+      /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+    );
   });
 
   it('generates unique IDs', () => {
@@ -30,7 +39,10 @@ describe('generateUUIDv7', () => {
     for (let i = 1; i < ids.length; i++) {
       const prevTs = ids[i - 1].slice(0, 13);
       const currTs = ids[i].slice(0, 13);
-      assert.ok(currTs >= prevTs, `timestamp prefix should be non-decreasing: ${prevTs} <= ${currTs}`);
+      assert.ok(
+        currTs >= prevTs,
+        `timestamp prefix should be non-decreasing: ${prevTs} <= ${currTs}`
+      );
     }
   });
 });
@@ -46,12 +58,17 @@ describe('MailboxStore', () => {
 
   after(() => {
     store.close();
-    try { fs.rmSync(dataDir, { recursive: true }); } catch {}
+    try {
+      fs.rmSync(dataDir, { recursive: true });
+    } catch {}
   });
 
   describe('send()', () => {
     it('creates an outbound message with correct fields', () => {
-      const result = store.send({ type: 'asset_submit', payload: { data: 'test' } });
+      const result = store.send({
+        type: 'asset_submit',
+        payload: { data: 'test' },
+      });
       assert.ok(result.message_id);
       assert.equal(result.status, 'pending');
 
@@ -85,7 +102,10 @@ describe('MailboxStore', () => {
 
   describe('writeInbound()', () => {
     it('creates an inbound message', () => {
-      const id = store.writeInbound({ type: 'task_available', payload: { task_id: 't1' } });
+      const id = store.writeInbound({
+        type: 'task_available',
+        payload: { task_id: 't1' },
+      });
       assert.ok(id);
 
       const msg = store.getById(id);
@@ -96,7 +116,11 @@ describe('MailboxStore', () => {
 
     it('accepts a custom id', () => {
       const customId = generateUUIDv7();
-      const id = store.writeInbound({ id: customId, type: 'hub_event', payload: {} });
+      const id = store.writeInbound({
+        id: customId,
+        type: 'hub_event',
+        payload: {},
+      });
       assert.equal(id, customId);
     });
 
@@ -106,12 +130,34 @@ describe('MailboxStore', () => {
       // payload stays as the first write, countPending does not double,
       // and poll() still sees exactly one row.
       const customId = generateUUIDv7();
-      store.writeInbound({ id: customId, type: 'hub_event', payload: { n: 1 } });
-      const duplicateId = store.writeInbound({ id: customId, type: 'hub_event', payload: { n: 2 } });
-      assert.equal(duplicateId, customId, 'duplicate write must still return the original id');
-      const pendingMatches = store.poll({ type: 'hub_event' }).filter(m => m.id === customId);
-      assert.equal(pendingMatches.length, 1, 'duplicate write must not produce a second row');
-      assert.deepEqual(pendingMatches[0].payload, { n: 1 }, 'first write wins (idempotent)');
+      store.writeInbound({
+        id: customId,
+        type: 'hub_event',
+        payload: { n: 1 },
+      });
+      const duplicateId = store.writeInbound({
+        id: customId,
+        type: 'hub_event',
+        payload: { n: 2 },
+      });
+      assert.equal(
+        duplicateId,
+        customId,
+        'duplicate write must still return the original id'
+      );
+      const pendingMatches = store
+        .poll({ type: 'hub_event' })
+        .filter(m => m.id === customId);
+      assert.equal(
+        pendingMatches.length,
+        1,
+        'duplicate write must not produce a second row'
+      );
+      assert.deepEqual(
+        pendingMatches[0].payload,
+        { n: 1 },
+        'first write wins (idempotent)'
+      );
     });
   });
 
@@ -302,7 +348,9 @@ describe('MailboxStore', () => {
       assert.equal(s2.getState('my_key'), 'my_val');
       assert.equal(s2.getCursor('test:cursor'), 'c1');
       s2.close();
-      try { fs.rmSync(dir, { recursive: true }); } catch {}
+      try {
+        fs.rmSync(dir, { recursive: true });
+      } catch {}
     });
   });
 
@@ -323,7 +371,9 @@ describe('MailboxStore', () => {
       const msg = s.getById(message_id);
       assert.equal(msg.status, 'delivered');
       s.close();
-      try { fs.rmSync(dir, { recursive: true }); } catch {}
+      try {
+        fs.rmSync(dir, { recursive: true });
+      } catch {}
     });
   });
 
@@ -334,7 +384,9 @@ describe('MailboxStore', () => {
       const stateRaw = JSON.parse(fs.readFileSync(s._stateFile, 'utf8'));
       assert.equal(stateRaw._schema_version, SCHEMA_VERSION);
       s.close();
-      try { fs.rmSync(dir, { recursive: true }); } catch {}
+      try {
+        fs.rmSync(dir, { recursive: true });
+      } catch {}
     });
 
     it('preserves schema version across restart', () => {
@@ -345,7 +397,9 @@ describe('MailboxStore', () => {
       const stateRaw = JSON.parse(fs.readFileSync(s2._stateFile, 'utf8'));
       assert.equal(stateRaw._schema_version, SCHEMA_VERSION);
       s2.close();
-      try { fs.rmSync(dir, { recursive: true }); } catch {}
+      try {
+        fs.rmSync(dir, { recursive: true });
+      } catch {}
     });
 
     it('runs migrations when state has older schema version', () => {
@@ -360,7 +414,9 @@ describe('MailboxStore', () => {
       const stateRaw = JSON.parse(fs.readFileSync(s._stateFile, 'utf8'));
       assert.equal(stateRaw._schema_version, SCHEMA_VERSION);
       s.close();
-      try { fs.rmSync(dir, { recursive: true }); } catch {}
+      try {
+        fs.rmSync(dir, { recursive: true });
+      } catch {}
     });
   });
 
@@ -391,24 +447,36 @@ describe('MailboxStore', () => {
           payload: {},
           priority: 'normal',
           created_at: Date.now(),
-        }) + '\n' +
-        JSON.stringify({
-          _op: 'update',
-          id: 'msg-1',
-          fields: {
-            __proto__: { polluted: true, isAdmin: true },
-            status: 'synced',
-          },
-        }) + '\n',
+        }) +
+          '\n' +
+          JSON.stringify({
+            _op: 'update',
+            id: 'msg-1',
+            fields: {
+              __proto__: { polluted: true, isAdmin: true },
+              status: 'synced',
+            },
+          }) +
+          '\n',
         'utf8'
       );
 
       const s = new MailboxStore(dir);
       const probe = {};
-      assert.equal(probe.polluted, undefined, 'Object.prototype must not be polluted');
-      assert.equal(probe.isAdmin, undefined, 'Object.prototype must not be polluted');
+      assert.equal(
+        probe.polluted,
+        undefined,
+        'Object.prototype must not be polluted'
+      );
+      assert.equal(
+        probe.isAdmin,
+        undefined,
+        'Object.prototype must not be polluted'
+      );
       s.close();
-      try { fs.rmSync(dir, { recursive: true }); } catch {}
+      try {
+        fs.rmSync(dir, { recursive: true });
+      } catch {}
     });
 
     it('strips constructor/prototype from raw message rows', () => {
@@ -434,9 +502,15 @@ describe('MailboxStore', () => {
 
       const s = new MailboxStore(dir);
       const probe = {};
-      assert.equal(probe.evil, undefined, 'Object.prototype must not be polluted');
+      assert.equal(
+        probe.evil,
+        undefined,
+        'Object.prototype must not be polluted'
+      );
       s.close();
-      try { fs.rmSync(dir, { recursive: true }); } catch {}
+      try {
+        fs.rmSync(dir, { recursive: true });
+      } catch {}
     });
   });
 });

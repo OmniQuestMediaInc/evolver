@@ -49,14 +49,22 @@ afterEach(() => {
     if (savedEnv[k] === undefined) delete process.env[k];
     else process.env[k] = savedEnv[k];
   }
-  try { fs.rmSync(tmpMemoryDir, { recursive: true, force: true }); } catch (_) {}
+  try {
+    fs.rmSync(tmpMemoryDir, { recursive: true, force: true });
+  } catch (_) {}
 });
 
 describe('heartbeatSignalsHandler gating', () => {
   it('submits once when a deliverable pending_delivery arrives', async () => {
     const signals = {
       pending_deliveries: [
-        { proof_id: 'p1', order_id: 'atp_1', task_id: 't1', result_asset_id: 'asset1', verify_mode: 'auto' },
+        {
+          proof_id: 'p1',
+          order_id: 'atp_1',
+          task_id: 't1',
+          result_asset_id: 'asset1',
+          verify_mode: 'auto',
+        },
       ],
     };
     const summary = await handler.handleHeartbeatSignals(signals);
@@ -70,7 +78,13 @@ describe('heartbeatSignalsHandler gating', () => {
   it('skips deliveries without result_asset_id (nothing to deliver)', async () => {
     const signals = {
       pending_deliveries: [
-        { proof_id: 'p1', order_id: 'atp_1', task_id: 't1', result_asset_id: null, verify_mode: 'auto' },
+        {
+          proof_id: 'p1',
+          order_id: 'atp_1',
+          task_id: 't1',
+          result_asset_id: null,
+          verify_mode: 'auto',
+        },
       ],
     };
     const summary = await handler.handleHeartbeatSignals(signals);
@@ -81,8 +95,18 @@ describe('heartbeatSignalsHandler gating', () => {
   it('counts need_work for pending_atp_tasks without result_asset_id', async () => {
     const signals = {
       pending_atp_tasks: [
-        { phase: 'claim', task_id: 't1', order_id: 'atp_1', result_asset_id: null },
-        { phase: 'execute', task_id: 't2', order_id: 'atp_2', result_asset_id: null },
+        {
+          phase: 'claim',
+          task_id: 't1',
+          order_id: 'atp_1',
+          result_asset_id: null,
+        },
+        {
+          phase: 'execute',
+          task_id: 't2',
+          order_id: 'atp_2',
+          result_asset_id: null,
+        },
       ],
     };
     const summary = await handler.handleHeartbeatSignals(signals);
@@ -93,7 +117,13 @@ describe('heartbeatSignalsHandler gating', () => {
   it('ledger prevents double-submission across invocations', async () => {
     const signals = {
       pending_deliveries: [
-        { proof_id: 'p1', order_id: 'atp_1', task_id: 't1', result_asset_id: 'a1', verify_mode: 'auto' },
+        {
+          proof_id: 'p1',
+          order_id: 'atp_1',
+          task_id: 't1',
+          result_asset_id: 'a1',
+          verify_mode: 'auto',
+        },
       ],
     };
     const first = await handler.handleHeartbeatSignals(signals);
@@ -110,18 +140,31 @@ describe('heartbeatSignalsHandler gating', () => {
 
   it('records terminal Hub errors (409) in ledger so we do not hammer', async () => {
     hubClient.submitDelivery = function () {
-      return Promise.resolve({ ok: false, status: 409, error: 'already_delivered' });
+      return Promise.resolve({
+        ok: false,
+        status: 409,
+        error: 'already_delivered',
+      });
     };
     const signals = {
       pending_deliveries: [
-        { proof_id: 'p1', order_id: 'atp_terminal', task_id: 't1', result_asset_id: 'a1', verify_mode: 'auto' },
+        {
+          proof_id: 'p1',
+          order_id: 'atp_terminal',
+          task_id: 't1',
+          result_asset_id: 'a1',
+          verify_mode: 'auto',
+        },
       ],
     };
     const summary = await handler.handleHeartbeatSignals(signals);
     assert.equal(summary.failed, 1);
 
     const ledger = handler._internals.readLedger();
-    assert.ok(ledger.submitted['atp_terminal'] < 0, 'terminal error should be marked negative');
+    assert.ok(
+      ledger.submitted['atp_terminal'] < 0,
+      'terminal error should be marked negative'
+    );
   });
 
   it('does not run when EVOLVER_ATP_AUTODELIVER=off', async () => {
@@ -130,7 +173,13 @@ describe('heartbeatSignalsHandler gating', () => {
     // exercises that gate explicitly.
     const signals = {
       pending_deliveries: [
-        { proof_id: 'p1', order_id: 'atp_1', task_id: 't1', result_asset_id: 'a1', verify_mode: 'auto' },
+        {
+          proof_id: 'p1',
+          order_id: 'atp_1',
+          task_id: 't1',
+          result_asset_id: 'a1',
+          verify_mode: 'auto',
+        },
       ],
     };
     const summary = await handler.handleHeartbeatSignals(signals);
@@ -141,7 +190,13 @@ describe('heartbeatSignalsHandler gating', () => {
   it('respects per-call cooldown (back-to-back call returns empty)', async () => {
     const signals = {
       pending_deliveries: [
-        { proof_id: 'p1', order_id: 'atp_A', task_id: 't1', result_asset_id: 'a1', verify_mode: 'auto' },
+        {
+          proof_id: 'p1',
+          order_id: 'atp_A',
+          task_id: 't1',
+          result_asset_id: 'a1',
+          verify_mode: 'auto',
+        },
       ],
     };
     const first = await handler.handleHeartbeatSignals(signals);
@@ -149,7 +204,13 @@ describe('heartbeatSignalsHandler gating', () => {
     // Immediate second call -- cooldown not elapsed, should no-op
     const second = await handler.handleHeartbeatSignals({
       pending_deliveries: [
-        { proof_id: 'p2', order_id: 'atp_B', task_id: 't2', result_asset_id: 'a2', verify_mode: 'auto' },
+        {
+          proof_id: 'p2',
+          order_id: 'atp_B',
+          task_id: 't2',
+          result_asset_id: 'a2',
+          verify_mode: 'auto',
+        },
       ],
     });
     assert.equal(second.submitted, 0);
@@ -161,7 +222,12 @@ describe('heartbeatSignalsHandler gating', () => {
     ];
     const atpTasks = [
       { phase: 'execute', order_id: 'dup', task_id: 't', result_asset_id: 'a' },
-      { phase: 'claim', order_id: 'unique', task_id: 't2', result_asset_id: 'a2' },
+      {
+        phase: 'claim',
+        order_id: 'unique',
+        task_id: 't2',
+        result_asset_id: 'a2',
+      },
     ];
     const out = handler._internals.collectDeliverable(deliveries, atpTasks);
     assert.equal(out.length, 2);

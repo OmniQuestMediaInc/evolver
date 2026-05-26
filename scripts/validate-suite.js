@@ -24,7 +24,8 @@ function expandTestGlob(repoRoot, pat) {
     .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
     .replace(/\*/g, '.*');
   const matcher = new RegExp('^' + escaped + '$');
-  return fs.readdirSync(fullDir)
+  return fs
+    .readdirSync(fullDir)
     .filter(f => f.endsWith('.test.js') && matcher.test(f))
     .map(f => path.join(fullDir, f))
     .sort();

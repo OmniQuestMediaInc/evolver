@@ -2,7 +2,11 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { createGene, validateGene, VALID_CATEGORIES } = require('../src/gep/schemas/gene');
+const {
+  createGene,
+  validateGene,
+  VALID_CATEGORIES,
+} = require('../src/gep/schemas/gene');
 
 describe('createGene', () => {
   it('returns a fully-formed Gene with all defaults when called with empty object', () => {
@@ -23,7 +27,12 @@ describe('createGene', () => {
   });
 
   it('preserves provided fields', () => {
-    const g = createGene({ id: 'g1', category: 'repair', signals_match: ['log_error'], summary: 'Fix bugs' });
+    const g = createGene({
+      id: 'g1',
+      category: 'repair',
+      signals_match: ['log_error'],
+      summary: 'Fix bugs',
+    });
     assert.equal(g.id, 'g1');
     assert.equal(g.category, 'repair');
     assert.deepEqual(g.signals_match, ['log_error']);
@@ -31,7 +40,12 @@ describe('createGene', () => {
   });
 
   it('is idempotent — createGene(createGene(x)) equals createGene(x)', () => {
-    const input = { id: 'g2', category: 'optimize', signals_match: ['perf'], strategy: ['step1'] };
+    const input = {
+      id: 'g2',
+      category: 'optimize',
+      signals_match: ['perf'],
+      strategy: ['step1'],
+    };
     const once = createGene(input);
     const twice = createGene(once);
     assert.deepEqual(once, twice);
@@ -82,9 +96,21 @@ describe('createGene', () => {
     g1.epigenetic_marks.push({ context: 'test', boost: -0.5 });
     g1.learning_history.push({ result: 'success' });
     g1.anti_patterns.push('bad_pattern');
-    assert.deepEqual(g2.epigenetic_marks, [], 'epigenetic_marks should be independent');
-    assert.deepEqual(g2.learning_history, [], 'learning_history should be independent');
-    assert.deepEqual(g2.anti_patterns, [], 'anti_patterns should be independent');
+    assert.deepEqual(
+      g2.epigenetic_marks,
+      [],
+      'epigenetic_marks should be independent'
+    );
+    assert.deepEqual(
+      g2.learning_history,
+      [],
+      'learning_history should be independent'
+    );
+    assert.deepEqual(
+      g2.anti_patterns,
+      [],
+      'anti_patterns should be independent'
+    );
   });
 
   it('returns independent array instances even when partial provides arrays', () => {
@@ -92,14 +118,27 @@ describe('createGene', () => {
     const g1 = createGene({ signals_match: shared });
     const g2 = createGene({ signals_match: shared });
     g1.signals_match.push('new_signal');
-    assert.equal(g2.signals_match.length, 1, 'signals_match arrays should not share references');
-    assert.equal(shared.length, 1, 'original partial array should not be mutated');
+    assert.equal(
+      g2.signals_match.length,
+      1,
+      'signals_match arrays should not share references'
+    );
+    assert.equal(
+      shared.length,
+      1,
+      'original partial array should not be mutated'
+    );
   });
 });
 
 describe('validateGene', () => {
   function validGene(overrides) {
-    return createGene({ id: 'g-valid', category: 'repair', strategy: ['do it'], ...overrides });
+    return createGene({
+      id: 'g-valid',
+      category: 'repair',
+      strategy: ['do it'],
+      ...overrides,
+    });
   }
 
   it('passes for a valid Gene', () => {
@@ -111,11 +150,17 @@ describe('validateGene', () => {
   });
 
   it('throws when type is not "Gene"', () => {
-    assert.throws(() => validateGene(validGene({ type: 'Capsule' })), /type must be "Gene"/);
+    assert.throws(
+      () => validateGene(validGene({ type: 'Capsule' })),
+      /type must be "Gene"/
+    );
   });
 
   it('throws when id is missing', () => {
-    assert.throws(() => validateGene(validGene({ id: null })), /id is required/);
+    assert.throws(
+      () => validateGene(validGene({ id: null })),
+      /id is required/
+    );
   });
 
   it('throws when id is empty string', () => {
@@ -124,15 +169,45 @@ describe('validateGene', () => {
 
   it('throws when category is invalid', () => {
     // pass raw object — bypasses createGene normalization
-    assert.throws(() => validateGene({ type: 'Gene', id: 'g1', category: 'bad', signals_match: [], strategy: [] }), /category must be one of/);
+    assert.throws(
+      () =>
+        validateGene({
+          type: 'Gene',
+          id: 'g1',
+          category: 'bad',
+          signals_match: [],
+          strategy: [],
+        }),
+      /category must be one of/
+    );
   });
 
   it('throws when signals_match is not an array', () => {
-    assert.throws(() => validateGene({ type: 'Gene', id: 'g1', category: 'repair', signals_match: 'oops', strategy: [] }), /signals_match must be an array/);
+    assert.throws(
+      () =>
+        validateGene({
+          type: 'Gene',
+          id: 'g1',
+          category: 'repair',
+          signals_match: 'oops',
+          strategy: [],
+        }),
+      /signals_match must be an array/
+    );
   });
 
   it('throws when strategy is not an array', () => {
-    assert.throws(() => validateGene({ type: 'Gene', id: 'g1', category: 'repair', signals_match: [], strategy: 'oops' }), /strategy must be an array/);
+    assert.throws(
+      () =>
+        validateGene({
+          type: 'Gene',
+          id: 'g1',
+          category: 'repair',
+          signals_match: [],
+          strategy: 'oops',
+        }),
+      /strategy must be an array/
+    );
   });
 
   it('returns true on success', () => {

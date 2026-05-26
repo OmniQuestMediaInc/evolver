@@ -3,16 +3,36 @@
 // Can be consumed by external Hubs or Judges for automated assessment.
 
 const { computeAssetId, SCHEMA_VERSION } = require('./contentHash');
-const { captureEnvFingerprint, envFingerprintKey } = require('./envFingerprint');
+const {
+  captureEnvFingerprint,
+  envFingerprintKey,
+} = require('./envFingerprint');
 
 // Build a standardized ValidationReport from raw validation results.
-function buildValidationReport({ geneId, commands, results, envFp, startedAt, finishedAt }) {
+function buildValidationReport({
+  geneId,
+  commands,
+  results,
+  envFp,
+  startedAt,
+  finishedAt,
+}) {
   const env = envFp || captureEnvFingerprint();
   const resultsList = Array.isArray(results) ? results : [];
-  const cmdsList = Array.isArray(commands) ? commands : resultsList.map(function (r) { return r && r.cmd ? String(r.cmd) : ''; });
-  const overallOk = resultsList.length > 0 && resultsList.every(function (r) { return r && r.ok; });
+  const cmdsList = Array.isArray(commands)
+    ? commands
+    : resultsList.map(function (r) {
+        return r && r.cmd ? String(r.cmd) : '';
+      });
+  const overallOk =
+    resultsList.length > 0 &&
+    resultsList.every(function (r) {
+      return r && r.ok;
+    });
   const durationMs =
-    Number.isFinite(startedAt) && Number.isFinite(finishedAt) ? finishedAt - startedAt : null;
+    Number.isFinite(startedAt) && Number.isFinite(finishedAt)
+      ? finishedAt - startedAt
+      : null;
 
   const report = {
     type: 'ValidationReport',

@@ -3,10 +3,18 @@ const assert = require('node:assert/strict');
 const path = require('path');
 
 const savedEnv = {};
-const envKeys = ['EVOLVER_REPO_ROOT', 'WORKSPACE_DIR', 'OPENCLAW_WORKSPACE', 'MEMORY_DIR', 'EVOLUTION_DIR'];
+const envKeys = [
+  'EVOLVER_REPO_ROOT',
+  'WORKSPACE_DIR',
+  'OPENCLAW_WORKSPACE',
+  'MEMORY_DIR',
+  'EVOLUTION_DIR',
+];
 
 beforeEach(() => {
-  for (const k of envKeys) { savedEnv[k] = process.env[k]; }
+  for (const k of envKeys) {
+    savedEnv[k] = process.env[k];
+  }
   process.env.EVOLVER_REPO_ROOT = path.resolve(__dirname, '..');
 });
 
@@ -45,22 +53,46 @@ function buildMinimalPrompt(overrides) {
 describe('buildGepPrompt -- prompt does not contain inline status write', () => {
   it('does not embed node -e status file command in prompt', () => {
     const prompt = buildMinimalPrompt();
-    assert.ok(!prompt.includes('mkdirSync'), 'prompt should NOT contain mkdirSync (status write moved to wrapper)');
-    assert.ok(!prompt.includes('writeFileSync'), 'prompt should NOT contain writeFileSync');
-    assert.ok(!prompt.includes('status_'), 'prompt should NOT contain status file references');
+    assert.ok(
+      !prompt.includes('mkdirSync'),
+      'prompt should NOT contain mkdirSync (status write moved to wrapper)'
+    );
+    assert.ok(
+      !prompt.includes('writeFileSync'),
+      'prompt should NOT contain writeFileSync'
+    );
+    assert.ok(
+      !prompt.includes('status_'),
+      'prompt should NOT contain status file references'
+    );
   });
 
   it('does not contain POST-SOLIDIFY block', () => {
     const prompt = buildMinimalPrompt();
-    assert.ok(!prompt.includes('POST-SOLIDIFY'), 'prompt should NOT contain POST-SOLIDIFY block');
-    assert.ok(!prompt.includes('Wrapper Authority'), 'prompt should NOT contain Wrapper Authority header');
+    assert.ok(
+      !prompt.includes('POST-SOLIDIFY'),
+      'prompt should NOT contain POST-SOLIDIFY block'
+    );
+    assert.ok(
+      !prompt.includes('Wrapper Authority'),
+      'prompt should NOT contain Wrapper Authority header'
+    );
   });
 
   it('does not contain bash heredoc patterns', () => {
     const prompt = buildMinimalPrompt();
-    assert.ok(!prompt.includes('cat >'), 'prompt should NOT contain bash cat > redirect');
-    assert.ok(!prompt.includes('STATUSEOF'), 'prompt should NOT contain heredoc delimiter');
-    assert.ok(!prompt.includes('<< '), 'prompt should NOT contain heredoc operator');
+    assert.ok(
+      !prompt.includes('cat >'),
+      'prompt should NOT contain bash cat > redirect'
+    );
+    assert.ok(
+      !prompt.includes('STATUSEOF'),
+      'prompt should NOT contain heredoc delimiter'
+    );
+    assert.ok(
+      !prompt.includes('<< '),
+      'prompt should NOT contain heredoc operator'
+    );
   });
 });
 
@@ -68,22 +100,40 @@ describe('buildGepPrompt -- structure', () => {
   it('contains GEP protocol header', () => {
     const prompt = buildMinimalPrompt();
     assert.ok(prompt.includes('GEP'), 'prompt should contain GEP header');
-    assert.ok(prompt.includes('GENOME EVOLUTION PROTOCOL'), 'prompt should contain full protocol name');
+    assert.ok(
+      prompt.includes('GENOME EVOLUTION PROTOCOL'),
+      'prompt should contain full protocol name'
+    );
   });
 
   it('contains mandatory object model section', () => {
     const prompt = buildMinimalPrompt();
-    assert.ok(prompt.includes('Mutation'), 'prompt should contain Mutation object');
-    assert.ok(prompt.includes('PersonalityState'), 'prompt should contain PersonalityState');
-    assert.ok(prompt.includes('EvolutionEvent'), 'prompt should contain EvolutionEvent');
+    assert.ok(
+      prompt.includes('Mutation'),
+      'prompt should contain Mutation object'
+    );
+    assert.ok(
+      prompt.includes('PersonalityState'),
+      'prompt should contain PersonalityState'
+    );
+    assert.ok(
+      prompt.includes('EvolutionEvent'),
+      'prompt should contain EvolutionEvent'
+    );
     assert.ok(prompt.includes('Gene'), 'prompt should contain Gene');
     assert.ok(prompt.includes('Capsule'), 'prompt should contain Capsule');
   });
 
   it('contains constitutional ethics section', () => {
     const prompt = buildMinimalPrompt();
-    assert.ok(prompt.includes('CONSTITUTIONAL ETHICS'), 'prompt should contain ethics section');
-    assert.ok(prompt.includes('HUMAN WELFARE'), 'prompt should contain human welfare principle');
+    assert.ok(
+      prompt.includes('CONSTITUTIONAL ETHICS'),
+      'prompt should contain ethics section'
+    );
+    assert.ok(
+      prompt.includes('HUMAN WELFARE'),
+      'prompt should contain human welfare principle'
+    );
   });
 
   it('contains cycle ID in report requirement', () => {

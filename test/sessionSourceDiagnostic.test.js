@@ -23,8 +23,13 @@ function ensureAgentsRoot() {
 
 function clearAgentsRoot() {
   try {
-    fs.rmSync(path.join(tmpHome, '.openclaw'), { recursive: true, force: true });
-  } catch { /* ignore */ }
+    fs.rmSync(path.join(tmpHome, '.openclaw'), {
+      recursive: true,
+      force: true,
+    });
+  } catch {
+    /* ignore */
+  }
 }
 
 describe('diagnoseSessionSourceEmpty (session source diagnostics)', () => {
@@ -42,7 +47,10 @@ describe('diagnoseSessionSourceEmpty (session source diagnostics)', () => {
     // Require AFTER env is staged so module-level constants resolve to tmpHome.
     // Clear cache first in case another test loaded evolve.js earlier.
     delete require.cache[require.resolve('../src/evolve')];
-    ({ diagnoseSessionSourceEmpty, resetSessionSourceWarning } = require('../src/evolve'));
+    ({
+      diagnoseSessionSourceEmpty,
+      resetSessionSourceWarning,
+    } = require('../src/evolve'));
   });
 
   after(() => {
@@ -51,18 +59,29 @@ describe('diagnoseSessionSourceEmpty (session source diagnostics)', () => {
       else process.env[k] = v;
     }
     process.env.HOME = originalHome;
-    try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch { /* ignore */ }
+    try {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
   });
 
   beforeEach(() => {
     clearAgentsRoot();
-    if (typeof resetSessionSourceWarning === 'function') resetSessionSourceWarning();
+    if (typeof resetSessionSourceWarning === 'function')
+      resetSessionSourceWarning();
   });
 
   it('lists candidate OpenClaw agents when AGENT_NAME points to a missing directory', () => {
     ensureAgentsRoot();
-    fs.mkdirSync(path.join(tmpHome, '.openclaw', 'agents', 'coder', 'sessions'), { recursive: true });
-    fs.mkdirSync(path.join(tmpHome, '.openclaw', 'agents', 'worker-01', 'sessions'), { recursive: true });
+    fs.mkdirSync(
+      path.join(tmpHome, '.openclaw', 'agents', 'coder', 'sessions'),
+      { recursive: true }
+    );
+    fs.mkdirSync(
+      path.join(tmpHome, '.openclaw', 'agents', 'worker-01', 'sessions'),
+      { recursive: true }
+    );
 
     const diag = diagnoseSessionSourceEmpty({
       homedir: tmpHome,
@@ -72,7 +91,10 @@ describe('diagnoseSessionSourceEmpty (session source diagnostics)', () => {
     });
 
     assert.equal(diag.agentSessionsDirExists, false);
-    assert.deepEqual(diag.availableOpenClawAgents.sort(), ['coder', 'worker-01']);
+    assert.deepEqual(diag.availableOpenClawAgents.sort(), [
+      'coder',
+      'worker-01',
+    ]);
     const hintText = diag.hints.join('\n');
     assert.match(hintText, /AGENT_NAME="main"/);
     assert.match(hintText, /coder/);
@@ -118,7 +140,13 @@ describe('diagnoseSessionSourceEmpty (session source diagnostics)', () => {
   });
 
   it('produces no hints when the configured OpenClaw agent dir exists', () => {
-    const agentDir = path.join(tmpHome, '.openclaw', 'agents', 'main', 'sessions');
+    const agentDir = path.join(
+      tmpHome,
+      '.openclaw',
+      'agents',
+      'main',
+      'sessions'
+    );
     fs.mkdirSync(agentDir, { recursive: true });
     const diag = diagnoseSessionSourceEmpty({
       homedir: tmpHome,
@@ -132,7 +160,9 @@ describe('diagnoseSessionSourceEmpty (session source diagnostics)', () => {
   });
 
   it('treats EVOLVER_CURSOR_TRANSCRIPTS_DIR as a valid source for cursor mode', () => {
-    const override = fs.mkdtempSync(path.join(os.tmpdir(), 'evolver-cursor-override-'));
+    const override = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'evolver-cursor-override-')
+    );
     try {
       const diag = diagnoseSessionSourceEmpty({
         homedir: tmpHome,
@@ -143,7 +173,11 @@ describe('diagnoseSessionSourceEmpty (session source diagnostics)', () => {
       const hintText = diag.hints.join('\n');
       assert.doesNotMatch(hintText, /EVOLVER_SESSION_SOURCE=cursor/);
     } finally {
-      try { fs.rmSync(override, { recursive: true, force: true }); } catch { /* ignore */ }
+      try {
+        fs.rmSync(override, { recursive: true, force: true });
+      } catch {
+        /* ignore */
+      }
     }
   });
 });

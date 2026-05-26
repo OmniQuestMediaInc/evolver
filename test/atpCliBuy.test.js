@@ -23,7 +23,11 @@ describe('cli.parseBuyArgs', () => {
   it('parses comma-separated capabilities with trimming', () => {
     const r = cli.parseBuyArgs(['code_review, bug_fix , refactor']);
     assert.equal(r.ok, true);
-    assert.deepEqual(r.opts.capabilities, ['code_review', 'bug_fix', 'refactor']);
+    assert.deepEqual(r.opts.capabilities, [
+      'code_review',
+      'bug_fix',
+      'refactor',
+    ]);
   });
 
   it('accepts --budget=N form', () => {
@@ -51,7 +55,11 @@ describe('cli.parseBuyArgs', () => {
   });
 
   it('respects --question with quoted value', () => {
-    const r = cli.parseBuyArgs(['cap1', '--question', 'fix null bug in parser']);
+    const r = cli.parseBuyArgs([
+      'cap1',
+      '--question',
+      'fix null bug in parser',
+    ]);
     assert.equal(r.ok, true);
     assert.equal(r.opts.question, 'fix null bug in parser');
   });
@@ -138,8 +146,14 @@ describe('cli.runBuy wiring', () => {
     const deps = {
       atp: {
         consumerAgent: {
-          orderAndWait: async (opts) => { captured.push(['orderAndWait', opts]); return { ok: true, order: { order_id: 'ord_X' } }; },
-          orderService: async (opts) => { captured.push(['orderService', opts]); return { ok: true, data: { order_id: 'ord_Y' } }; },
+          orderAndWait: async opts => {
+            captured.push(['orderAndWait', opts]);
+            return { ok: true, order: { order_id: 'ord_X' } };
+          },
+          orderService: async opts => {
+            captured.push(['orderService', opts]);
+            return { ok: true, data: { order_id: 'ord_Y' } };
+          },
         },
       },
       log: () => {},
@@ -158,8 +172,14 @@ describe('cli.runBuy wiring', () => {
     const deps = {
       atp: {
         consumerAgent: {
-          orderAndWait: async () => ({ ok: false, error: 'should_not_be_called' }),
-          orderService: async (opts) => { captured.push(opts); return { ok: true, data: { order_id: 'ord_Z' } }; },
+          orderAndWait: async () => ({
+            ok: false,
+            error: 'should_not_be_called',
+          }),
+          orderService: async opts => {
+            captured.push(opts);
+            return { ok: true, data: { order_id: 'ord_Z' } };
+          },
         },
       },
       log: () => {},
@@ -175,7 +195,10 @@ describe('cli.runBuy wiring', () => {
     const deps = {
       atp: {
         consumerAgent: {
-          orderAndWait: async () => ({ ok: false, error: 'no_matching_services' }),
+          orderAndWait: async () => ({
+            ok: false,
+            error: 'no_matching_services',
+          }),
         },
       },
       log: () => {},
@@ -193,13 +216,20 @@ describe('cli.runOrders wiring', () => {
     const deps = {
       atp: {
         hubClient: {
-          listProofs: async (opts) => { captured.push(opts); return { ok: true, data: { proofs: [] } }; },
+          listProofs: async opts => {
+            captured.push(opts);
+            return { ok: true, data: { proofs: [] } };
+          },
         },
       },
       log: () => {},
       err: () => {},
     };
-    const { opts } = cli.parseOrdersArgs(['--role=merchant', '--status=settled', '--limit=5']);
+    const { opts } = cli.parseOrdersArgs([
+      '--role=merchant',
+      '--status=settled',
+      '--limit=5',
+    ]);
     const r = await cli.runOrders(opts, deps);
     assert.equal(r.exitCode, 0);
     assert.equal(captured[0].role, 'merchant');
@@ -214,8 +244,14 @@ describe('cli.runVerify wiring', () => {
     const deps = {
       atp: {
         consumerAgent: {
-          confirmDelivery: async (id) => { captured.push(['confirm', id]); return { ok: true, data: {} }; },
-          requestAiJudge: async () => ({ ok: false, error: 'should_not_be_called' }),
+          confirmDelivery: async id => {
+            captured.push(['confirm', id]);
+            return { ok: true, data: {} };
+          },
+          requestAiJudge: async () => ({
+            ok: false,
+            error: 'should_not_be_called',
+          }),
         },
       },
       log: () => {},
@@ -232,8 +268,14 @@ describe('cli.runVerify wiring', () => {
     const deps = {
       atp: {
         consumerAgent: {
-          confirmDelivery: async () => ({ ok: false, error: 'should_not_be_called' }),
-          requestAiJudge: async (id) => { captured.push(['ai_judge', id]); return { ok: true, data: {} }; },
+          confirmDelivery: async () => ({
+            ok: false,
+            error: 'should_not_be_called',
+          }),
+          requestAiJudge: async id => {
+            captured.push(['ai_judge', id]);
+            return { ok: true, data: {} };
+          },
         },
       },
       log: () => {},

@@ -84,44 +84,164 @@ function sanitizePayload(capsule) {
 
 const LEAK_SCANNERS = [
   // API keys & tokens
-  { type: 'api_key', pattern: /sk-[A-Za-z0-9]{20,}/g, suggest: 'process.env.OPENAI_API_KEY' },
-  { type: 'api_key', pattern: /sk-proj-[A-Za-z0-9\-_]{20,}/g, suggest: 'process.env.OPENAI_API_KEY' },
-  { type: 'api_key', pattern: /sk-ant-[A-Za-z0-9\-_]{20,}/g, suggest: 'process.env.ANTHROPIC_API_KEY' },
-  { type: 'api_key', pattern: /AKIA[0-9A-Z]{16}/g, suggest: 'process.env.AWS_ACCESS_KEY_ID' },
-  { type: 'github_token', pattern: /ghp_[A-Za-z0-9]{36,}/g, suggest: 'process.env.GITHUB_TOKEN' },
-  { type: 'github_token', pattern: /github_pat_[A-Za-z0-9_]{22,}/g, suggest: 'process.env.GITHUB_TOKEN' },
-  { type: 'npm_token', pattern: /npm_[A-Za-z0-9]{36,}/g, suggest: 'process.env.NPM_TOKEN' },
-  { type: 'slack_token', pattern: /xox[baprsv]-[A-Za-z0-9-]{10,}/g, suggest: 'process.env.SLACK_TOKEN' },
-  { type: 'jwt', pattern: /eyJ[A-Za-z0-9_\-]+\.eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]{20,}/g, suggest: 'process.env.JWT' },
-  { type: 'azure_key', pattern: /AccountKey=[^;\s]+/gi, suggest: 'process.env.AZURE_STORAGE_KEY' },
-  { type: 'azure_client_secret', pattern: /client_secret=[A-Za-z0-9~._\-]{8,}/gi, suggest: 'process.env.AZURE_CLIENT_SECRET' },
-  { type: 'azure_instrumentation_key', pattern: /instrumentationkey=[0-9a-fA-F-]{20,}/gi, suggest: 'process.env.APPINSIGHTS_INSTRUMENTATIONKEY' },
-  { type: 'discord_token', pattern: /\b[MNO][A-Za-z0-9_\-]{23,}\.[A-Za-z0-9_\-]{6}\.[A-Za-z0-9_\-]{27,}\b/g, suggest: 'process.env.DISCORD_TOKEN' },
-  { type: 'bearer_token', pattern: /Bearer\s+[A-Za-z0-9\-._~+\/]{20,}=*/g, suggest: 'process.env.AUTH_TOKEN' },
-  { type: 'private_key', pattern: /-----BEGIN\s+(?:RSA\s+|EC\s+|DSA\s+|OPENSSH\s+)?PRIVATE\s+KEY-----/g, suggest: 'process.env.PRIVATE_KEY_PATH' },
+  {
+    type: 'api_key',
+    pattern: /sk-[A-Za-z0-9]{20,}/g,
+    suggest: 'process.env.OPENAI_API_KEY',
+  },
+  {
+    type: 'api_key',
+    pattern: /sk-proj-[A-Za-z0-9\-_]{20,}/g,
+    suggest: 'process.env.OPENAI_API_KEY',
+  },
+  {
+    type: 'api_key',
+    pattern: /sk-ant-[A-Za-z0-9\-_]{20,}/g,
+    suggest: 'process.env.ANTHROPIC_API_KEY',
+  },
+  {
+    type: 'api_key',
+    pattern: /AKIA[0-9A-Z]{16}/g,
+    suggest: 'process.env.AWS_ACCESS_KEY_ID',
+  },
+  {
+    type: 'github_token',
+    pattern: /ghp_[A-Za-z0-9]{36,}/g,
+    suggest: 'process.env.GITHUB_TOKEN',
+  },
+  {
+    type: 'github_token',
+    pattern: /github_pat_[A-Za-z0-9_]{22,}/g,
+    suggest: 'process.env.GITHUB_TOKEN',
+  },
+  {
+    type: 'npm_token',
+    pattern: /npm_[A-Za-z0-9]{36,}/g,
+    suggest: 'process.env.NPM_TOKEN',
+  },
+  {
+    type: 'slack_token',
+    pattern: /xox[baprsv]-[A-Za-z0-9-]{10,}/g,
+    suggest: 'process.env.SLACK_TOKEN',
+  },
+  {
+    type: 'jwt',
+    pattern: /eyJ[A-Za-z0-9_\-]+\.eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]{20,}/g,
+    suggest: 'process.env.JWT',
+  },
+  {
+    type: 'azure_key',
+    pattern: /AccountKey=[^;\s]+/gi,
+    suggest: 'process.env.AZURE_STORAGE_KEY',
+  },
+  {
+    type: 'azure_client_secret',
+    pattern: /client_secret=[A-Za-z0-9~._\-]{8,}/gi,
+    suggest: 'process.env.AZURE_CLIENT_SECRET',
+  },
+  {
+    type: 'azure_instrumentation_key',
+    pattern: /instrumentationkey=[0-9a-fA-F-]{20,}/gi,
+    suggest: 'process.env.APPINSIGHTS_INSTRUMENTATIONKEY',
+  },
+  {
+    type: 'discord_token',
+    pattern:
+      /\b[MNO][A-Za-z0-9_\-]{23,}\.[A-Za-z0-9_\-]{6}\.[A-Za-z0-9_\-]{27,}\b/g,
+    suggest: 'process.env.DISCORD_TOKEN',
+  },
+  {
+    type: 'bearer_token',
+    pattern: /Bearer\s+[A-Za-z0-9\-._~+\/]{20,}=*/g,
+    suggest: 'process.env.AUTH_TOKEN',
+  },
+  {
+    type: 'private_key',
+    pattern:
+      /-----BEGIN\s+(?:RSA\s+|EC\s+|DSA\s+|OPENSSH\s+)?PRIVATE\s+KEY-----/g,
+    suggest: 'process.env.PRIVATE_KEY_PATH',
+  },
   // Database connection strings with credentials
-  { type: 'db_url', pattern: /(?:mongodb|postgres|postgresql|mysql|redis|amqp):\/\/[^\s"',;)}\]]{10,}/gi, suggest: 'process.env.DATABASE_URL' },
+  {
+    type: 'db_url',
+    pattern:
+      /(?:mongodb|postgres|postgresql|mysql|redis|amqp):\/\/[^\s"',;)}\]]{10,}/gi,
+    suggest: 'process.env.DATABASE_URL',
+  },
   // Local filesystem paths with usernames
-  { type: 'local_path', pattern: /\/home\/[a-zA-Z0-9_.-]+\//g, suggest: 'process.env.HOME' },
-  { type: 'local_path', pattern: /\/Users\/[a-zA-Z0-9_.-]+\//g, suggest: 'process.env.HOME' },
-  { type: 'local_path', pattern: /[A-Z]:\\Users\\[a-zA-Z0-9_.-]+\\/g, suggest: 'process.env.USERPROFILE' },
+  {
+    type: 'local_path',
+    pattern: /\/home\/[a-zA-Z0-9_.-]+\//g,
+    suggest: 'process.env.HOME',
+  },
+  {
+    type: 'local_path',
+    pattern: /\/Users\/[a-zA-Z0-9_.-]+\//g,
+    suggest: 'process.env.HOME',
+  },
+  {
+    type: 'local_path',
+    pattern: /[A-Z]:\\Users\\[a-zA-Z0-9_.-]+\\/g,
+    suggest: 'process.env.USERPROFILE',
+  },
   // Internal IP addresses
-  { type: 'internal_ip', pattern: /\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3})(?::\d{2,5})?\b/g, suggest: 'process.env.SERVICE_HOST' },
+  {
+    type: 'internal_ip',
+    pattern:
+      /\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3})(?::\d{2,5})?\b/g,
+    suggest: 'process.env.SERVICE_HOST',
+  },
   // SSH connection strings
-  { type: 'ssh_target', pattern: /[a-zA-Z0-9_.-]+@(?:(?:\d{1,3}\.){3}\d{1,3}|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, suggest: 'process.env.SSH_HOST' },
+  {
+    type: 'ssh_target',
+    pattern:
+      /[a-zA-Z0-9_.-]+@(?:(?:\d{1,3}\.){3}\d{1,3}|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
+    suggest: 'process.env.SSH_HOST',
+  },
   // Generic password/secret assignments
-  { type: 'password', pattern: /password[=:]\s*["']?[^\s"',;)}\]]{6,}["']?/gi, suggest: 'process.env.PASSWORD' },
-  { type: 'secret', pattern: /secret[=:]\s*["']?[A-Za-z0-9\-._~+\/]{16,}["']?/gi, suggest: 'process.env.SECRET' },
+  {
+    type: 'password',
+    pattern: /password[=:]\s*["']?[^\s"',;)}\]]{6,}["']?/gi,
+    suggest: 'process.env.PASSWORD',
+  },
+  {
+    type: 'secret',
+    pattern: /secret[=:]\s*["']?[A-Za-z0-9\-._~+\/]{16,}["']?/gi,
+    suggest: 'process.env.SECRET',
+  },
   // Basic auth in URLs
-  { type: 'basic_auth', pattern: /:\/\/[^@\s:]+:[^@\s]+@/g, suggest: 'process.env.SERVICE_URL' },
+  {
+    type: 'basic_auth',
+    pattern: /:\/\/[^@\s:]+:[^@\s]+@/g,
+    suggest: 'process.env.SERVICE_URL',
+  },
 ];
 
 const ENV_SCAN_SKIP_KEYS = new Set([
-  'PATH', 'HOME', 'SHELL', 'TERM', 'LANG', 'USER', 'LOGNAME',
-  'PWD', 'OLDPWD', 'SHLVL', 'HOSTNAME', 'DISPLAY', 'EDITOR',
-  'PAGER', 'LESS', 'LS_COLORS', 'COLORTERM', 'TERM_PROGRAM',
-  'XDG_SESSION_ID', 'XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS',
-  'SSH_AUTH_SOCK', 'SSH_AGENT_PID', '_',
+  'PATH',
+  'HOME',
+  'SHELL',
+  'TERM',
+  'LANG',
+  'USER',
+  'LOGNAME',
+  'PWD',
+  'OLDPWD',
+  'SHLVL',
+  'HOSTNAME',
+  'DISPLAY',
+  'EDITOR',
+  'PAGER',
+  'LESS',
+  'LS_COLORS',
+  'COLORTERM',
+  'TERM_PROGRAM',
+  'XDG_SESSION_ID',
+  'XDG_RUNTIME_DIR',
+  'DBUS_SESSION_BUS_ADDRESS',
+  'SSH_AUTH_SOCK',
+  'SSH_AGENT_PID',
+  '_',
 ]);
 
 /**
@@ -130,7 +250,8 @@ const ENV_SCAN_SKIP_KEYS = new Set([
  * Does NOT modify the content.
  */
 function scanForLeaks(content) {
-  if (typeof content !== 'string' || !content) return { found: false, leaks: [] };
+  if (typeof content !== 'string' || !content)
+    return { found: false, leaks: [] };
   const leaks = [];
   const seen = new Set();
   for (const scanner of LEAK_SCANNERS) {
@@ -141,7 +262,11 @@ function scanForLeaks(content) {
       const key = scanner.type + ':' + val;
       if (seen.has(key)) continue;
       seen.add(key);
-      leaks.push({ type: scanner.type, value: val.length > 60 ? val.slice(0, 57) + '...' : val, suggestion: scanner.suggest });
+      leaks.push({
+        type: scanner.type,
+        value: val.length > 60 ? val.slice(0, 57) + '...' : val,
+        suggestion: scanner.suggest,
+      });
     }
   }
   return { found: leaks.length > 0, leaks };
@@ -159,7 +284,12 @@ function detectEnvValueLeaks(content) {
     if (!val || val.length < 8) continue;
     if (ENV_SCAN_SKIP_KEYS.has(key)) continue;
     if (content.includes(val)) {
-      leaks.push({ type: 'env_value_leak', envKey: key, value: val.length > 60 ? val.slice(0, 57) + '...' : val, suggestion: 'process.env.' + key });
+      leaks.push({
+        type: 'env_value_leak',
+        envKey: key,
+        value: val.length > 60 ? val.slice(0, 57) + '...' : val,
+        suggestion: 'process.env.' + key,
+      });
     }
   }
   return leaks;
@@ -176,4 +306,10 @@ function fullLeakCheck(content) {
   return { found: allLeaks.length > 0, leaks: allLeaks };
 }
 
-module.exports = { sanitizePayload, redactString, scanForLeaks, detectEnvValueLeaks, fullLeakCheck };
+module.exports = {
+  sanitizePayload,
+  redactString,
+  scanForLeaks,
+  detectEnvValueLeaks,
+  fullLeakCheck,
+};

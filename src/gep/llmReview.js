@@ -15,9 +15,15 @@ function isLlmReviewEnabled() {
 
 function buildReviewPrompt({ diff, gene, signals, mutation }) {
   const geneId = gene && gene.id ? gene.id : '(unknown)';
-  const category = (mutation && mutation.category) || (gene && gene.category) || 'unknown';
-  const rationale = mutation && mutation.rationale ? String(mutation.rationale).slice(0, 500) : '(none)';
-  const signalsList = Array.isArray(signals) ? signals.slice(0, 8).join(', ') : '(none)';
+  const category =
+    (mutation && mutation.category) || (gene && gene.category) || 'unknown';
+  const rationale =
+    mutation && mutation.rationale
+      ? String(mutation.rationale).slice(0, 500)
+      : '(none)';
+  const signalsList = Array.isArray(signals)
+    ? signals.slice(0, 8).join(', ')
+    : '(none)';
   const diffPreview = String(diff || '').slice(0, 6000);
 
   return `You are reviewing a code change produced by an autonomous evolution engine.
@@ -57,7 +63,10 @@ function runLlmReview({ diff, gene, signals, mutation }) {
     const repoRoot = getRepoRoot();
 
     // Write prompt to a temp file to avoid shell quoting issues entirely.
-    const tmpFile = path.join(os.tmpdir(), 'evolver_review_prompt_' + process.pid + '.txt');
+    const tmpFile = path.join(
+      os.tmpdir(),
+      'evolver_review_prompt_' + process.pid + '.txt'
+    );
     fs.writeFileSync(tmpFile, prompt, 'utf8');
 
     try {
@@ -67,25 +76,44 @@ function runLlmReview({ diff, gene, signals, mutation }) {
         const prompt = fs.readFileSync(process.argv[1], 'utf8');
         console.log(JSON.stringify({ approved: true, confidence: 0.7, concerns: [], summary: 'auto-approved (no external LLM configured)' }));
       `;
-      const result = execFileSync(process.execPath, ['-e', reviewScript, tmpFile], {
-        cwd: repoRoot,
-        encoding: 'utf8',
-        timeout: REVIEW_TIMEOUT_MS,
-        stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
-      });
+      const result = execFileSync(
+        process.execPath,
+        ['-e', reviewScript, tmpFile],
+        {
+          cwd: repoRoot,
+          encoding: 'utf8',
+          timeout: REVIEW_TIMEOUT_MS,
+          stdio: ['ignore', 'pipe', 'pipe'],
+          windowsHide: true,
+        }
+      );
 
       try {
         return JSON.parse(result.trim());
       } catch (_) {
-        return { approved: true, confidence: 0.5, concerns: ['failed to parse review response'], summary: 'review parse error' };
+        return {
+          approved: true,
+          confidence: 0.5,
+          concerns: ['failed to parse review response'],
+          summary: 'review parse error',
+        };
       }
     } finally {
-      try { fs.unlinkSync(tmpFile); } catch (_) {}
+      try {
+        fs.unlinkSync(tmpFile);
+      } catch (_) {}
     }
   } catch (e) {
-    console.log('[LLMReview] Execution failed (non-fatal): ' + (e && e.message ? e.message : e));
-    return { approved: true, confidence: 0.5, concerns: ['review execution failed'], summary: 'review timeout or error' };
+    console.log(
+      '[LLMReview] Execution failed (non-fatal): ' +
+        (e && e.message ? e.message : e)
+    );
+    return {
+      approved: true,
+      confidence: 0.5,
+      concerns: ['review execution failed'],
+      summary: 'review timeout or error',
+    };
   }
 }
 

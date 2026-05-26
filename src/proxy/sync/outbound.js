@@ -64,7 +64,11 @@ class OutboundSync {
           if (msg && msg.retry_count < MAX_RETRIES) {
             this.store.incrementRetry(r.id, r.error || 'rejected by hub');
           } else {
-            updates.push({ id: r.id, status: 'failed', error: r.error || 'max retries' });
+            updates.push({
+              id: r.id,
+              status: 'failed',
+              error: r.error || 'max retries',
+            });
           }
         }
 
@@ -79,10 +83,15 @@ class OutboundSync {
       }
 
       if (updates.length > 0) this.store.updateStatusBatch(updates);
-      if (inboundMessages.length > 0) this.store.writeInboundBatch(inboundMessages);
+      if (inboundMessages.length > 0)
+        this.store.writeInboundBatch(inboundMessages);
 
       this.store.setState('last_sync_at', new Date().toISOString());
-      return { sent: pending.length, synced: updates.length, responses: inboundMessages.length };
+      return {
+        sent: pending.length,
+        synced: updates.length,
+        responses: inboundMessages.length,
+      };
     } catch (err) {
       if (err instanceof AuthError) throw err;
       this.logger.error(`[outbound] flush failed: ${err.message}`);

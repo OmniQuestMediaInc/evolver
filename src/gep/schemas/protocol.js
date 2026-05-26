@@ -30,7 +30,7 @@ function renderEnum(arr) {
 // renderEnumList: format an enum array as a quoted JSON-ish list for prompt schemas.
 // Example: ['build', 'validate', 'canary'] -> '"build","validate","canary"'
 function renderEnumList(arr) {
-  return arr.map((s) => '"' + s + '"').join(',');
+  return arr.map(s => '"' + s + '"').join(',');
 }
 
 module.exports = {

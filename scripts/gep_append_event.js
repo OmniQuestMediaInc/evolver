@@ -31,7 +31,10 @@ function parseInput(text) {
   } catch (e) {}
 
   // Fallback: JSONL.
-  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const lines = raw
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
   const out = [];
   for (const line of lines) {
     try {
@@ -52,9 +55,16 @@ function isValidEvolutionEvent(ev) {
   if (!Array.isArray(ev.genes_used)) return false;
   // GEP v1.4: mutation + personality are mandatory evolution dimensions
   if (!ev.mutation_id || typeof ev.mutation_id !== 'string') return false;
-  if (!ev.personality_state || typeof ev.personality_state !== 'object') return false;
+  if (!ev.personality_state || typeof ev.personality_state !== 'object')
+    return false;
   if (ev.personality_state.type !== 'PersonalityState') return false;
-  for (const k of ['rigor', 'creativity', 'verbosity', 'risk_tolerance', 'obedience']) {
+  for (const k of [
+    'rigor',
+    'creativity',
+    'verbosity',
+    'risk_tolerance',
+    'obedience',
+  ]) {
     const v = Number(ev.personality_state[k]);
     if (!Number.isFinite(v) || v < 0 || v > 1) return false;
   }
@@ -93,4 +103,3 @@ try {
   process.stderr.write(`${e && e.message ? e.message : String(e)}\n`);
   process.exit(1);
 }
-

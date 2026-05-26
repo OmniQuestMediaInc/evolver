@@ -11,7 +11,6 @@ const { execSync, spawnSync } = require('child_process');
 // on large repos). See GHSA reports / issue #451.
 const MAX_EXEC_BUFFER = 10 * 1024 * 1024;
 
-
 function findEvolverRoot() {
   const candidates = [
     process.env.EVOLVER_ROOT,
@@ -20,9 +19,13 @@ function findEvolverRoot() {
   for (const c of candidates) {
     if (c && fs.existsSync(path.join(c, 'package.json'))) {
       try {
-        const pkg = JSON.parse(fs.readFileSync(path.join(c, 'package.json'), 'utf8'));
+        const pkg = JSON.parse(
+          fs.readFileSync(path.join(c, 'package.json'), 'utf8')
+        );
         if (pkg.name === '@evomap/evolver' || pkg.name === 'evolver') return c;
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
   }
   const homeSkills = path.join(require('os').homedir(), 'skills', 'evolver');
@@ -31,18 +34,28 @@ function findEvolverRoot() {
 }
 
 function findMemoryGraph(evolverRoot) {
-  if (process.env.MEMORY_GRAPH_PATH && fs.existsSync(process.env.MEMORY_GRAPH_PATH)) {
+  if (
+    process.env.MEMORY_GRAPH_PATH &&
+    fs.existsSync(process.env.MEMORY_GRAPH_PATH)
+  ) {
     return process.env.MEMORY_GRAPH_PATH;
   }
   const candidates = [
-    evolverRoot && path.join(evolverRoot, 'memory', 'evolution', 'memory_graph.jsonl'),
-    evolverRoot && path.join(evolverRoot, 'MEMORY', 'evolution', 'memory_graph.jsonl'),
+    evolverRoot &&
+      path.join(evolverRoot, 'memory', 'evolution', 'memory_graph.jsonl'),
+    evolverRoot &&
+      path.join(evolverRoot, 'MEMORY', 'evolution', 'memory_graph.jsonl'),
   ];
   for (const c of candidates) {
     if (c && fs.existsSync(c)) return c;
   }
   if (evolverRoot) {
-    const defaultPath = path.join(evolverRoot, 'memory', 'evolution', 'memory_graph.jsonl');
+    const defaultPath = path.join(
+      evolverRoot,
+      'memory',
+      'evolution',
+      'memory_graph.jsonl'
+    );
     fs.mkdirSync(path.dirname(defaultPath), { recursive: true });
     return defaultPath;
   }
@@ -52,16 +65,24 @@ function findMemoryGraph(evolverRoot) {
 function getGitDiffStats() {
   try {
     const cwd = process.cwd();
-    const stat = execSync('git diff --stat HEAD~1 2>/dev/null || git diff --stat 2>/dev/null || echo ""', {
-      cwd,
-      encoding: 'utf8',
-      timeout: 5000, maxBuffer: MAX_EXEC_BUFFER
-    }).trim();
-    const diffContent = execSync('git diff HEAD~1 --no-color 2>/dev/null || git diff --no-color 2>/dev/null || echo ""', {
-      cwd,
-      encoding: 'utf8',
-      timeout: 5000, maxBuffer: MAX_EXEC_BUFFER
-    }).trim();
+    const stat = execSync(
+      'git diff --stat HEAD~1 2>/dev/null || git diff --stat 2>/dev/null || echo ""',
+      {
+        cwd,
+        encoding: 'utf8',
+        timeout: 5000,
+        maxBuffer: MAX_EXEC_BUFFER,
+      }
+    ).trim();
+    const diffContent = execSync(
+      'git diff HEAD~1 --no-color 2>/dev/null || git diff --no-color 2>/dev/null || echo ""',
+      {
+        cwd,
+        encoding: 'utf8',
+        timeout: 5000,
+        maxBuffer: MAX_EXEC_BUFFER,
+      }
+    ).trim();
     const filesChanged = (stat.match(/\d+ files? changed/) || ['0'])[0];
     const insertions = (stat.match(/(\d+) insertions?/) || [null, '0'])[1];
     const deletions = (stat.match(/(\d+) deletions?/) || [null, '0'])[1];
@@ -81,11 +102,16 @@ function detectSignals(text) {
   const lower = text.toLowerCase();
   const signals = [];
   if (/error:|exception:|failed/i.test(lower)) signals.push('log_error');
-  if (/timeout|slow|latency|bottleneck/i.test(lower)) signals.push('perf_bottleneck');
-  if (/add|implement|feature|new function|new module/i.test(lower)) signals.push('user_feature_request');
-  if (/improve|enhance|refactor|optimize/i.test(lower)) signals.push('user_improvement_suggestion');
-  if (/not supported|unsupported|not implemented/i.test(lower)) signals.push('capability_gap');
-  if (/deploy|ci|pipeline|build failed/i.test(lower)) signals.push('deployment_issue');
+  if (/timeout|slow|latency|bottleneck/i.test(lower))
+    signals.push('perf_bottleneck');
+  if (/add|implement|feature|new function|new module/i.test(lower))
+    signals.push('user_feature_request');
+  if (/improve|enhance|refactor|optimize/i.test(lower))
+    signals.push('user_improvement_suggestion');
+  if (/not supported|unsupported|not implemented/i.test(lower))
+    signals.push('capability_gap');
+  if (/deploy|ci|pipeline|build failed/i.test(lower))
+    signals.push('deployment_issue');
   if (/test fail|assertion|expect\(/i.test(lower)) signals.push('test_failure');
   return [...new Set(signals)];
 }
@@ -107,18 +133,29 @@ function recordToHub(outcome) {
     });
     // Argv-array form avoids shell interpretation of apiKey, payload, or the
     // hub URL. Values cannot break out through shell metacharacters.
-    const res = spawnSync('curl', [
-      '-s', '-m', '8', '-X', 'POST',
-      '-H', 'Content-Type: application/json',
-      '-H', `Authorization: Bearer ${apiKey}`,
-      '-d', payload,
-      `${hubUrl.replace(/\/+$/, '')}/a2a/evolution/record`,
-    ], {
-      timeout: 10000,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: MAX_EXEC_BUFFER,
-      shell: false,
-    });
+    const res = spawnSync(
+      'curl',
+      [
+        '-s',
+        '-m',
+        '8',
+        '-X',
+        'POST',
+        '-H',
+        'Content-Type: application/json',
+        '-H',
+        `Authorization: Bearer ${apiKey}`,
+        '-d',
+        payload,
+        `${hubUrl.replace(/\/+$/, '')}/a2a/evolution/record`,
+      ],
+      {
+        timeout: 10000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        maxBuffer: MAX_EXEC_BUFFER,
+        shell: false,
+      }
+    );
     if (res.status !== 0 || res.error) return false;
     return true;
   } catch {
@@ -150,7 +187,9 @@ function main() {
   let inputData = '';
   let handled = false;
   process.stdin.setEncoding('utf8');
-  process.stdin.on('data', chunk => { inputData += chunk; });
+  process.stdin.on('data', chunk => {
+    inputData += chunk;
+  });
   process.stdin.on('end', () => {
     if (handled) return;
     handled = true;
@@ -165,7 +204,8 @@ function main() {
       const signals = detectSignals(diffInfo.diffSnippet);
       if (signals.length === 0) signals.push('stable_success_plateau');
 
-      const hasErrors = signals.includes('log_error') || signals.includes('test_failure');
+      const hasErrors =
+        signals.includes('log_error') || signals.includes('test_failure');
       const status = hasErrors ? 'failed' : 'success';
       const score = hasErrors ? 0.3 : 0.8;
 
@@ -183,14 +223,20 @@ function main() {
       const hubOk = recordToHub(outcome);
       const localOk = graphPath ? recordToLocal(graphPath, outcome) : false;
 
-      const target = hubOk ? 'Hub' : localOk ? 'local memory' : 'nowhere (no Hub or local path)';
+      const target = hubOk
+        ? 'Hub'
+        : localOk
+          ? 'local memory'
+          : 'nowhere (no Hub or local path)';
       const msg = `[Evolution] Session outcome recorded to ${target}: ${outcome.summary}`;
 
-      process.stdout.write(JSON.stringify({
-        followup_message: msg,
-        stopMessage: msg,
-        additionalContext: msg,
-      }));
+      process.stdout.write(
+        JSON.stringify({
+          followup_message: msg,
+          stopMessage: msg,
+          additionalContext: msg,
+        })
+      );
     } catch (e) {
       process.stdout.write(JSON.stringify({}));
     }

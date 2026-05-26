@@ -72,7 +72,11 @@ function buildCtx(overrides) {
     selectedBy: 'selector',
     selectedCapsuleId: 'c1',
     strategyPolicy: { blastRadiusMaxFiles: 5 },
-    personalitySelection: { personality_key: 'explorer', personality_known: true, personality_mutations: [] },
+    personalitySelection: {
+      personality_key: 'explorer',
+      personality_known: true,
+      personality_mutations: [],
+    },
     personalityState: { creativity: 0.8, rigor: 0.7, risk_tolerance: 0.2 },
     mutation: { id: 'm1', category: 'innovate' },
     forceInnovation: false,
@@ -100,14 +104,19 @@ describe('dispatch', () => {
     mockMods['assetCallLog'] = { logAssetCall: () => {} };
     mockMods['solidify'] = {
       readStateForSolidify: () => ({}),
-      writeStateForSolidify: (state) => { solidifyWritten = state; },
+      writeStateForSolidify: state => {
+        solidifyWritten = state;
+      },
     };
     mockMods['bridge'] = {
-      clip: (s) => s,
+      clip: s => s,
       writePromptArtifact: () => ({ promptPath: '/tmp/prompt.txt' }),
       renderSessionsSpawnCall: () => 'sessions_spawn({...})',
     };
-    mockMods['paths'] = { getEvolutionDir: () => '/tmp/evo', getRepoRoot: () => '/tmp/repo' };
+    mockMods['paths'] = {
+      getEvolutionDir: () => '/tmp/evo',
+      getRepoRoot: () => '/tmp/repo',
+    };
     mockMods['explore'] = { tryExplore: async () => ({ signals: [] }) };
 
     // Patch execSync so git calls don't fail
@@ -124,11 +133,20 @@ describe('dispatch', () => {
       console.log = origLog;
     }
 
-    assert.ok(solidifyWritten !== null, 'writeStateForSolidify should have been called');
+    assert.ok(
+      solidifyWritten !== null,
+      'writeStateForSolidify should have been called'
+    );
     assert.ok(solidifyWritten.last_run, 'last_run should be set');
     assert.equal(solidifyWritten.last_run.selected_gene_id, 'g1');
-    assert.ok(loggedLines.some(l => l.includes('BUILT_PROMPT')), 'prompt should be logged');
-    assert.ok(loggedLines.some(l => l.includes('SOLIDIFY REQUIRED')), 'solidify required message should be logged');
+    assert.ok(
+      loggedLines.some(l => l.includes('BUILT_PROMPT')),
+      'prompt should be logged'
+    );
+    assert.ok(
+      loggedLines.some(l => l.includes('SOLIDIFY REQUIRED')),
+      'solidify required message should be logged'
+    );
   });
 
   it('emits sessions_spawn when bridgeEnabled is true', async () => {
@@ -146,11 +164,14 @@ describe('dispatch', () => {
       writeStateForSolidify: () => {},
     };
     mockMods['bridge'] = {
-      clip: (s) => s,
+      clip: s => s,
       writePromptArtifact: () => ({ promptPath: '/tmp/prompt.txt' }),
       renderSessionsSpawnCall: () => 'sessions_spawn({...})',
     };
-    mockMods['paths'] = { getEvolutionDir: () => '/tmp/evo', getRepoRoot: () => '/tmp/repo' };
+    mockMods['paths'] = {
+      getEvolutionDir: () => '/tmp/evo',
+      getRepoRoot: () => '/tmp/repo',
+    };
     mockMods['explore'] = { tryExplore: async () => ({ signals: [] }) };
 
     delete require.cache[require.resolve('../src/evolve/pipeline/dispatch')];
@@ -164,8 +185,14 @@ describe('dispatch', () => {
       console.log = origLog;
     }
 
-    assert.ok(loggedLines.some(l => l.includes('BRIDGE ENABLED')), 'bridge log should appear');
-    assert.ok(loggedLines.some(l => l.includes('sessions_spawn')), 'sessions_spawn call should be logged');
+    assert.ok(
+      loggedLines.some(l => l.includes('BRIDGE ENABLED')),
+      'bridge log should appear'
+    );
+    assert.ok(
+      loggedLines.some(l => l.includes('sessions_spawn')),
+      'sessions_spawn call should be logged'
+    );
   });
 
   it('skips prompt output when skipHubCalls is true', async () => {
@@ -173,14 +200,27 @@ describe('dispatch', () => {
     let solidifyWritten = false;
 
     mockMods['assetStore'] = { getLastEventId: () => null };
-    mockMods['prompt'] = { buildGepPrompt: () => 'PROMPT', buildReusePrompt: () => '', buildHubMatchedBlock: () => null };
+    mockMods['prompt'] = {
+      buildGepPrompt: () => 'PROMPT',
+      buildReusePrompt: () => '',
+      buildHubMatchedBlock: () => null,
+    };
     mockMods['assetCallLog'] = { logAssetCall: () => {} };
     mockMods['solidify'] = {
       readStateForSolidify: () => ({}),
-      writeStateForSolidify: () => { solidifyWritten = true; },
+      writeStateForSolidify: () => {
+        solidifyWritten = true;
+      },
     };
-    mockMods['bridge'] = { clip: s => s, writePromptArtifact: () => ({}), renderSessionsSpawnCall: () => '' };
-    mockMods['paths'] = { getEvolutionDir: () => '/tmp/evo', getRepoRoot: () => '/tmp/repo' };
+    mockMods['bridge'] = {
+      clip: s => s,
+      writePromptArtifact: () => ({}),
+      renderSessionsSpawnCall: () => '',
+    };
+    mockMods['paths'] = {
+      getEvolutionDir: () => '/tmp/evo',
+      getRepoRoot: () => '/tmp/repo',
+    };
     mockMods['explore'] = { tryExplore: async () => ({ signals: [] }) };
 
     delete require.cache[require.resolve('../src/evolve/pipeline/dispatch')];
@@ -195,8 +235,14 @@ describe('dispatch', () => {
     }
 
     assert.ok(solidifyWritten, 'solidify should still be written in idle path');
-    assert.ok(loggedLines.some(l => l.includes('Idle cycle complete')), 'idle log should appear');
-    assert.ok(!loggedLines.some(l => l.includes('BUILT_PROMPT')), 'prompt should NOT be logged');
+    assert.ok(
+      loggedLines.some(l => l.includes('Idle cycle complete')),
+      'idle log should appear'
+    );
+    assert.ok(
+      !loggedLines.some(l => l.includes('BUILT_PROMPT')),
+      'prompt should NOT be logged'
+    );
   });
 
   it('uses buildReusePrompt when hubHit is direct-reuse', async () => {
@@ -205,14 +251,29 @@ describe('dispatch', () => {
 
     mockMods['assetStore'] = { getLastEventId: () => null };
     mockMods['prompt'] = {
-      buildGepPrompt: () => { throw new Error('should not call buildGepPrompt'); },
-      buildReusePrompt: (opts) => { reusePromptCalled = true; return 'REUSE_PROMPT'; },
+      buildGepPrompt: () => {
+        throw new Error('should not call buildGepPrompt');
+      },
+      buildReusePrompt: opts => {
+        reusePromptCalled = true;
+        return 'REUSE_PROMPT';
+      },
       buildHubMatchedBlock: () => null,
     };
     mockMods['assetCallLog'] = { logAssetCall: () => {} };
-    mockMods['solidify'] = { readStateForSolidify: () => ({}), writeStateForSolidify: () => {} };
-    mockMods['bridge'] = { clip: s => s, writePromptArtifact: () => ({}), renderSessionsSpawnCall: () => '' };
-    mockMods['paths'] = { getEvolutionDir: () => '/tmp/evo', getRepoRoot: () => '/tmp/repo' };
+    mockMods['solidify'] = {
+      readStateForSolidify: () => ({}),
+      writeStateForSolidify: () => {},
+    };
+    mockMods['bridge'] = {
+      clip: s => s,
+      writePromptArtifact: () => ({}),
+      renderSessionsSpawnCall: () => '',
+    };
+    mockMods['paths'] = {
+      getEvolutionDir: () => '/tmp/evo',
+      getRepoRoot: () => '/tmp/repo',
+    };
     mockMods['explore'] = { tryExplore: async () => ({ signals: [] }) };
 
     delete require.cache[require.resolve('../src/evolve/pipeline/dispatch')];
@@ -221,27 +282,55 @@ describe('dispatch', () => {
     const origLog = console.log;
     console.log = (...args) => loggedLines.push(args.join(' '));
     try {
-      await dispatch(buildCtx({
-        bridgeEnabled: false,
-        hubHit: { hit: true, mode: 'direct', match: { id: 'asset1' }, asset_id: 'asset1', score: 0.9 },
-      }));
+      await dispatch(
+        buildCtx({
+          bridgeEnabled: false,
+          hubHit: {
+            hit: true,
+            mode: 'direct',
+            match: { id: 'asset1' },
+            asset_id: 'asset1',
+            score: 0.9,
+          },
+        })
+      );
     } finally {
       console.log = origLog;
     }
 
-    assert.ok(reusePromptCalled, 'buildReusePrompt should be called for direct-reuse hit');
-    assert.ok(loggedLines.some(l => l.includes('REUSE_PROMPT')), 'reuse prompt should be logged');
+    assert.ok(
+      reusePromptCalled,
+      'buildReusePrompt should be called for direct-reuse hit'
+    );
+    assert.ok(
+      loggedLines.some(l => l.includes('REUSE_PROMPT')),
+      'reuse prompt should be logged'
+    );
   });
 
   it('emits thought process block when EVOLVE_EMIT_THOUGHT_PROCESS=true', async () => {
     let loggedLines = [];
 
     mockMods['assetStore'] = { getLastEventId: () => null };
-    mockMods['prompt'] = { buildGepPrompt: () => 'PROMPT', buildReusePrompt: () => '', buildHubMatchedBlock: () => null };
+    mockMods['prompt'] = {
+      buildGepPrompt: () => 'PROMPT',
+      buildReusePrompt: () => '',
+      buildHubMatchedBlock: () => null,
+    };
     mockMods['assetCallLog'] = { logAssetCall: () => {} };
-    mockMods['solidify'] = { readStateForSolidify: () => ({}), writeStateForSolidify: () => {} };
-    mockMods['bridge'] = { clip: s => s, writePromptArtifact: () => ({}), renderSessionsSpawnCall: () => '' };
-    mockMods['paths'] = { getEvolutionDir: () => '/tmp/evo', getRepoRoot: () => '/tmp/repo' };
+    mockMods['solidify'] = {
+      readStateForSolidify: () => ({}),
+      writeStateForSolidify: () => {},
+    };
+    mockMods['bridge'] = {
+      clip: s => s,
+      writePromptArtifact: () => ({}),
+      renderSessionsSpawnCall: () => '',
+    };
+    mockMods['paths'] = {
+      getEvolutionDir: () => '/tmp/evo',
+      getRepoRoot: () => '/tmp/repo',
+    };
     mockMods['explore'] = { tryExplore: async () => ({ signals: [] }) };
 
     delete require.cache[require.resolve('../src/evolve/pipeline/dispatch')];
@@ -259,7 +348,13 @@ describe('dispatch', () => {
       else process.env.EVOLVE_EMIT_THOUGHT_PROCESS = origEnv;
     }
 
-    assert.ok(loggedLines.some(l => l.includes('[THOUGHT_PROCESS]')), 'thought process block should be emitted');
-    assert.ok(loggedLines.some(l => l.includes('force_innovation:')), 'force_innovation field should appear');
+    assert.ok(
+      loggedLines.some(l => l.includes('[THOUGHT_PROCESS]')),
+      'thought process block should be emitted'
+    );
+    assert.ok(
+      loggedLines.some(l => l.includes('force_innovation:')),
+      'force_innovation field should appear'
+    );
   });
 });

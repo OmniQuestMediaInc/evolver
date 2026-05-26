@@ -26,7 +26,10 @@ require.cache[forceUpdatePath] = {
   },
 };
 
-const { sendHeartbeat, _resetForceUpdateStateForTesting } = require('../src/gep/a2aProtocol');
+const {
+  sendHeartbeat,
+  _resetForceUpdateStateForTesting,
+} = require('../src/gep/a2aProtocol');
 
 describe('heartbeat-triggered force_update', () => {
   var tmpDir;
@@ -60,7 +63,9 @@ describe('heartbeat-triggered force_update', () => {
     executeForceUpdateCalls = [];
     executeForceUpdateReturn = false;
     exitCalls = [];
-    process.exit = function (code) { exitCalls.push(code); };
+    process.exit = function (code) {
+      exitCalls.push(code);
+    };
     // Default: cooldown 0 so each test starts fresh. The cooldown test
     // overrides to a large value inside its own body.
     process.env.EVOLVER_FORCE_UPDATE_RETRY_COOLDOWN_MS = '0';
@@ -87,7 +92,11 @@ describe('heartbeat-triggered force_update', () => {
     // Give the microtask a tick to run.
     await new Promise(resolve => setImmediate(resolve));
 
-    assert.equal(executeForceUpdateCalls.length, 1, 'executeForceUpdate called exactly once');
+    assert.equal(
+      executeForceUpdateCalls.length,
+      1,
+      'executeForceUpdate called exactly once'
+    );
     assert.equal(executeForceUpdateCalls[0].required_version, '>=1.74.1');
     assert.deepEqual(exitCalls, [], 'no process.exit when upgrade fails');
   });
@@ -149,7 +158,10 @@ describe('heartbeat-triggered force_update', () => {
     // In beforeEach we reset counters before each `it`, so within this single
     // test we should see at most 1 call (the second one is blocked by
     // in-flight lock / recent-attempt cooldown).
-    assert.equal(executeForceUpdateCalls.length, 1,
-      'second back-to-back heartbeat must not re-trigger executeForceUpdate');
+    assert.equal(
+      executeForceUpdateCalls.length,
+      1,
+      'second back-to-back heartbeat must not re-trigger executeForceUpdate'
+    );
   });
 });
