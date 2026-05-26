@@ -18,19 +18,28 @@ const MAX_LOG_CHARS = 2000;
 const MAX_EVENTS = 5;
 
 function getConfig() {
-  const enabled = String(process.env.EVOLVER_AUTO_ISSUE || 'true').toLowerCase();
+  const enabled = String(
+    process.env.EVOLVER_AUTO_ISSUE || 'true'
+  ).toLowerCase();
   if (enabled === 'false' || enabled === '0') return null;
   return {
     // Default repo is shared with self-PR (see config.SELF_PR_REPO) so that
     // auto-reported issues and auto-filed PRs land in the same public repo.
     repo: process.env.EVOLVER_ISSUE_REPO || SELF_PR_REPO,
-    cooldownMs: Number(process.env.EVOLVER_ISSUE_COOLDOWN_MS) || DEFAULT_COOLDOWN_MS,
-    minStreak: Number(process.env.EVOLVER_ISSUE_MIN_STREAK) || DEFAULT_MIN_STREAK,
+    cooldownMs:
+      Number(process.env.EVOLVER_ISSUE_COOLDOWN_MS) || DEFAULT_COOLDOWN_MS,
+    minStreak:
+      Number(process.env.EVOLVER_ISSUE_MIN_STREAK) || DEFAULT_MIN_STREAK,
   };
 }
 
 function getGithubToken() {
-  return process.env.GITHUB_TOKEN || process.env.GH_TOKEN || process.env.GITHUB_PAT || '';
+  return (
+    process.env.GITHUB_TOKEN ||
+    process.env.GH_TOKEN ||
+    process.env.GITHUB_PAT ||
+    ''
+  );
 }
 
 function getStatePath() {
@@ -64,34 +73,51 @@ function truncateNodeId(nodeId) {
 function computeErrorKey(signals) {
   const relevant = signals
     .filter(function (s) {
-      return s.startsWith('recurring_errsig') ||
+      return (
+        s.startsWith('recurring_errsig') ||
         s.startsWith('ban_gene:') ||
         s === 'recurring_error' ||
         s === 'failure_loop_detected' ||
-        s === 'high_failure_ratio';
+        s === 'high_failure_ratio'
+      );
     })
     .map(function (s) {
       return s.replace(/^recurring_errsig\(\d+x\):/, 'recurring_errsig:');
     })
     .sort()
     .join('|');
-  return crypto.createHash('sha256').update(relevant || 'unknown').digest('hex').slice(0, 16);
+  return crypto
+    .createHash('sha256')
+    .update(relevant || 'unknown')
+    .digest('hex')
+    .slice(0, 16);
 }
 
 function extractErrorSignature(signals) {
-  const errSig = signals.find(function (s) { return s.startsWith('recurring_errsig'); });
+  const errSig = signals.find(function (s) {
+    return s.startsWith('recurring_errsig');
+  });
   if (errSig) {
-    return errSig.replace(/^recurring_errsig\(\d+x\):/, '').trim().slice(0, 200);
+    return errSig
+      .replace(/^recurring_errsig\(\d+x\):/, '')
+      .trim()
+      .slice(0, 200);
   }
-  const banned = signals.find(function (s) { return s.startsWith('ban_gene:'); });
-  if (banned) return 'Repeated failures with gene: ' + banned.replace('ban_gene:', '');
+  const banned = signals.find(function (s) {
+    return s.startsWith('ban_gene:');
+  });
+  if (banned)
+    return 'Repeated failures with gene: ' + banned.replace('ban_gene:', '');
   return 'Persistent evolution failure';
 }
 
 function extractStreakCount(signals) {
   for (let i = 0; i < signals.length; i++) {
     if (signals[i].startsWith('consecutive_failure_streak_')) {
-      const n = parseInt(signals[i].replace('consecutive_failure_streak_', ''), 10);
+      const n = parseInt(
+        signals[i].replace('consecutive_failure_streak_', ''),
+        10
+      );
       if (Number.isFinite(n)) return n;
     }
   }
@@ -99,8 +125,11 @@ function extractStreakCount(signals) {
 }
 
 function formatRecentEvents(events) {
-  if (!Array.isArray(events) || events.length === 0) return '_No recent events available._';
-  const failed = events.filter(function (e) { return e && e.outcome && e.outcome.status === 'failed'; });
+  if (!Array.isArray(events) || events.length === 0)
+    return '_No recent events available._';
+  const failed = events.filter(function (e) {
+    return e && e.outcome && e.outcome.status === 'failed';
+  });
   const rows = failed.slice(-MAX_EVENTS).map(function (e, idx) {
     const intent = e.intent || '-';
     const gene = (Array.isArray(e.genes_used) && e.genes_used[0]) || '-';
@@ -108,10 +137,25 @@ function formatRecentEvents(events) {
     let reason = (e.outcome && e.outcome.reason) || '';
     if (reason.length > 80) reason = reason.slice(0, 80) + '...';
     reason = redactString(reason);
-    return '| ' + (idx + 1) + ' | ' + intent + ' | ' + gene + ' | ' + outcome + ' | ' + reason + ' |';
+    return (
+      '| ' +
+      (idx + 1) +
+      ' | ' +
+      intent +
+      ' | ' +
+      gene +
+      ' | ' +
+      outcome +
+      ' | ' +
+      reason +
+      ' |'
+    );
   });
   if (rows.length === 0) return '_No failed events in recent history._';
-  return '| # | Intent | Gene | Outcome | Reason |\n|---|--------|------|---------|--------|\n' + rows.join('\n');
+  return (
+    '| # | Intent | Gene | Outcome | Reason |\n|---|--------|------|---------|--------|\n' +
+    rows.join('\n')
+  );
 }
 
 function buildIssueBody(opts) {
@@ -123,14 +167,18 @@ function buildIssueBody(opts) {
   const errorSig = extractErrorSignature(signals);
   const nodeId = truncateNodeId(getNodeId());
 
-  const failureSignals = signals.filter(function (s) {
-    return s.startsWith('recurring_') ||
-      s.startsWith('consecutive_failure') ||
-      s.startsWith('failure_loop') ||
-      s.startsWith('high_failure') ||
-      s.startsWith('ban_gene:') ||
-      s === 'force_innovation_after_repair_loop';
-  }).join(', ');
+  const failureSignals = signals
+    .filter(function (s) {
+      return (
+        s.startsWith('recurring_') ||
+        s.startsWith('consecutive_failure') ||
+        s.startsWith('failure_loop') ||
+        s.startsWith('high_failure') ||
+        s.startsWith('ban_gene:') ||
+        s === 'force_innovation_after_repair_loop'
+      );
+    })
+    .join(', ');
 
   const sanitizedLog = redactString(
     typeof sessionLog === 'string' ? sessionLog.slice(-MAX_LOG_CHARS) : ''
@@ -138,15 +186,20 @@ function buildIssueBody(opts) {
 
   const eventsTable = formatRecentEvents(recentEvents);
 
-  const reportId = crypto.createHash('sha256')
+  const reportId = crypto
+    .createHash('sha256')
     .update(nodeId + '|' + Date.now() + '|' + errorSig)
-    .digest('hex').slice(0, 12);
+    .digest('hex')
+    .slice(0, 12);
 
   const body = [
     '## Environment',
     '- **Evolver Version:** ' + (fp.evolver_version || 'unknown'),
     '- **Node.js:** ' + (fp.node_version || process.version),
-    '- **Platform:** ' + (fp.platform || process.platform) + ' ' + (fp.arch || process.arch),
+    '- **Platform:** ' +
+      (fp.platform || process.platform) +
+      ' ' +
+      (fp.arch || process.arch),
     '- **Container:** ' + (fp.container ? 'yes' : 'no'),
     '',
     '## Failure Summary',
@@ -167,7 +220,9 @@ function buildIssueBody(opts) {
     '```',
     '',
     '---',
-    '_This issue was automatically created by evolver v' + (fp.evolver_version || 'unknown') + '._',
+    '_This issue was automatically created by evolver v' +
+      (fp.evolver_version || 'unknown') +
+      '._',
     '_Device: ' + nodeId + ' | Report ID: ' + reportId + '_',
   ];
 
@@ -178,7 +233,9 @@ function shouldReport(signals, config) {
   if (!config) return false;
 
   const hasFailureLoop = signals.includes('failure_loop_detected');
-  const hasRecurringAndHigh = signals.includes('recurring_error') && signals.includes('high_failure_ratio');
+  const hasRecurringAndHigh =
+    signals.includes('recurring_error') &&
+    signals.includes('high_failure_ratio');
 
   if (!hasFailureLoop && !hasRecurringAndHigh) return false;
 
@@ -191,7 +248,9 @@ function shouldReport(signals, config) {
   if (state.lastReportedAt) {
     const elapsed = Date.now() - new Date(state.lastReportedAt).getTime();
     if (elapsed < config.cooldownMs) {
-      const recentKeys = Array.isArray(state.recentIssueKeys) ? state.recentIssueKeys : [];
+      const recentKeys = Array.isArray(state.recentIssueKeys)
+        ? state.recentIssueKeys
+        : [];
       if (recentKeys.includes(errorKey)) {
         return false;
       }
@@ -206,8 +265,8 @@ async function createGithubIssue(repo, title, body, token) {
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + token,
-      'Accept': 'application/vnd.github+json',
+      Authorization: 'Bearer ' + token,
+      Accept: 'application/vnd.github+json',
       'Content-Type': 'application/json',
       'X-GitHub-Api-Version': '2022-11-28',
     },
@@ -217,8 +276,12 @@ async function createGithubIssue(repo, title, body, token) {
 
   if (!response.ok) {
     let errText = '';
-    try { errText = await response.text(); } catch (_) {}
-    throw new Error('GitHub API ' + response.status + ': ' + errText.slice(0, 200));
+    try {
+      errText = await response.text();
+    } catch (_) {}
+    throw new Error(
+      'GitHub API ' + response.status + ': ' + errText.slice(0, 200)
+    );
   }
 
   const data = await response.json();
@@ -226,36 +289,61 @@ async function createGithubIssue(repo, title, body, token) {
 }
 
 function escapeSearchQuery(s) {
-  return String(s || '').replace(/"/g, '').replace(/[\r\n]+/g, ' ').trim();
+  return String(s || '')
+    .replace(/"/g, '')
+    .replace(/[\r\n]+/g, ' ')
+    .trim();
 }
 
 async function findExistingIssue(repo, title, token) {
   const titleSig = escapeSearchQuery(title).slice(0, 120);
   if (!titleSig) return null;
   const q = 'repo:' + repo + ' is:issue is:open in:title "' + titleSig + '"';
-  const url = 'https://api.github.com/search/issues?per_page=5&q=' + encodeURIComponent(q);
+  const url =
+    'https://api.github.com/search/issues?per_page=5&q=' +
+    encodeURIComponent(q);
   const headers = {
-    'Accept': 'application/vnd.github+json',
+    Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
   };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   let response;
   try {
-    response = await fetch(url, { method: 'GET', headers: headers, signal: AbortSignal.timeout(10000) });
+    response = await fetch(url, {
+      method: 'GET',
+      headers: headers,
+      signal: AbortSignal.timeout(10000),
+    });
   } catch (e) {
     return null;
   }
   if (!response.ok) return null;
   let data;
-  try { data = await response.json(); } catch (_) { return null; }
+  try {
+    data = await response.json();
+  } catch (_) {
+    return null;
+  }
   const items = Array.isArray(data && data.items) ? data.items : [];
   const AUTO_PREFIX = '[Auto] Recurring failure: ';
-  const match = items.find(function (it) {
-    return it && typeof it.title === 'string' && it.title.trim() === title.trim() && it.state === 'open';
-  }) || items.find(function (it) {
-    return it && it.state === 'open' && typeof it.title === 'string' &&
-      it.title.startsWith(AUTO_PREFIX) && it.title.trim().startsWith(titleSig.trim());
-  });
+  const match =
+    items.find(function (it) {
+      return (
+        it &&
+        typeof it.title === 'string' &&
+        it.title.trim() === title.trim() &&
+        it.state === 'open'
+      );
+    }) ||
+    items.find(function (it) {
+      return (
+        it &&
+        it.state === 'open' &&
+        typeof it.title === 'string' &&
+        it.title.startsWith(AUTO_PREFIX) &&
+        it.title.trim().startsWith(titleSig.trim())
+      );
+    });
   if (!match) return null;
   return { number: match.number, url: match.html_url, title: match.title };
 }
@@ -270,7 +358,9 @@ async function maybeReportIssue(opts) {
 
   const token = getGithubToken();
   if (!token) {
-    console.log('[IssueReporter] No GitHub token available. Skipping auto-report.');
+    console.log(
+      '[IssueReporter] No GitHub token available. Skipping auto-report.'
+    );
     return;
   }
 
@@ -282,10 +372,18 @@ async function maybeReportIssue(opts) {
   try {
     const existing = await findExistingIssue(config.repo, title, token);
     if (existing) {
-      console.log('[IssueReporter] Open issue already exists (#' + existing.number + '): ' + existing.url + '. Skipping duplicate report.');
+      console.log(
+        '[IssueReporter] Open issue already exists (#' +
+          existing.number +
+          '): ' +
+          existing.url +
+          '. Skipping duplicate report.'
+      );
       const state = readState();
       const errorKey = computeErrorKey(signals);
-      let recentKeys = Array.isArray(state.recentIssueKeys) ? state.recentIssueKeys : [];
+      let recentKeys = Array.isArray(state.recentIssueKeys)
+        ? state.recentIssueKeys
+        : [];
       if (!recentKeys.includes(errorKey)) recentKeys.push(errorKey);
       if (recentKeys.length > 20) recentKeys = recentKeys.slice(-20);
       writeState({
@@ -299,11 +397,18 @@ async function maybeReportIssue(opts) {
     }
 
     const result = await createGithubIssue(config.repo, title, body, token);
-    console.log('[IssueReporter] Created GitHub issue #' + result.number + ': ' + result.url);
+    console.log(
+      '[IssueReporter] Created GitHub issue #' +
+        result.number +
+        ': ' +
+        result.url
+    );
 
     const state = readState();
     const errorKey = computeErrorKey(signals);
-    let recentKeys = Array.isArray(state.recentIssueKeys) ? state.recentIssueKeys : [];
+    let recentKeys = Array.isArray(state.recentIssueKeys)
+      ? state.recentIssueKeys
+      : [];
     recentKeys.push(errorKey);
     if (recentKeys.length > 20) recentKeys = recentKeys.slice(-20);
     writeState({
@@ -313,7 +418,10 @@ async function maybeReportIssue(opts) {
       lastIssueNumber: result.number,
     });
   } catch (e) {
-    console.log('[IssueReporter] Failed to create issue (non-fatal): ' + (e && e.message ? e.message : String(e)));
+    console.log(
+      '[IssueReporter] Failed to create issue (non-fatal): ' +
+        (e && e.message ? e.message : String(e))
+    );
   }
 }
 

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 function stripAnsi(str) {
   // Strip CSI sequences so child stdout stays deterministic regardless of
   // the parent shell's FORCE_COLOR state (see issue #430 and PRs #444/#445).
+  // eslint-disable-next-line no-control-regex
   return String(str).replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
 }
 
@@ -17,7 +18,10 @@ function freshRequire(modulePath) {
 }
 
 beforeEach(() => {
-  for (const k of envKeys) { savedEnv[k] = process.env[k]; delete process.env[k]; }
+  for (const k of envKeys) {
+    savedEnv[k] = process.env[k];
+    delete process.env[k];
+  }
 });
 
 afterEach(() => {
@@ -135,6 +139,9 @@ describe('determineBridgeEnabled -- black-box via child_process', () => {
   });
 
   it('explicit override: bridge forced off even with OPENCLAW_WORKSPACE', () => {
-    assert.equal(runBridgeCheck({ EVOLVE_BRIDGE: 'false', OPENCLAW_WORKSPACE: '/ws' }), 'false');
+    assert.equal(
+      runBridgeCheck({ EVOLVE_BRIDGE: 'false', OPENCLAW_WORKSPACE: '/ws' }),
+      'false'
+    );
   });
 });

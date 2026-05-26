@@ -36,11 +36,13 @@ function getRepoRoot() {
 
   const ownDir = path.resolve(__dirname, '..', '..');
 
-  const noParent = String(process.env.EVOLVER_NO_PARENT_GIT || '').toLowerCase() === 'true';
+  const noParent =
+    String(process.env.EVOLVER_NO_PARENT_GIT || '').toLowerCase() === 'true';
   // Older flag kept for backward compatibility. Setting it to 'false'
   // explicitly is treated as an opt-out, mirroring EVOLVER_NO_PARENT_GIT.
   const legacyFlag = process.env.EVOLVER_USE_PARENT_GIT;
-  const legacyOptOut = typeof legacyFlag === 'string' && legacyFlag.toLowerCase() === 'false';
+  const legacyOptOut =
+    typeof legacyFlag === 'string' && legacyFlag.toLowerCase() === 'false';
 
   // Walk upward from process.cwd() — the project the user is standing in.
   if (!noParent && !legacyOptOut) {
@@ -117,7 +119,8 @@ function getSessionScope() {
 }
 
 function getEvolutionDir() {
-  const baseDir = process.env.EVOLUTION_DIR || path.join(getMemoryDir(), 'evolution');
+  const baseDir =
+    process.env.EVOLUTION_DIR || path.join(getMemoryDir(), 'evolution');
   const scope = getSessionScope();
   if (scope) {
     return path.join(baseDir, 'scopes', scope);
@@ -127,7 +130,8 @@ function getEvolutionDir() {
 
 function getGepAssetsDir() {
   const repoRoot = getRepoRoot();
-  const baseDir = process.env.GEP_ASSETS_DIR || path.join(repoRoot, 'assets', 'gep');
+  const baseDir =
+    process.env.GEP_ASSETS_DIR || path.join(repoRoot, 'assets', 'gep');
   const scope = getSessionScope();
   if (scope) {
     return path.join(baseDir, 'scopes', scope);

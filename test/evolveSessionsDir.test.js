@@ -82,25 +82,36 @@ describe('evolve.js sessions-dir resolution (#527)', () => {
     process.env.AGENT_NAME = 'worker-7';
     const { getAgentSessionsDir } = freshRequire('../src/gep/paths');
     const home = process.env.HOME || process.env.USERPROFILE || '';
-    assert.equal(getAgentSessionsDir(),
-      path.join(home, '.openclaw', 'agents', 'worker-7', 'sessions'));
+    assert.equal(
+      getAgentSessionsDir(),
+      path.join(home, '.openclaw', 'agents', 'worker-7', 'sessions')
+    );
   });
 
   it('paths.getAgentSessionsDir derives agent from workspace-<name> scope', () => {
     process.env.EVOLVER_SESSION_SCOPE = 'workspace-proj-alpha';
     const { getAgentSessionsDir } = freshRequire('../src/gep/paths');
     const home = process.env.HOME || process.env.USERPROFILE || '';
-    assert.equal(getAgentSessionsDir(),
-      path.join(home, '.openclaw', 'agents', 'proj-alpha', 'sessions'));
+    assert.equal(
+      getAgentSessionsDir(),
+      path.join(home, '.openclaw', 'agents', 'proj-alpha', 'sessions')
+    );
   });
 
   it('paths.readSessionCwdFromHead reads cwd from session header', () => {
     const sessionsDir = path.join(tmpDir, 'sessions');
     fs.mkdirSync(sessionsDir, { recursive: true });
     const sessionPath = path.join(sessionsDir, 'session-abc.jsonl');
-    const header = { type: 'session', cwd: '/home/alice/proj', sessionId: 'abc' };
+    const header = {
+      type: 'session',
+      cwd: '/home/alice/proj',
+      sessionId: 'abc',
+    };
     const body = { type: 'turn', role: 'user', content: 'hi' };
-    fs.writeFileSync(sessionPath, JSON.stringify(header) + '\n' + JSON.stringify(body) + '\n');
+    fs.writeFileSync(
+      sessionPath,
+      JSON.stringify(header) + '\n' + JSON.stringify(body) + '\n'
+    );
     const { readSessionCwdFromHead } = freshRequire('../src/gep/paths');
     assert.equal(readSessionCwdFromHead(sessionPath), '/home/alice/proj');
   });
@@ -120,14 +131,29 @@ describe('evolve.js sessions-dir resolution (#527)', () => {
   });
 
   it('evolve.js reads sessions from AGENT_SESSIONS_DIR override (the #527 regression)', () => {
-    const customSessionsDir = path.join(tmpDir, 'win-style', 'data', '.openclaw', 'agents', 'main', 'sessions');
+    const customSessionsDir = path.join(
+      tmpDir,
+      'win-style',
+      'data',
+      '.openclaw',
+      'agents',
+      'main',
+      'sessions'
+    );
     fs.mkdirSync(customSessionsDir, { recursive: true });
 
     // Write a recent .jsonl file so readOpenClawSessions would pick it up.
     const sessionPath = path.join(customSessionsDir, 'session-1.jsonl');
     const header = { type: 'session', cwd: tmpDir, sessionId: 'test-1' };
-    const turn = { type: 'turn', role: 'user', content: 'integration test for 527' };
-    fs.writeFileSync(sessionPath, JSON.stringify(header) + '\n' + JSON.stringify(turn) + '\n');
+    const turn = {
+      type: 'turn',
+      role: 'user',
+      content: 'integration test for 527',
+    };
+    fs.writeFileSync(
+      sessionPath,
+      JSON.stringify(header) + '\n' + JSON.stringify(turn) + '\n'
+    );
 
     process.env.AGENT_SESSIONS_DIR = customSessionsDir;
 
@@ -139,16 +165,20 @@ describe('evolve.js sessions-dir resolution (#527)', () => {
     // does not export AGENT_SESSIONS_DIR directly, but it DOES export
     // diagnoseSessionSourceEmpty() which surfaces the resolved path.
     const evolve = require('../src/evolve');
-    const diag = typeof evolve.diagnoseSessionSourceEmpty === 'function'
-      ? evolve.diagnoseSessionSourceEmpty()
-      : null;
+    const diag =
+      typeof evolve.diagnoseSessionSourceEmpty === 'function'
+        ? evolve.diagnoseSessionSourceEmpty()
+        : null;
 
     assert.ok(diag, 'diagnoseSessionSourceEmpty should be exported');
     // Normalize for cross-platform equality (resolve any trailing sep).
     const actual = path.resolve(diag.agentSessionsDir || '');
     const expected = path.resolve(customSessionsDir);
-    assert.equal(actual, expected,
-      `evolve.js must honor AGENT_SESSIONS_DIR override (got "${actual}", expected "${expected}")`);
+    assert.equal(
+      actual,
+      expected,
+      `evolve.js must honor AGENT_SESSIONS_DIR override (got "${actual}", expected "${expected}")`
+    );
     assert.equal(diag.agentSessionsDirExists, true);
   });
 
@@ -158,13 +188,23 @@ describe('evolve.js sessions-dir resolution (#527)', () => {
 
     purgeModuleCache();
     const evolve = require('../src/evolve');
-    const diag = typeof evolve.diagnoseSessionSourceEmpty === 'function'
-      ? evolve.diagnoseSessionSourceEmpty()
-      : null;
+    const diag =
+      typeof evolve.diagnoseSessionSourceEmpty === 'function'
+        ? evolve.diagnoseSessionSourceEmpty()
+        : null;
 
     assert.ok(diag);
     const home = process.env.HOME || process.env.USERPROFILE || '';
-    const expected = path.join(home, '.openclaw', 'agents', 'test-agent', 'sessions');
-    assert.equal(path.resolve(diag.agentSessionsDir || ''), path.resolve(expected));
+    const expected = path.join(
+      home,
+      '.openclaw',
+      'agents',
+      'test-agent',
+      'sessions'
+    );
+    assert.equal(
+      path.resolve(diag.agentSessionsDir || ''),
+      path.resolve(expected)
+    );
   });
 });

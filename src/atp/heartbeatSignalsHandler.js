@@ -33,7 +33,9 @@ let _inflight = false;
 let _lastRunAt = 0;
 
 function _isEnabled() {
-  const raw = (process.env.EVOLVER_ATP_AUTODELIVER || 'on').toLowerCase().trim();
+  const raw = (process.env.EVOLVER_ATP_AUTODELIVER || 'on')
+    .toLowerCase()
+    .trim();
   return raw !== 'off' && raw !== '0' && raw !== 'false';
 }
 
@@ -51,7 +53,8 @@ function _readLedger() {
     if (!fs.existsSync(p)) return _emptyLedger();
     const raw = fs.readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || !parsed.submitted) return _emptyLedger();
+    if (!parsed || typeof parsed !== 'object' || !parsed.submitted)
+      return _emptyLedger();
     return parsed;
   } catch (_) {
     return _emptyLedger();
@@ -95,17 +98,24 @@ function _withTimeout(promise, ms) {
       done = true;
       resolve({ ok: false, error: 'timeout', status: 0 });
     }, ms);
-    Promise.resolve(promise).then(function (v) {
-      if (done) return;
-      done = true;
-      clearTimeout(timer);
-      resolve(v);
-    }, function (err) {
-      if (done) return;
-      done = true;
-      clearTimeout(timer);
-      resolve({ ok: false, error: err && err.message || String(err), status: 0 });
-    });
+    Promise.resolve(promise).then(
+      function (v) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve(v);
+      },
+      function (err) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve({
+          ok: false,
+          error: (err && err.message) || String(err),
+          status: 0,
+        });
+      }
+    );
   });
 }
 
@@ -170,10 +180,13 @@ async function handleHeartbeatSignals(signals) {
   if (!_isEnabled()) return summary;
   if (_inflight) return summary;
   var now = Date.now();
-  if (_lastRunAt && (now - _lastRunAt) < HANDLER_COOLDOWN_MS) return summary;
+  if (_lastRunAt && now - _lastRunAt < HANDLER_COOLDOWN_MS) return summary;
   if (!signals || typeof signals !== 'object') return summary;
 
-  var deliverables = _collectDeliverable(signals.pending_deliveries, signals.pending_atp_tasks);
+  var deliverables = _collectDeliverable(
+    signals.pending_deliveries,
+    signals.pending_atp_tasks
+  );
 
   // Log (but do not act on) tasks that cannot be submitted from heartbeat-only
   // context. A human-readable warning on stdout makes the "this node is asked
@@ -187,8 +200,12 @@ async function handleHeartbeatSignals(signals) {
 
   if (deliverables.length === 0) {
     if (summary.need_work > 0) {
-      console.log('[ATP-HB] ' + summary.need_work + ' ATP task(s) need work on this node but no run() loop is active. '
-        + 'Start Evolver with `node index.js run` to pick them up. Skipping from heartbeat-only mode.');
+      console.log(
+        '[ATP-HB] ' +
+          summary.need_work +
+          ' ATP task(s) need work on this node but no run() loop is active. ' +
+          'Start Evolver with `node index.js run` to pick them up. Skipping from heartbeat-only mode.'
+      );
     }
     return summary;
   }
@@ -205,13 +222,22 @@ async function handleHeartbeatSignals(signals) {
         continue;
       }
       var payload = _buildProofPayload(row);
-      var resp = await _withTimeout(hubClient.submitDelivery(row.order_id, payload), SUBMIT_TIMEOUT_MS);
+      var resp = await _withTimeout(
+        hubClient.submitDelivery(row.order_id, payload),
+        SUBMIT_TIMEOUT_MS
+      );
       if (resp && resp.ok) {
         if (!ledger.submitted) ledger.submitted = {};
         ledger.submitted[row.order_id] = Date.now();
         wrote = true;
         summary.submitted++;
-        console.log('[ATP-HB] Delivered order=' + row.order_id + ' asset=' + (row.result_asset_id || 'none') + ' (via heartbeat)');
+        console.log(
+          '[ATP-HB] Delivered order=' +
+            row.order_id +
+            ' asset=' +
+            (row.result_asset_id || 'none') +
+            ' (via heartbeat)'
+        );
       } else {
         var status = resp && resp.status;
         var terminal = status === 400 || status === 404 || status === 409;
@@ -221,8 +247,14 @@ async function handleHeartbeatSignals(signals) {
           wrote = true;
         }
         summary.failed++;
-        console.log('[ATP-HB] Delivery failed order=' + row.order_id + ' status=' + (status || 'n/a')
-          + ' err=' + String((resp && resp.error) || 'unknown').slice(0, 120));
+        console.log(
+          '[ATP-HB] Delivery failed order=' +
+            row.order_id +
+            ' status=' +
+            (status || 'n/a') +
+            ' err=' +
+            String((resp && resp.error) || 'unknown').slice(0, 120)
+        );
       }
     }
     if (wrote) _writeLedger(ledger);

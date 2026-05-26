@@ -6,7 +6,11 @@ var contentHash = require('../src/gep/contentHash');
 var a2aProto = require('../src/gep/a2aProtocol');
 
 function readStdin() {
-  try { return fs.readFileSync(0, 'utf8'); } catch (e) { return ''; }
+  try {
+    return fs.readFileSync(0, 'utf8');
+  } catch (e) {
+    return '';
+  }
 }
 
 function parseSignalsFromEnv() {
@@ -16,18 +20,29 @@ function parseSignalsFromEnv() {
     var maybe = JSON.parse(raw);
     if (Array.isArray(maybe)) return maybe.map(String).filter(Boolean);
   } catch (e) {}
-  return String(raw).split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  return String(raw)
+    .split(',')
+    .map(function (s) {
+      return s.trim();
+    })
+    .filter(Boolean);
 }
 
 function main() {
   var args = process.argv.slice(2);
   var inputPath = '';
   for (var i = 0; i < args.length; i++) {
-    if (args[i] && !args[i].startsWith('--')) { inputPath = args[i]; break; }
+    if (args[i] && !args[i].startsWith('--')) {
+      inputPath = args[i];
+      break;
+    }
   }
   var source = process.env.A2A_SOURCE || 'external';
-  var factor = Number.isFinite(Number(process.env.A2A_EXTERNAL_CONFIDENCE_FACTOR))
-    ? Number(process.env.A2A_EXTERNAL_CONFIDENCE_FACTOR) : 0.6;
+  var factor = Number.isFinite(
+    Number(process.env.A2A_EXTERNAL_CONFIDENCE_FACTOR)
+  )
+    ? Number(process.env.A2A_EXTERNAL_CONFIDENCE_FACTOR)
+    : 0.6;
 
   var text = inputPath ? a2a.readTextIfExists(inputPath) : readStdin();
   var parsed = a2a.parseA2AInput(text);
@@ -46,7 +61,12 @@ function main() {
         rejected += 1;
         if (emitDecisions) {
           try {
-            var dm = a2aProto.buildDecision({ assetId: obj.asset_id, localId: obj.id, decision: 'reject', reason: 'asset_id integrity check failed' });
+            var dm = a2aProto.buildDecision({
+              assetId: obj.asset_id,
+              localId: obj.id,
+              decision: 'reject',
+              reason: 'asset_id integrity check failed',
+            });
             a2aProto.getTransport().send(dm);
           } catch (e) {}
         }
@@ -58,11 +78,22 @@ function main() {
     if (!staged) continue;
 
     assetStore.appendExternalCandidateJsonl(staged);
-    try { memGraph.recordExternalCandidate({ asset: staged, source: source, signals: signals }); } catch (e) {}
+    try {
+      memGraph.recordExternalCandidate({
+        asset: staged,
+        source: source,
+        signals: signals,
+      });
+    } catch (e) {}
 
     if (emitDecisions) {
       try {
-        var dm2 = a2aProto.buildDecision({ assetId: staged.asset_id, localId: staged.id, decision: 'quarantine', reason: 'staged as external candidate' });
+        var dm2 = a2aProto.buildDecision({
+          assetId: staged.asset_id,
+          localId: staged.id,
+          decision: 'quarantine',
+          reason: 'staged as external candidate',
+        });
         a2aProto.getTransport().send(dm2);
       } catch (e) {}
     }
@@ -73,7 +104,9 @@ function main() {
   process.stdout.write('accepted=' + accepted + ' rejected=' + rejected + '\n');
 }
 
-try { main(); } catch (e) {
+try {
+  main();
+} catch (e) {
   process.stderr.write((e && e.message ? e.message : String(e)) + '\n');
   process.exit(1);
 }

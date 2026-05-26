@@ -40,7 +40,9 @@ afterEach(() => {
     if (savedEnv[k] === undefined) delete process.env[k];
     else process.env[k] = savedEnv[k];
   }
-  try { fs.rmSync(tmpMemoryDir, { recursive: true, force: true }); } catch (_) {}
+  try {
+    fs.rmSync(tmpMemoryDir, { recursive: true, force: true });
+  } catch (_) {}
 });
 
 describe('atpTaskPickup._isEnabled', () => {
@@ -59,22 +61,38 @@ describe('atpTaskPickup._isEnabled', () => {
 
 describe('atpTaskPickup._isEligible', () => {
   it('accepts ATP tasks without a result_asset_id', () => {
-    const ok = pickup._isEligible({ id: 't1', atp_order_id: 'p1', status: 'claimed' });
+    const ok = pickup._isEligible({
+      id: 't1',
+      atp_order_id: 'p1',
+      status: 'claimed',
+    });
     assert.equal(ok, true);
   });
   it('rejects tasks with no atp_order_id', () => {
     assert.equal(pickup._isEligible({ id: 't1', status: 'claimed' }), false);
   });
   it('rejects tasks that already have a result_asset_id', () => {
-    assert.equal(pickup._isEligible({
-      id: 't1', atp_order_id: 'p1', status: 'claimed', result_asset_id: 'sha256:abc',
-    }), false);
+    assert.equal(
+      pickup._isEligible({
+        id: 't1',
+        atp_order_id: 'p1',
+        status: 'claimed',
+        result_asset_id: 'sha256:abc',
+      }),
+      false
+    );
   });
   it('rejects completed tasks', () => {
-    assert.equal(pickup._isEligible({ id: 't1', atp_order_id: 'p1', status: 'completed' }), false);
+    assert.equal(
+      pickup._isEligible({ id: 't1', atp_order_id: 'p1', status: 'completed' }),
+      false
+    );
   });
   it('rejects tasks without id', () => {
-    assert.equal(pickup._isEligible({ atp_order_id: 'p1', status: 'claimed' }), false);
+    assert.equal(
+      pickup._isEligible({ atp_order_id: 'p1', status: 'claimed' }),
+      false
+    );
   });
 });
 
@@ -100,7 +118,10 @@ describe('atpTaskPickup._buildSpawnTask', () => {
 
   it('works when buyer question is missing', () => {
     const prompt = pickup._buildSpawnTask({
-      id: 't1', atp_order_id: 'p1', capabilities: [], signals: '',
+      id: 't1',
+      atp_order_id: 'p1',
+      capabilities: [],
+      signals: '',
     });
     assert.ok(prompt.includes('buyer did not provide a question body'));
   });
@@ -108,9 +129,15 @@ describe('atpTaskPickup._buildSpawnTask', () => {
   it('clips extremely long buyer questions', () => {
     const longQ = 'x'.repeat(50000);
     const prompt = pickup._buildSpawnTask({
-      id: 't1', atp_order_id: 'p1', user_question_body: longQ,
+      id: 't1',
+      atp_order_id: 'p1',
+      user_question_body: longQ,
     });
-    assert.ok(prompt.length < 20000, 'spawn prompt should be clipped well under 20k chars, got ' + prompt.length);
+    assert.ok(
+      prompt.length < 20000,
+      'spawn prompt should be clipped well under 20k chars, got ' +
+        prompt.length
+    );
   });
 });
 
@@ -138,9 +165,20 @@ describe('atpTaskPickup.pickOne', () => {
       ok: true,
       data: {
         tasks: [
-          { id: 't_done', atp_order_id: 'p1', status: 'claimed', result_asset_id: 'sha256:x' },
+          {
+            id: 't_done',
+            atp_order_id: 'p1',
+            status: 'claimed',
+            result_asset_id: 'sha256:x',
+          },
           { id: 't_no_atp', status: 'claimed' },
-          { id: 't_target', atp_order_id: 'p2', status: 'claimed', title: 'pick me', user_question_body: 'q' },
+          {
+            id: 't_target',
+            atp_order_id: 'p2',
+            status: 'claimed',
+            title: 'pick me',
+            user_question_body: 'q',
+          },
         ],
       },
     });
@@ -159,7 +197,13 @@ describe('atpTaskPickup.pickOne', () => {
         ok: true,
         data: {
           tasks: [
-            { id: 't_sticky', atp_order_id: 'p_sticky', status: 'claimed', title: 't', user_question_body: 'q' },
+            {
+              id: 't_sticky',
+              atp_order_id: 'p_sticky',
+              status: 'claimed',
+              title: 't',
+              user_question_body: 'q',
+            },
           ],
         },
       };
@@ -167,7 +211,11 @@ describe('atpTaskPickup.pickOne', () => {
     const first = await pickup.pickOne({ limit: 5 });
     assert.ok(first);
     const second = await pickup.pickOne({ limit: 5 });
-    assert.equal(second, null, 'cooldown should block the second pick for the same task');
+    assert.equal(
+      second,
+      null,
+      'cooldown should block the second pick for the same task'
+    );
     assert.equal(listCalls, 2);
   });
 
@@ -176,7 +224,13 @@ describe('atpTaskPickup.pickOne', () => {
       ok: true,
       data: {
         tasks: [
-          { id: 't_retry', atp_order_id: 'p_retry', status: 'claimed', title: 't', user_question_body: 'q' },
+          {
+            id: 't_retry',
+            atp_order_id: 'p_retry',
+            status: 'claimed',
+            title: 't',
+            user_question_body: 'q',
+          },
         ],
       },
     });

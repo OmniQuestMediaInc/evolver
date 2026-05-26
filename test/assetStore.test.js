@@ -6,11 +6,20 @@ const path = require('path');
 
 let tmpDir;
 const savedEnv = {};
-const envKeys = ['EVOLVER_REPO_ROOT', 'OPENCLAW_WORKSPACE', 'GEP_ASSETS_DIR', 'MEMORY_DIR', 'EVOLUTION_DIR', 'EVOLVER_SESSION_SCOPE'];
+const envKeys = [
+  'EVOLVER_REPO_ROOT',
+  'OPENCLAW_WORKSPACE',
+  'GEP_ASSETS_DIR',
+  'MEMORY_DIR',
+  'EVOLUTION_DIR',
+  'EVOLVER_SESSION_SCOPE',
+];
 
 function setupTempEnv() {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'assetstore-test-'));
-  for (const k of envKeys) { savedEnv[k] = process.env[k]; }
+  for (const k of envKeys) {
+    savedEnv[k] = process.env[k];
+  }
   const assetsDir = path.join(tmpDir, 'assets', 'gep');
   fs.mkdirSync(assetsDir, { recursive: true });
   process.env.EVOLVER_REPO_ROOT = tmpDir;
@@ -36,7 +45,11 @@ function freshRequire() {
 }
 
 function writeJsonl(filePath, objects) {
-  fs.writeFileSync(filePath, objects.map(o => JSON.stringify(o)).join('\n') + '\n', 'utf8');
+  fs.writeFileSync(
+    filePath,
+    objects.map(o => JSON.stringify(o)).join('\n') + '\n',
+    'utf8'
+  );
 }
 
 describe('readRecentCandidates', () => {
@@ -102,7 +115,10 @@ describe('readRecentCandidates', () => {
     content += '{"type":"tail","id":"last2"}\n';
     fs.writeFileSync(p, content, 'utf8');
     const stat = fs.statSync(p);
-    assert.ok(stat.size > 1024 * 1024, 'file should be >1MB for large file path');
+    assert.ok(
+      stat.size > 1024 * 1024,
+      'file should be >1MB for large file path'
+    );
     const result = readRecentCandidates(2);
     assert.equal(result.length, 2);
     assert.equal(result[0].id, 'last1');
@@ -142,11 +158,27 @@ describe('loadGenes', () => {
     const { genesPath, loadGenes } = freshRequire();
     const jsonContent = {
       version: 1,
-      genes: [{ type: 'Gene', id: 'gene_a', category: 'repair', signals_match: ['error'] }],
+      genes: [
+        {
+          type: 'Gene',
+          id: 'gene_a',
+          category: 'repair',
+          signals_match: ['error'],
+        },
+      ],
     };
     fs.writeFileSync(genesPath(), JSON.stringify(jsonContent), 'utf8');
     const jsonlPath = path.join(path.dirname(genesPath()), 'genes.jsonl');
-    fs.writeFileSync(jsonlPath, JSON.stringify({ type: 'Gene', id: 'gene_a', category: 'optimize', signals_match: ['perf'] }) + '\n', 'utf8');
+    fs.writeFileSync(
+      jsonlPath,
+      JSON.stringify({
+        type: 'Gene',
+        id: 'gene_a',
+        category: 'optimize',
+        signals_match: ['perf'],
+      }) + '\n',
+      'utf8'
+    );
     const genes = loadGenes();
     const geneA = genes.find(g => g.id === 'gene_a');
     assert.ok(geneA);
@@ -173,15 +205,35 @@ describe('loadGenes', () => {
     };
     legacyGene.asset_id = computeAssetId(legacyGene);
 
-    fs.writeFileSync(genesPath(), JSON.stringify({ version: 1, genes: [legacyGene] }), 'utf8');
+    fs.writeFileSync(
+      genesPath(),
+      JSON.stringify({ version: 1, genes: [legacyGene] }),
+      'utf8'
+    );
 
     const loaded = loadGenes().find(g => g.id === 'gene_legacy');
     assert.ok(loaded, 'gene_legacy should be loaded');
     assert.ok(verifyAssetId(loaded), 'loaded gene asset_id must still verify');
-    assert.equal(loaded.epigenetic_marks, undefined, 'must not synthesize epigenetic_marks');
-    assert.equal(loaded.learning_history, undefined, 'must not synthesize learning_history');
-    assert.equal(loaded.anti_patterns, undefined, 'must not synthesize anti_patterns');
-    assert.equal(loaded.schema_version, undefined, 'must not synthesize schema_version');
+    assert.equal(
+      loaded.epigenetic_marks,
+      undefined,
+      'must not synthesize epigenetic_marks'
+    );
+    assert.equal(
+      loaded.learning_history,
+      undefined,
+      'must not synthesize learning_history'
+    );
+    assert.equal(
+      loaded.anti_patterns,
+      undefined,
+      'must not synthesize anti_patterns'
+    );
+    assert.equal(
+      loaded.schema_version,
+      undefined,
+      'must not synthesize schema_version'
+    );
     assert.equal(loaded.summary, undefined, 'must not synthesize summary');
   });
 });
@@ -197,11 +249,20 @@ describe('readAllEvents', () => {
 
   it('parses JSONL events and skips malformed lines', () => {
     const { eventsPath, readAllEvents } = freshRequire();
-    const content = [
-      JSON.stringify({ type: 'EvolutionEvent', id: 'evt_1', intent: 'repair' }),
-      'NOT_JSON',
-      JSON.stringify({ type: 'EvolutionEvent', id: 'evt_2', intent: 'innovate' }),
-    ].join('\n') + '\n';
+    const content =
+      [
+        JSON.stringify({
+          type: 'EvolutionEvent',
+          id: 'evt_1',
+          intent: 'repair',
+        }),
+        'NOT_JSON',
+        JSON.stringify({
+          type: 'EvolutionEvent',
+          id: 'evt_2',
+          intent: 'innovate',
+        }),
+      ].join('\n') + '\n';
     fs.writeFileSync(eventsPath(), content, 'utf8');
     const events = readAllEvents();
     assert.equal(events.length, 2);
@@ -221,12 +282,27 @@ describe('readAllEvents', () => {
     // to start mid-file (readPos > 0), exercising the partial-line discard path.
     process.env.EVOLVER_EVENTS_FULL_READ_MAX_BYTES = '512';
     try {
-      const padding = JSON.stringify({ type: 'EvolutionEvent', id: 'pad', data: 'x'.repeat(200) }) + '\n';
+      const padding =
+        JSON.stringify({
+          type: 'EvolutionEvent',
+          id: 'pad',
+          data: 'x'.repeat(200),
+        }) + '\n';
       const padCount = 30;
       let content = '';
       for (let i = 0; i < padCount; i++) content += padding;
-      content += JSON.stringify({ type: 'EvolutionEvent', id: 'recent_1', intent: 'repair' }) + '\n';
-      content += JSON.stringify({ type: 'EvolutionEvent', id: 'recent_2', intent: 'optimize' }) + '\n';
+      content +=
+        JSON.stringify({
+          type: 'EvolutionEvent',
+          id: 'recent_1',
+          intent: 'repair',
+        }) + '\n';
+      content +=
+        JSON.stringify({
+          type: 'EvolutionEvent',
+          id: 'recent_2',
+          intent: 'optimize',
+        }) + '\n';
       fs.writeFileSync(p, content, 'utf8');
       // > 2MB tail chunk default ensures readPos = stat.size - chunkSize stays
       // at 0 here; the inner branch is exercised by the next test below.
@@ -256,14 +332,24 @@ describe('readAllEvents', () => {
         { type: 'EvolutionEvent', id: 'event_b' },
         { type: 'EvolutionEvent', id: 'event_c' },
       ];
-      fs.writeFileSync(p, events.map(e => JSON.stringify(e)).join('\n') + '\n', 'utf8');
+      fs.writeFileSync(
+        p,
+        events.map(e => JSON.stringify(e)).join('\n') + '\n',
+        'utf8'
+      );
       const stat = fs.statSync(p);
-      assert.ok(stat.size > 512, 'file must exceed tail-read chunk for readPos > 0');
+      assert.ok(
+        stat.size > 512,
+        'file must exceed tail-read chunk for readPos > 0'
+      );
 
       const recovered = readAllEvents();
       const ids = recovered.map(e => e && e.id).filter(Boolean);
       // event_a sits in the dropped-prefix region; event_b / event_c survive.
-      assert.ok(!ids.includes('event_a'), 'partial first line must be discarded');
+      assert.ok(
+        !ids.includes('event_a'),
+        'partial first line must be discarded'
+      );
       assert.ok(ids.includes('event_b'), 'second event must survive');
       assert.ok(ids.includes('event_c'), 'last event must survive');
     } finally {
@@ -284,18 +370,37 @@ describe('readAllEvents', () => {
     process.env.EVOLVER_EVENTS_FULL_READ_MAX_BYTES = '128';
     try {
       const lines = [
-        JSON.stringify({ type: 'EvolutionEvent', id: 'first_event', intent: 'repair' }),
-        JSON.stringify({ type: 'EvolutionEvent', id: 'middle_event', intent: 'optimize' }),
-        JSON.stringify({ type: 'EvolutionEvent', id: 'last_event', intent: 'innovate' }),
+        JSON.stringify({
+          type: 'EvolutionEvent',
+          id: 'first_event',
+          intent: 'repair',
+        }),
+        JSON.stringify({
+          type: 'EvolutionEvent',
+          id: 'middle_event',
+          intent: 'optimize',
+        }),
+        JSON.stringify({
+          type: 'EvolutionEvent',
+          id: 'last_event',
+          intent: 'innovate',
+        }),
       ];
       fs.writeFileSync(p, lines.join('\n') + '\n', 'utf8');
       const stat = fs.statSync(p);
       assert.ok(stat.size > 128, 'fixture must exceed cap');
-      assert.ok(stat.size < 2 * 1024 * 1024, 'fixture must fit in a single tail chunk');
+      assert.ok(
+        stat.size < 2 * 1024 * 1024,
+        'fixture must fit in a single tail chunk'
+      );
 
       const events = readAllEvents();
       const ids = events.map(e => e && e.id).filter(Boolean);
-      assert.equal(events.length, 3, 'all 3 events recovered, first must not be dropped');
+      assert.equal(
+        events.length,
+        3,
+        'all 3 events recovered, first must not be dropped'
+      );
       assert.deepEqual(ids, ['first_event', 'middle_event', 'last_event']);
     } finally {
       delete process.env.EVOLVER_EVENTS_FULL_READ_MAX_BYTES;
@@ -311,7 +416,9 @@ describe('upsertCapsule / upsertGene validation (issue #30 H1)', () => {
     const { upsertCapsule, loadCapsules } = freshRequire();
     const warnings = [];
     const origWarn = console.warn;
-    console.warn = (...a) => { warnings.push(a.join(' ')); };
+    console.warn = (...a) => {
+      warnings.push(a.join(' '));
+    };
     try {
       upsertCapsule({
         type: 'Capsule',
@@ -323,16 +430,24 @@ describe('upsertCapsule / upsertGene validation (issue #30 H1)', () => {
     } finally {
       console.warn = origWarn;
     }
-    assert.equal(warnings.filter(w => w.includes('schema validation warning')).length, 0);
+    assert.equal(
+      warnings.filter(w => w.includes('schema validation warning')).length,
+      0
+    );
     const loaded = loadCapsules();
-    assert.ok(loaded.find(c => c.id === 'cap_ok'), 'capsule should be persisted');
+    assert.ok(
+      loaded.find(c => c.id === 'cap_ok'),
+      'capsule should be persisted'
+    );
   });
 
   it('emits a warning but still persists a malformed Capsule (warn-only contract)', () => {
     const { upsertCapsule, loadCapsules } = freshRequire();
     const warnings = [];
     const origWarn = console.warn;
-    console.warn = (...a) => { warnings.push(a.join(' ')); };
+    console.warn = (...a) => {
+      warnings.push(a.join(' '));
+    };
     try {
       upsertCapsule({
         type: 'Capsule',
@@ -346,17 +461,22 @@ describe('upsertCapsule / upsertGene validation (issue #30 H1)', () => {
     }
     assert.ok(
       warnings.some(w => w.includes('Capsule schema validation warning')),
-      'should warn about invalid outcome.status',
+      'should warn about invalid outcome.status'
     );
     const loaded = loadCapsules();
-    assert.ok(loaded.find(c => c.id === 'cap_bad'), 'persistence must not be blocked by validator');
+    assert.ok(
+      loaded.find(c => c.id === 'cap_bad'),
+      'persistence must not be blocked by validator'
+    );
   });
 
   it('emits a warning but still persists a malformed Gene', () => {
     const { upsertGene, loadGenes } = freshRequire();
     const warnings = [];
     const origWarn = console.warn;
-    console.warn = (...a) => { warnings.push(a.join(' ')); };
+    console.warn = (...a) => {
+      warnings.push(a.join(' '));
+    };
     try {
       upsertGene({
         type: 'Gene',
@@ -370,10 +490,13 @@ describe('upsertCapsule / upsertGene validation (issue #30 H1)', () => {
     }
     assert.ok(
       warnings.some(w => w.includes('Gene schema validation warning')),
-      'should warn about invalid category',
+      'should warn about invalid category'
     );
     const loaded = loadGenes();
-    assert.ok(loaded.find(g => g.id === 'gene_bad_category'), 'persistence must not be blocked by validator');
+    assert.ok(
+      loaded.find(g => g.id === 'gene_bad_category'),
+      'persistence must not be blocked by validator'
+    );
   });
 });
 
@@ -405,7 +528,12 @@ describe('getLastEventId', () => {
     const bigStderr = 'B'.repeat(4000);
     const commands = [];
     for (let i = 0; i < 16; i++) {
-      commands.push({ command: `cmd_${i}`, ok: true, stdout: bigStdout, stderr: bigStderr });
+      commands.push({
+        command: `cmd_${i}`,
+        ok: true,
+        stdout: bigStdout,
+        stderr: bigStderr,
+      });
     }
     writeJsonl(eventsPath(), [
       { type: 'EvolutionEvent', id: 'evt_first' },
@@ -416,7 +544,10 @@ describe('getLastEventId', () => {
       },
     ]);
     const stat = fs.statSync(eventsPath());
-    assert.ok(stat.size > 64 * 1024, 'fixture must exceed the initial 64KB chunk');
+    assert.ok(
+      stat.size > 64 * 1024,
+      'fixture must exceed the initial 64KB chunk'
+    );
     assert.equal(getLastEventId(), 'evt_huge_last');
   });
 
@@ -442,8 +573,17 @@ describe('readRecentFailedCapsules', () => {
   it('respects limit parameter', () => {
     const { failedCapsulesPath, readRecentFailedCapsules } = freshRequire();
     const list = [];
-    for (let i = 0; i < 10; i++) list.push({ type: 'Capsule', id: 'fc' + i, outcome: { status: 'failed' } });
-    fs.writeFileSync(failedCapsulesPath(), JSON.stringify({ version: 1, failed_capsules: list }), 'utf8');
+    for (let i = 0; i < 10; i++)
+      list.push({
+        type: 'Capsule',
+        id: 'fc' + i,
+        outcome: { status: 'failed' },
+      });
+    fs.writeFileSync(
+      failedCapsulesPath(),
+      JSON.stringify({ version: 1, failed_capsules: list }),
+      'utf8'
+    );
     const result = readRecentFailedCapsules(3);
     assert.equal(result.length, 3);
     assert.equal(result[0].id, 'fc7');

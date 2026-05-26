@@ -1,6 +1,7 @@
 'use strict';
 
-const SECRET_KEY_RE = /(secret|token|api[_-]?key|authorization|cookie|oauth|password|private[_-]?key|node_secret)/i;
+const SECRET_KEY_RE =
+  /(secret|token|api[_-]?key|authorization|cookie|oauth|password|private[_-]?key|node_secret)/i;
 // Three alternation arms, each with one capturing group so the replace()
 // callback can keep the prefix and only mask the value:
 //   1) HTTP Bearer auth header
@@ -15,15 +16,19 @@ const SECRET_KEY_RE = /(secret|token|api[_-]?key|authorization|cookie|oauth|pass
 // Flagged /gi so lower-case variants (`password=...`, `bearer ...`,
 // `sk-...`) are also caught; over-redacting harmless prose tokens like
 // "monkey=" is acceptable, leaking a real key is not.
-const SECRET_TEXT_RE = new RegExp([
-  '(Bearer\\s+)[A-Za-z0-9._~+/-]+=*',
-  '([A-Za-z0-9_]*(?:SECRET|TOKEN|KEY|PASSWORD|PASSWD|PWD)[A-Za-z0-9_]*\\s*[:=]\\s*)["\']?[^\\s,"\'`]+',
-  '(sk-(?:ant-)?[A-Za-z0-9_-]{20,})',
-].join('|'), 'gi');
+const SECRET_TEXT_RE = new RegExp(
+  [
+    '(Bearer\\s+)[A-Za-z0-9._~+/-]+=*',
+    '([A-Za-z0-9_]*(?:SECRET|TOKEN|KEY|PASSWORD|PASSWD|PWD)[A-Za-z0-9_]*\\s*[:=]\\s*)["\']?[^\\s,"\'`]+',
+    '(sk-(?:ant-)?[A-Za-z0-9_-]{20,})',
+  ].join('|'),
+  'gi'
+);
 
 function redactValue(value, depth = 0) {
   if (depth > 8) return '[REDACTED_DEPTH]';
-  if (Array.isArray(value)) return value.map((entry) => redactValue(entry, depth + 1));
+  if (Array.isArray(value))
+    return value.map(entry => redactValue(entry, depth + 1));
   if (!value || typeof value !== 'object') {
     return typeof value === 'string' ? redactText(value) : value;
   }

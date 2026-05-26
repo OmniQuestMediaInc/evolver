@@ -6,7 +6,13 @@
 //   const merchant = require('./merchantAgent');
 //   merchant.start({ services: [{ title: 'Code Review', ... }] });
 
-const { getNodeId, sendHelloToHub, startHeartbeat, stopHeartbeat, consumeAvailableWork } = require('../gep/a2aProtocol');
+const {
+  getNodeId,
+  sendHelloToHub,
+  startHeartbeat,
+  stopHeartbeat,
+  consumeAvailableWork,
+} = require('../gep/a2aProtocol');
 const { publishService } = require('./serviceHelper');
 const { submitDelivery, getMerchantTier, listProofs } = require('./hubClient');
 
@@ -44,7 +50,11 @@ async function start(opts) {
         if (result.ok) {
           console.log('[ATP-Merchant] Published service:', svc.title);
         } else {
-          console.warn('[ATP-Merchant] Failed to publish service:', svc.title, result.error);
+          console.warn(
+            '[ATP-Merchant] Failed to publish service:',
+            svc.title,
+            result.error
+          );
         }
       } catch (e) {
         console.warn('[ATP-Merchant] Service publish error:', e.message);
@@ -65,9 +75,15 @@ async function start(opts) {
           try {
             const proofPayload = await opts.onOrder(order);
             if (proofPayload && order.atp_order_id) {
-              const delivery = await submitDelivery(order.atp_order_id, proofPayload);
+              const delivery = await submitDelivery(
+                order.atp_order_id,
+                proofPayload
+              );
               if (delivery.ok) {
-                console.log('[ATP-Merchant] Delivered order:', order.atp_order_id);
+                console.log(
+                  '[ATP-Merchant] Delivered order:',
+                  order.atp_order_id
+                );
               } else {
                 console.warn('[ATP-Merchant] Delivery failed:', delivery.error);
               }

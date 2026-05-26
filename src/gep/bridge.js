@@ -23,7 +23,10 @@ function writePromptArtifact({ memoryDir, cycleId, runId, prompt, meta }) {
   const dir = String(memoryDir || '').trim();
   if (!dir) throw new Error('bridge: missing memoryDir');
   ensureDir(dir);
-  const safeCycle = String(cycleId || 'cycle').replace(/[^a-zA-Z0-9_\-#]/g, '_');
+  const safeCycle = String(cycleId || 'cycle').replace(
+    /[^a-zA-Z0-9_\-#]/g,
+    '_'
+  );
   const safeRun = String(runId || Date.now()).replace(/[^a-zA-Z0-9_\-]/g, '_');
   const base = `gep_prompt_${safeCycle}_${safeRun}`;
   const promptPath = path.join(dir, base + '.txt');
@@ -68,4 +71,3 @@ module.exports = {
   writePromptArtifact,
   renderSessionsSpawnCall,
 };
-

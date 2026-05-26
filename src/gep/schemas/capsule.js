@@ -40,9 +40,11 @@ function createCapsule(partial) {
   const c = Object.assign({}, CAPSULE_DEFAULTS, partial);
 
   // Fresh array copies — never hold references to CAPSULE_DEFAULTS arrays.
-  c.trigger         = Array.isArray(c.trigger)         ? c.trigger.slice()         : [];
-  c.strategy        = Array.isArray(c.strategy)        ? c.strategy.slice()        : [];
-  c.execution_trace = Array.isArray(c.execution_trace) ? c.execution_trace.slice() : [];
+  c.trigger = Array.isArray(c.trigger) ? c.trigger.slice() : [];
+  c.strategy = Array.isArray(c.strategy) ? c.strategy.slice() : [];
+  c.execution_trace = Array.isArray(c.execution_trace)
+    ? c.execution_trace.slice()
+    : [];
 
   // Normalize blast_radius
   if (!c.blast_radius || typeof c.blast_radius !== 'object') {
@@ -69,9 +71,9 @@ function createCapsule(partial) {
   }
 
   // Normalize string fields
-  if (typeof c.summary !== 'string')        c.summary = '';
+  if (typeof c.summary !== 'string') c.summary = '';
   if (typeof c.schema_version !== 'string') c.schema_version = SCHEMA_VERSION;
-  if (typeof c.confidence !== 'number')     c.confidence = 0;
+  if (typeof c.confidence !== 'number') c.confidence = 0;
 
   return c;
 }
@@ -79,16 +81,30 @@ function createCapsule(partial) {
 // validateCapsule: throw if required fields are missing or malformed.
 // Use before broadcasting/publishing a Capsule to the Hub or writing to disk.
 function validateCapsule(c) {
-  if (!c || typeof c !== 'object')          throw new Error('Capsule must be an object');
-  if (c.type !== 'Capsule')                 throw new Error('Capsule.type must be "Capsule", got: ' + c.type);
-  if (!c.id || typeof c.id !== 'string')    throw new Error('Capsule.id is required and must be a string');
+  if (!c || typeof c !== 'object') throw new Error('Capsule must be an object');
+  if (c.type !== 'Capsule')
+    throw new Error('Capsule.type must be "Capsule", got: ' + c.type);
+  if (!c.id || typeof c.id !== 'string')
+    throw new Error('Capsule.id is required and must be a string');
   if (!c.outcome || typeof c.outcome !== 'object')
-                                            throw new Error('Capsule.outcome must be an object');
+    throw new Error('Capsule.outcome must be an object');
   if (!VALID_OUTCOME_STATUSES.includes(c.outcome.status))
-                                            throw new Error('Capsule.outcome.status must be one of: ' + VALID_OUTCOME_STATUSES.join(', ') + ', got: ' + c.outcome.status);
-  if (!Array.isArray(c.trigger))            throw new Error('Capsule.trigger must be an array');
-  if (!Array.isArray(c.execution_trace))    throw new Error('Capsule.execution_trace must be an array');
+    throw new Error(
+      'Capsule.outcome.status must be one of: ' +
+        VALID_OUTCOME_STATUSES.join(', ') +
+        ', got: ' +
+        c.outcome.status
+    );
+  if (!Array.isArray(c.trigger))
+    throw new Error('Capsule.trigger must be an array');
+  if (!Array.isArray(c.execution_trace))
+    throw new Error('Capsule.execution_trace must be an array');
   return true;
 }
 
-module.exports = { createCapsule, validateCapsule, CAPSULE_DEFAULTS, VALID_OUTCOME_STATUSES };
+module.exports = {
+  createCapsule,
+  validateCapsule,
+  CAPSULE_DEFAULTS,
+  VALID_OUTCOME_STATUSES,
+};

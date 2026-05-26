@@ -30,7 +30,10 @@ async function searchByQuery(query, opts) {
     const data = await res.json();
     return data.results || data;
   } catch (err) {
-    console.warn('[DirectoryClient] searchByQuery failed:', err?.message || err);
+    console.warn(
+      '[DirectoryClient] searchByQuery failed:',
+      err?.message || err
+    );
     return null;
   }
 }
@@ -56,7 +59,10 @@ async function searchBySignals(signals, opts) {
     const data = await res.json();
     return data.results || data;
   } catch (err) {
-    console.warn('[DirectoryClient] searchBySignals failed:', err?.message || err);
+    console.warn(
+      '[DirectoryClient] searchBySignals failed:',
+      err?.message || err
+    );
     return null;
   }
 }
@@ -77,7 +83,10 @@ async function getAgentProfile(nodeId) {
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
-    console.warn('[DirectoryClient] getAgentProfile failed:', err?.message || err);
+    console.warn(
+      '[DirectoryClient] getAgentProfile failed:',
+      err?.message || err
+    );
     return null;
   }
 }
@@ -90,7 +99,10 @@ async function getAgentProfile(nodeId) {
  */
 async function discoverForTask(task, opts) {
   if (!task) return null;
-  const signals = (task.signals || '').split(',').map(s => s.trim()).filter(Boolean);
+  const signals = (task.signals || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
   const query = task.title || '';
 
   if (query) {

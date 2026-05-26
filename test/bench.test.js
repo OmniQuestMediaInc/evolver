@@ -41,7 +41,11 @@ function setupTempEnv() {
   process.env.GEP_ASSETS_DIR = path.join(tmpDir, 'assets');
   process.env.EVOLUTION_DIR = path.join(tmpDir, 'evolution');
   process.env.MEMORY_DIR = path.join(tmpDir, 'memory');
-  process.env.MEMORY_GRAPH_PATH = path.join(tmpDir, 'evolution', 'memory_graph.jsonl');
+  process.env.MEMORY_GRAPH_PATH = path.join(
+    tmpDir,
+    'evolution',
+    'memory_graph.jsonl'
+  );
   fs.mkdirSync(process.env.GEP_ASSETS_DIR, { recursive: true });
   fs.mkdirSync(process.env.EVOLUTION_DIR, { recursive: true });
   fs.mkdirSync(process.env.MEMORY_DIR, { recursive: true });
@@ -52,7 +56,9 @@ function teardownTempEnv() {
     if (savedEnv[key] !== undefined) process.env[key] = savedEnv[key];
     else delete process.env[key];
   });
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (e) {}
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch (e) {}
 }
 
 function writeJson(filePath, data) {
@@ -60,7 +66,14 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
-function makeFailedCapsule(id, gene, trigger, failureReason, learningSignals, violations) {
+function makeFailedCapsule(
+  id,
+  gene,
+  trigger,
+  failureReason,
+  learningSignals,
+  violations
+) {
   return {
     type: 'Capsule',
     id: id,
@@ -80,19 +93,71 @@ function makeFailedCapsule(id, gene, trigger, failureReason, learningSignals, vi
 // ---------------------------------------------------------------------------
 describe('bench: gene selection accuracy', function () {
   var BENCH_GENES = [
-    { type: 'Gene', id: 'gene_repair', category: 'repair', signals_match: ['error', 'exception', 'failed', 'unstable'], strategy: ['fix'] },
-    { type: 'Gene', id: 'gene_optimize', category: 'optimize', signals_match: ['protocol', 'gep', 'prompt', 'audit'], strategy: ['optimize'] },
-    { type: 'Gene', id: 'gene_innovate', category: 'innovate', signals_match: ['user_feature_request', 'capability_gap', 'stable_success_plateau'], strategy: ['build'] },
-    { type: 'Gene', id: 'gene_perf', category: 'optimize', signals_match: ['perf_bottleneck', 'latency', 'throughput', 'slow'], strategy: ['speed up'] },
+    {
+      type: 'Gene',
+      id: 'gene_repair',
+      category: 'repair',
+      signals_match: ['error', 'exception', 'failed', 'unstable'],
+      strategy: ['fix'],
+    },
+    {
+      type: 'Gene',
+      id: 'gene_optimize',
+      category: 'optimize',
+      signals_match: ['protocol', 'gep', 'prompt', 'audit'],
+      strategy: ['optimize'],
+    },
+    {
+      type: 'Gene',
+      id: 'gene_innovate',
+      category: 'innovate',
+      signals_match: [
+        'user_feature_request',
+        'capability_gap',
+        'stable_success_plateau',
+      ],
+      strategy: ['build'],
+    },
+    {
+      type: 'Gene',
+      id: 'gene_perf',
+      category: 'optimize',
+      signals_match: ['perf_bottleneck', 'latency', 'throughput', 'slow'],
+      strategy: ['speed up'],
+    },
   ];
 
   var TEST_CASES = [
-    { signals: ['error', 'exception'], expected: 'gene_repair', label: 'error signals -> repair' },
-    { signals: ['protocol', 'audit'], expected: 'gene_optimize', label: 'protocol signals -> optimize' },
-    { signals: ['user_feature_request', 'capability_gap'], expected: 'gene_innovate', label: 'feature request -> innovate' },
-    { signals: ['perf_bottleneck', 'latency'], expected: 'gene_perf', label: 'perf signals -> perf optimize' },
-    { signals: ['failed', 'unstable'], expected: 'gene_repair', label: 'failure signals -> repair' },
-    { signals: ['gep', 'prompt'], expected: 'gene_optimize', label: 'prompt signals -> optimize' },
+    {
+      signals: ['error', 'exception'],
+      expected: 'gene_repair',
+      label: 'error signals -> repair',
+    },
+    {
+      signals: ['protocol', 'audit'],
+      expected: 'gene_optimize',
+      label: 'protocol signals -> optimize',
+    },
+    {
+      signals: ['user_feature_request', 'capability_gap'],
+      expected: 'gene_innovate',
+      label: 'feature request -> innovate',
+    },
+    {
+      signals: ['perf_bottleneck', 'latency'],
+      expected: 'gene_perf',
+      label: 'perf signals -> perf optimize',
+    },
+    {
+      signals: ['failed', 'unstable'],
+      expected: 'gene_repair',
+      label: 'failure signals -> repair',
+    },
+    {
+      signals: ['gep', 'prompt'],
+      expected: 'gene_optimize',
+      label: 'prompt signals -> optimize',
+    },
   ];
 
   it('achieves >= 80% selection accuracy on standard signal scenarios', function () {
@@ -101,14 +166,21 @@ describe('bench: gene selection accuracy', function () {
 
     for (var i = 0; i < TEST_CASES.length; i++) {
       var tc = TEST_CASES[i];
-      var result = selectGene(BENCH_GENES, tc.signals, { effectivePopulationSize: 100 });
+      var result = selectGene(BENCH_GENES, tc.signals, {
+        effectivePopulationSize: 100,
+      });
       if (result.selected && result.selected.id === tc.expected) {
         correct++;
       }
     }
 
     var accuracy = correct / total;
-    assert.ok(accuracy >= 0.8, 'Gene selection accuracy ' + (accuracy * 100).toFixed(1) + '% < 80% threshold');
+    assert.ok(
+      accuracy >= 0.8,
+      'Gene selection accuracy ' +
+        (accuracy * 100).toFixed(1) +
+        '% < 80% threshold'
+    );
   });
 
   it('never selects a banned gene', function () {
@@ -119,7 +191,10 @@ describe('bench: gene selection accuracy', function () {
         effectivePopulationSize: 100,
       });
       if (result.selected) {
-        assert.ok(!banned.has(result.selected.id), 'Selected banned gene: ' + result.selected.id);
+        assert.ok(
+          !banned.has(result.selected.id),
+          'Selected banned gene: ' + result.selected.id
+        );
       }
     }
   });
@@ -132,11 +207,15 @@ describe('bench: signal extraction recall', function () {
   it('extracts error signals from log-like input', function () {
     var signals = extractSignals({
       recentSessionTranscript: '',
-      todayLog: '[error] Module X failed to load\n[error] Database connection timeout\nException in thread main',
+      todayLog:
+        '[error] Module X failed to load\n[error] Database connection timeout\nException in thread main',
       memorySnippet: '',
       userSnippet: '',
     });
-    assert.ok(signals.includes('log_error'), 'Should detect log_error from [error] lines');
+    assert.ok(
+      signals.includes('log_error'),
+      'Should detect log_error from [error] lines'
+    );
   });
 
   it('extracts feature request signals', function () {
@@ -147,9 +226,15 @@ describe('bench: signal extraction recall', function () {
       userSnippet: 'I want a dark mode toggle in the settings panel',
     });
     var hasFeatureSignal = signals.some(function (s) {
-      return s.indexOf('user_feature_request') !== -1 || s.indexOf('user_improvement_suggestion') !== -1;
+      return (
+        s.indexOf('user_feature_request') !== -1 ||
+        s.indexOf('user_improvement_suggestion') !== -1
+      );
     });
-    assert.ok(hasFeatureSignal, 'Should detect feature request from user input');
+    assert.ok(
+      hasFeatureSignal,
+      'Should detect feature request from user input'
+    );
   });
 
   it('detects stagnation signals', function () {
@@ -170,9 +255,16 @@ describe('bench: signal extraction recall', function () {
       recentEvents: recentEvents,
     });
     var hasStagnation = signals.some(function (s) {
-      return s.indexOf('empty_cycle') !== -1 || s.indexOf('stagnation') !== -1 || s.indexOf('steady_state') !== -1;
+      return (
+        s.indexOf('empty_cycle') !== -1 ||
+        s.indexOf('stagnation') !== -1 ||
+        s.indexOf('steady_state') !== -1
+      );
     });
-    assert.ok(hasStagnation || signals.length === 0, 'Stagnation detection assessed (may not trigger with minimal events)');
+    assert.ok(
+      hasStagnation || signals.length === 0,
+      'Stagnation detection assessed (may not trigger with minimal events)'
+    );
   });
 });
 
@@ -185,11 +277,35 @@ describe('bench: failure distillation quality', function () {
 
   it('collects and groups failed capsules correctly', function () {
     var failures = [
-      makeFailedCapsule('f1', 'gene_repair', ['error', 'crash'], 'blast_radius_exceeded', ['problem:reliability'], ['blast_radius_exceeded']),
-      makeFailedCapsule('f2', 'gene_repair', ['error', 'timeout'], 'blast_radius_exceeded', ['problem:reliability'], ['blast_radius_exceeded']),
-      makeFailedCapsule('f3', 'gene_optimize', ['protocol'], 'validation_failed', ['problem:protocol'], ['validation_cmd_failed']),
+      makeFailedCapsule(
+        'f1',
+        'gene_repair',
+        ['error', 'crash'],
+        'blast_radius_exceeded',
+        ['problem:reliability'],
+        ['blast_radius_exceeded']
+      ),
+      makeFailedCapsule(
+        'f2',
+        'gene_repair',
+        ['error', 'timeout'],
+        'blast_radius_exceeded',
+        ['problem:reliability'],
+        ['blast_radius_exceeded']
+      ),
+      makeFailedCapsule(
+        'f3',
+        'gene_optimize',
+        ['protocol'],
+        'validation_failed',
+        ['problem:protocol'],
+        ['validation_cmd_failed']
+      ),
     ];
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), { version: 1, failed_capsules: failures });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), {
+      version: 1,
+      failed_capsules: failures,
+    });
 
     var data = collectFailureDistillationData();
     assert.equal(data.failedCapsules.length, 3);
@@ -199,32 +315,49 @@ describe('bench: failure distillation quality', function () {
   it('identifies high-frequency failure patterns', function () {
     var failures = [];
     for (var i = 0; i < 5; i++) {
-      failures.push(makeFailedCapsule(
-        'f' + i, 'gene_repair', ['error', 'memory_leak'],
-        'blast_radius_exceeded: too many files changed',
-        ['problem:reliability', 'risk:validation'],
-        ['blast_radius_exceeded', 'max_files_exceeded']
-      ));
+      failures.push(
+        makeFailedCapsule(
+          'f' + i,
+          'gene_repair',
+          ['error', 'memory_leak'],
+          'blast_radius_exceeded: too many files changed',
+          ['problem:reliability', 'risk:validation'],
+          ['blast_radius_exceeded', 'max_files_exceeded']
+        )
+      );
     }
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), { version: 1, failed_capsules: failures });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), {
+      version: 1,
+      failed_capsules: failures,
+    });
 
     var data = collectFailureDistillationData();
     var analysis = analyzeFailurePatterns(data);
-    assert.ok(analysis.high_frequency_failures.length >= 1, 'Should detect high-frequency failure pattern');
+    assert.ok(
+      analysis.high_frequency_failures.length >= 1,
+      'Should detect high-frequency failure pattern'
+    );
     assert.ok(analysis.high_frequency_failures[0].count >= 2);
   });
 
   it('synthesizes a repair gene from failure patterns', function () {
     var failures = [];
     for (var i = 0; i < 6; i++) {
-      failures.push(makeFailedCapsule(
-        'f' + i, 'gene_repair', ['error', 'crash'],
-        'blast_radius_exceeded',
-        ['problem:reliability'],
-        ['blast_radius_exceeded']
-      ));
+      failures.push(
+        makeFailedCapsule(
+          'f' + i,
+          'gene_repair',
+          ['error', 'crash'],
+          'blast_radius_exceeded',
+          ['problem:reliability'],
+          ['blast_radius_exceeded']
+        )
+      );
     }
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), { version: 1, failed_capsules: failures });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), {
+      version: 1,
+      failed_capsules: failures,
+    });
 
     var data = collectFailureDistillationData();
     var analysis = analyzeFailurePatterns(data);
@@ -233,38 +366,80 @@ describe('bench: failure distillation quality', function () {
     assert.ok(gene, 'Should produce a repair gene');
     assert.equal(gene.type, 'Gene');
     assert.equal(gene.category, 'repair');
-    assert.ok(gene.id.startsWith(REPAIR_DISTILLED_ID_PREFIX) || gene.id.startsWith('gene_distilled_'), 'Gene id should have repair prefix');
+    assert.ok(
+      gene.id.startsWith(REPAIR_DISTILLED_ID_PREFIX) ||
+        gene.id.startsWith('gene_distilled_'),
+      'Gene id should have repair prefix'
+    );
     assert.ok(gene.strategy.length >= 4, 'Strategy should have guard steps');
-    assert.ok(gene.strategy.some(function (s) { return s.indexOf('GUARD') !== -1 || s.indexOf('guard') !== -1; }), 'Should include guard steps');
+    assert.ok(
+      gene.strategy.some(function (s) {
+        return s.indexOf('GUARD') !== -1 || s.indexOf('guard') !== -1;
+      }),
+      'Should include guard steps'
+    );
   });
 
   it('autoDistillFromFailures produces a gene when threshold met', function () {
     var failures = [];
     for (var i = 0; i < 6; i++) {
-      failures.push(makeFailedCapsule(
-        'f' + i, 'gene_repair', ['error', 'crash'],
-        'blast_radius_exceeded',
-        ['problem:reliability'],
-        ['blast_radius_exceeded']
-      ));
+      failures.push(
+        makeFailedCapsule(
+          'f' + i,
+          'gene_repair',
+          ['error', 'crash'],
+          'blast_radius_exceeded',
+          ['problem:reliability'],
+          ['blast_radius_exceeded']
+        )
+      );
     }
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), { version: 1, failed_capsules: failures });
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'genes.json'), { version: 1, genes: [] });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), {
+      version: 1,
+      failed_capsules: failures,
+    });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'genes.json'), {
+      version: 1,
+      genes: [],
+    });
 
     var result = autoDistillFromFailures();
-    assert.ok(result.ok, 'autoDistillFromFailures should succeed: ' + (result.reason || ''));
+    assert.ok(
+      result.ok,
+      'autoDistillFromFailures should succeed: ' + (result.reason || '')
+    );
     assert.ok(result.gene);
     assert.equal(result.source, 'failure_distillation');
 
-    var genes = JSON.parse(fs.readFileSync(path.join(process.env.GEP_ASSETS_DIR, 'genes.json'), 'utf8'));
-    assert.ok(genes.genes.some(function (g) { return g.id === result.gene.id; }), 'Gene should be persisted');
+    var genes = JSON.parse(
+      fs.readFileSync(
+        path.join(process.env.GEP_ASSETS_DIR, 'genes.json'),
+        'utf8'
+      )
+    );
+    assert.ok(
+      genes.genes.some(function (g) {
+        return g.id === result.gene.id;
+      }),
+      'Gene should be persisted'
+    );
   });
 
   it('returns insufficient_failures when below threshold', function () {
     var failures = [
-      makeFailedCapsule('f1', 'gene_repair', ['error'], 'blast_radius_exceeded', [], []),
+      makeFailedCapsule(
+        'f1',
+        'gene_repair',
+        ['error'],
+        'blast_radius_exceeded',
+        [],
+        []
+      ),
     ];
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), { version: 1, failed_capsules: failures });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), {
+      version: 1,
+      failed_capsules: failures,
+    });
 
     var result = autoDistillFromFailures();
     assert.equal(result.ok, false);
@@ -274,10 +449,25 @@ describe('bench: failure distillation quality', function () {
   it('idempotent skip on repeated calls with same data', function () {
     var failures = [];
     for (var i = 0; i < 6; i++) {
-      failures.push(makeFailedCapsule('f' + i, 'gene_repair', ['error'], 'blast_radius', ['problem:reliability'], ['blast_radius']));
+      failures.push(
+        makeFailedCapsule(
+          'f' + i,
+          'gene_repair',
+          ['error'],
+          'blast_radius',
+          ['problem:reliability'],
+          ['blast_radius']
+        )
+      );
     }
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), { version: 1, failed_capsules: failures });
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'genes.json'), { version: 1, genes: [] });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), {
+      version: 1,
+      failed_capsules: failures,
+    });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'genes.json'), {
+      version: 1,
+      genes: [],
+    });
 
     var first = autoDistillFromFailures();
     assert.ok(first.ok);
@@ -294,7 +484,9 @@ describe('bench: failure distillation quality', function () {
 describe('bench: anti-pattern avoidance', function () {
   it('genes with anti-patterns score lower than clean genes', function () {
     var riskyGene = {
-      type: 'Gene', id: 'gene_risky', category: 'repair',
+      type: 'Gene',
+      id: 'gene_risky',
+      category: 'repair',
       signals_match: ['error'],
       anti_patterns: [
         { mode: 'hard', learning_signals: ['problem:reliability'] },
@@ -303,7 +495,9 @@ describe('bench: anti-pattern avoidance', function () {
       strategy: ['fix'],
     };
     var safeGene = {
-      type: 'Gene', id: 'gene_safe', category: 'repair',
+      type: 'Gene',
+      id: 'gene_safe',
+      category: 'repair',
       signals_match: ['error'],
       learning_history: [
         { outcome: 'success', mode: 'none' },
@@ -312,9 +506,15 @@ describe('bench: anti-pattern avoidance', function () {
       strategy: ['fix safely'],
     };
 
-    var result = selectGene([riskyGene, safeGene], ['error'], { effectivePopulationSize: 100 });
+    var result = selectGene([riskyGene, safeGene], ['error'], {
+      effectivePopulationSize: 100,
+    });
     assert.ok(result.selected);
-    assert.equal(result.selected.id, 'gene_safe', 'Should prefer gene without anti-patterns');
+    assert.equal(
+      result.selected.id,
+      'gene_safe',
+      'Should prefer gene without anti-patterns'
+    );
   });
 });
 
@@ -333,7 +533,8 @@ describe('bench: shouldDistillFromFailures gate', function () {
 
   it('returns false when not enough failures', function () {
     writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), {
-      version: 1, failed_capsules: [makeFailedCapsule('f1', 'g', ['e'], 'reason', [], [])],
+      version: 1,
+      failed_capsules: [makeFailedCapsule('f1', 'g', ['e'], 'reason', [], [])],
     });
     assert.equal(shouldDistillFromFailures(), false);
   });
@@ -341,9 +542,14 @@ describe('bench: shouldDistillFromFailures gate', function () {
   it('returns true when enough failures and no recent distillation', function () {
     var failures = [];
     for (var i = 0; i < FAILURE_DISTILLER_MIN_CAPSULES + 1; i++) {
-      failures.push(makeFailedCapsule('f' + i, 'gene_repair', ['error'], 'reason', [], []));
+      failures.push(
+        makeFailedCapsule('f' + i, 'gene_repair', ['error'], 'reason', [], [])
+      );
     }
-    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), { version: 1, failed_capsules: failures });
+    writeJson(path.join(process.env.GEP_ASSETS_DIR, 'failed_capsules.json'), {
+      version: 1,
+      failed_capsules: failures,
+    });
     assert.equal(shouldDistillFromFailures(), true);
   });
 });

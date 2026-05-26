@@ -8,14 +8,16 @@ const { WebUiServer } = require('../src/webui');
 
 function request(url) {
   return new Promise((resolve, reject) => {
-    http.get(url, (res) => {
-      const chunks = [];
-      res.on('data', (chunk) => chunks.push(chunk));
-      res.on('end', () => {
-        const raw = Buffer.concat(chunks).toString();
-        resolve({ status: res.statusCode, headers: res.headers, body: raw });
-      });
-    }).on('error', reject);
+    http
+      .get(url, res => {
+        const chunks = [];
+        res.on('data', chunk => chunks.push(chunk));
+        res.on('end', () => {
+          const raw = Buffer.concat(chunks).toString();
+          resolve({ status: res.statusCode, headers: res.headers, body: raw });
+        });
+      })
+      .on('error', reject);
   });
 }
 
@@ -43,7 +45,10 @@ describe('WebUiServer', () => {
     assert.match(res.body, /Evolver Web UI/);
     // Dashboard must load echarts from the vendored local route, not from a
     // third-party CDN. Privacy + offline-availability requirement.
-    assert.match(res.body, /<script src="\/vendor\/echarts\.min\.js"><\/script>/);
+    assert.match(
+      res.body,
+      /<script src="\/vendor\/echarts\.min\.js"><\/script>/
+    );
     assert.doesNotMatch(res.body, /cdn\.jsdelivr\.net|unpkg\.com/);
   });
 
@@ -88,7 +93,7 @@ describe('WebUiServer', () => {
     assert.doesNotMatch(
       res.body,
       /\.replace\(\s*\/&lt;span/,
-      'kv-then-partial-replace antipattern reintroduced; rebuild the dl manually instead',
+      'kv-then-partial-replace antipattern reintroduced; rebuild the dl manually instead'
     );
   });
 
@@ -123,8 +128,9 @@ describe('WebUiServer', () => {
     // echarts.init), but reject any other call site that hits init().
     const initSites = res.body.match(/echarts\.init\(/g) || [];
     assert.equal(
-      initSites.length, 1,
-      `expected exactly one echarts.init( site (the ensureChart() definition), found ${initSites.length}`,
+      initSites.length,
+      1,
+      `expected exactly one echarts.init( site (the ensureChart() definition), found ${initSites.length}`
     );
   });
 
@@ -141,7 +147,7 @@ describe('WebUiServer', () => {
     assert.doesNotMatch(
       res.body,
       /matchMedia\(['"]\(prefers-color-scheme:\s*dark\)['"]\)\.matches/,
-      'isDarkMode() must not fall back to matchMedia; the class is canonical',
+      'isDarkMode() must not fall back to matchMedia; the class is canonical'
     );
   });
 
@@ -160,12 +166,12 @@ describe('WebUiServer', () => {
     assert.match(
       res.body,
       /esc\(e\.statusCode/,
-      'e.statusCode must be wrapped in esc() inside the Hub Activity table renderer',
+      'e.statusCode must be wrapped in esc() inside the Hub Activity table renderer'
     );
     assert.match(
       res.body,
       /esc\(e\.latencyMs/,
-      'e.latencyMs must be wrapped in esc() inside the Hub Activity table renderer',
+      'e.latencyMs must be wrapped in esc() inside the Hub Activity table renderer'
     );
   });
 
@@ -187,12 +193,12 @@ describe('WebUiServer', () => {
     assert.match(
       shell.body,
       /id="scoreTrendChart"/,
-      'pipelines view must ship the <div id="scoreTrendChart"> container',
+      'pipelines view must ship the <div id="scoreTrendChart"> container'
     );
     assert.match(
       shell.body,
       /data-i18n="pipelines\.card\.scoreTrend"/,
-      'Score Trend card heading must carry the i18n marker',
+      'Score Trend card heading must carry the i18n marker'
     );
 
     const js = await request(`${baseUrl}/app.js`);
@@ -200,7 +206,7 @@ describe('WebUiServer', () => {
     assert.match(
       js.body,
       /'pipelines\.card\.scoreTrend'\s*:\s*\{\s*en:\s*'Score Trend',\s*zh:\s*'评分趋势'\s*\}/,
-      'pipelines.card.scoreTrend must be present in both en and zh dicts',
+      'pipelines.card.scoreTrend must be present in both en and zh dicts'
     );
   });
 });

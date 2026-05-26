@@ -17,8 +17,13 @@ function readJsonl(filePath, opts = {}) {
   try {
     if (!filePath || !fs.existsSync(filePath)) return [];
     const raw = fs.readFileSync(filePath, 'utf8');
-    const lines = raw.split('\n').map((line) => line.trim()).filter(Boolean);
-    const selected = opts.last ? lines.slice(-toPositiveInt(opts.last, lines.length)) : lines;
+    const lines = raw
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean);
+    const selected = opts.last
+      ? lines.slice(-toPositiveInt(opts.last, lines.length))
+      : lines;
     const rows = [];
     for (const line of selected) {
       try {

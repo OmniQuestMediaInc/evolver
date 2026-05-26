@@ -19,7 +19,7 @@ function loadMod(tmpDir) {
 }
 
 function writeMemoryGraph(memoryGraphPath, events) {
-  const lines = events.map((e) => JSON.stringify(e)).join('\n') + '\n';
+  const lines = events.map(e => JSON.stringify(e)).join('\n') + '\n';
   fs.writeFileSync(memoryGraphPath, lines, 'utf8');
 }
 
@@ -103,7 +103,7 @@ describe('curriculum', () => {
         memoryGraphPath,
       });
       // No gap target since it's mastered; no frontier either (rate is 1.0).
-      assert.ok(!signals.some((s) => s.startsWith('curriculum_target:gap:')));
+      assert.ok(!signals.some(s => s.startsWith('curriculum_target:gap:')));
     });
 
     it('emits a frontier signal for a mid-rate key', () => {
@@ -119,7 +119,7 @@ describe('curriculum', () => {
         capabilityGaps: [],
         memoryGraphPath,
       });
-      assert.ok(signals.some((s) => s.startsWith('curriculum_target:frontier:')));
+      assert.ok(signals.some(s => s.startsWith('curriculum_target:frontier:')));
       assert.ok(signals[0].includes('perf_tune'));
     });
 
@@ -157,7 +157,10 @@ describe('curriculum', () => {
         memoryGraphPath: '',
       });
       assert.deepEqual(signals, []);
-      assert.equal(fs.existsSync(path.join(tmpDir, 'curriculum_state.json')), false);
+      assert.equal(
+        fs.existsSync(path.join(tmpDir, 'curriculum_state.json')),
+        false
+      );
     });
 
     it('skips non-outcome events and corrupt lines', () => {
@@ -177,7 +180,7 @@ describe('curriculum', () => {
         memoryGraphPath,
       });
       // With only 2 events for 'legit' at 50% rate it is a valid frontier key.
-      assert.ok(signals.some((s) => s.includes('legit')));
+      assert.ok(signals.some(s => s.includes('legit')));
     });
 
     it('truncates very long capability gap names to 60 chars', () => {

@@ -1,4 +1,11 @@
-const { describe, it, before, after, beforeEach, afterEach } = require('node:test');
+const {
+  describe,
+  it,
+  before,
+  after,
+  beforeEach,
+  afterEach,
+} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
@@ -27,7 +34,10 @@ describe('analyzeFailures', () => {
   });
 
   it('returns success with empty failures when MEMORY.md has no matching entries', () => {
-    fs.writeFileSync(path.join(tmpDir, 'MEMORY.md'), '# Memory\n\nNo failures yet.\n');
+    fs.writeFileSync(
+      path.join(tmpDir, 'MEMORY.md'),
+      '# Memory\n\nNo failures yet.\n'
+    );
     const result = analyzeFailures();
     assert.equal(result.status, 'success');
     assert.equal(result.count, 0);
@@ -56,7 +66,9 @@ describe('analyzeFailures', () => {
   it('returns only the top 3 failures in the failures field', () => {
     const rows = [];
     for (let i = 1; i <= 7; i++) {
-      rows.push(`| **F${i}** | Fix | summary ${i} | **Detail${i}** (extra ${i}) |`);
+      rows.push(
+        `| **F${i}** | Fix | summary ${i} | **Detail${i}** (extra ${i}) |`
+      );
     }
     const content = ['# Memory', '', ...rows].join('\n');
     fs.writeFileSync(path.join(tmpDir, 'MEMORY.md'), content);

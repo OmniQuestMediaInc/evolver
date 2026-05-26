@@ -48,14 +48,21 @@ describe('schema/prompt enum consistency', () => {
     // in turn re-exports from schemas/gene.js. If someone deletes that re-export
     // or breaks the pipeline, these arrays will diverge.
     const { VALID_CATEGORIES: fromGene } = require('../src/gep/schemas/gene');
-    assert.deepEqual(VALID_CATEGORIES, fromGene,
-      'protocol.js must re-export VALID_CATEGORIES from gene.js — see src/gep/schemas/protocol.js');
-    assert.ok(VALID_CATEGORIES.includes('explore'),
-      "'explore' must remain a valid category — removing it requires audit of strategy.js presets");
+    assert.deepEqual(
+      VALID_CATEGORIES,
+      fromGene,
+      'protocol.js must re-export VALID_CATEGORIES from gene.js — see src/gep/schemas/protocol.js'
+    );
+    assert.ok(
+      VALID_CATEGORIES.includes('explore'),
+      "'explore' must remain a valid category — removing it requires audit of strategy.js presets"
+    );
   });
 
   it('VALID_OUTCOME_STATUSES stays in sync with schemas/capsule.js', () => {
-    const { VALID_OUTCOME_STATUSES: fromCapsule } = require('../src/gep/schemas/capsule');
+    const {
+      VALID_OUTCOME_STATUSES: fromCapsule,
+    } = require('../src/gep/schemas/capsule');
     assert.deepEqual(VALID_OUTCOME_STATUSES, fromCapsule);
   });
 
@@ -88,9 +95,11 @@ describe('schema/prompt enum consistency', () => {
     });
 
     for (const lit of expected) {
-      assert.ok(prompt.includes(lit),
+      assert.ok(
+        prompt.includes(lit),
         `prompt is missing enum literal ${lit} — likely drift between schemas/protocol.js and prompt.js. ` +
-        `Add it to renderEnum() / renderEnumList() output, do not hardcode.`);
+          `Add it to renderEnum() / renderEnumList() output, do not hardcode.`
+      );
     }
   });
 
@@ -99,22 +108,31 @@ describe('schema/prompt enum consistency', () => {
     // pattern "repair|optimize|innovate" as a string literal, this test fails
     // and points the contributor at protocol.js.
     const fs = require('fs');
-    const src = fs.readFileSync(path.resolve(__dirname, '../src/gep/prompt.js'), 'utf8');
+    const src = fs.readFileSync(
+      path.resolve(__dirname, '../src/gep/prompt.js'),
+      'utf8'
+    );
 
     // The bad pattern is a literal triplet without 'explore' — the exact bug
     // we shipped in v1.80.7 and patched in v1.80.8.
     const badPattern = /["']repair\|optimize\|innovate["'](?!\|explore)/;
     const match = src.match(badPattern);
-    assert.equal(match, null,
+    assert.equal(
+      match,
+      null,
       `prompt.js contains a hardcoded category enum that omits 'explore'. ` +
-      `Use renderEnum(VALID_CATEGORIES) from schemas/protocol.js instead. ` +
-      `See: ${match ? src.slice(Math.max(0, match.index - 40), match.index + 60) : ''}`);
+        `Use renderEnum(VALID_CATEGORIES) from schemas/protocol.js instead. ` +
+        `See: ${match ? src.slice(Math.max(0, match.index - 40), match.index + 60) : ''}`
+    );
 
     // Also forbid the full quartet from being inlined as a literal — even with
     // 'explore' included, hardcoding it bypasses the single-source rule.
     const inlineQuartet = /["']repair\|optimize\|innovate\|explore["']/;
-    assert.equal(src.match(inlineQuartet), null,
+    assert.equal(
+      src.match(inlineQuartet),
+      null,
       `prompt.js inlines 'repair|optimize|innovate|explore' as a literal — ` +
-      `this defeats schemas/protocol.js. Use renderEnum(VALID_CATEGORIES).`);
+        `this defeats schemas/protocol.js. Use renderEnum(VALID_CATEGORIES).`
+    );
   });
 });

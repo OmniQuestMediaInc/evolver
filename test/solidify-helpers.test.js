@@ -14,8 +14,14 @@ const {
   BLAST_RADIUS_HARD_CAP_FILES,
   BLAST_RADIUS_HARD_CAP_LINES,
 } = require('../src/gep/policyCheck');
-const { computeProcessScores, _pickGeneCategory } = require('../src/gep/solidify');
-const { normalizeRelPath, isCriticalProtectedPath } = require('../src/gep/gitOps');
+const {
+  computeProcessScores,
+  _pickGeneCategory,
+} = require('../src/gep/solidify');
+const {
+  normalizeRelPath,
+  isCriticalProtectedPath,
+} = require('../src/gep/gitOps');
 
 describe('normalizeRelPath', () => {
   it('strips backslashes and leading ./', () => {
@@ -33,7 +39,10 @@ describe('normalizeRelPath', () => {
 describe('isCriticalProtectedPath', () => {
   it('protects skill directories', () => {
     assert.equal(isCriticalProtectedPath('skills/evolver/index.js'), true);
-    assert.equal(isCriticalProtectedPath('skills/feishu-evolver-wrapper/lifecycle.js'), true);
+    assert.equal(
+      isCriticalProtectedPath('skills/feishu-evolver-wrapper/lifecycle.js'),
+      true
+    );
   });
 
   it('protects root files', () => {
@@ -44,7 +53,10 @@ describe('isCriticalProtectedPath', () => {
 
   it('allows non-critical paths', () => {
     assert.equal(isCriticalProtectedPath('src/evolve.js'), false);
-    assert.equal(isCriticalProtectedPath('skills/my-new-skill/index.js'), false);
+    assert.equal(
+      isCriticalProtectedPath('skills/my-new-skill/index.js'),
+      false
+    );
     assert.equal(isCriticalProtectedPath('test/foo.test.js'), false);
   });
 });
@@ -61,12 +73,21 @@ describe('isConstraintCountedPath', () => {
 
   it('counts src/ files', () => {
     assert.equal(isConstraintCountedPath('src/evolve.js', defaultPolicy), true);
-    assert.equal(isConstraintCountedPath('src/gep/solidify.js', defaultPolicy), true);
+    assert.equal(
+      isConstraintCountedPath('src/gep/solidify.js', defaultPolicy),
+      true
+    );
   });
 
   it('excludes memory/ and logs/', () => {
-    assert.equal(isConstraintCountedPath('memory/graph.jsonl', defaultPolicy), false);
-    assert.equal(isConstraintCountedPath('logs/evolver.log', defaultPolicy), false);
+    assert.equal(
+      isConstraintCountedPath('memory/graph.jsonl', defaultPolicy),
+      false
+    );
+    assert.equal(
+      isConstraintCountedPath('logs/evolver.log', defaultPolicy),
+      false
+    );
   });
 
   it('excludes exact matches', () => {
@@ -74,7 +95,10 @@ describe('isConstraintCountedPath', () => {
   });
 
   it('excludes regex matches', () => {
-    assert.equal(isConstraintCountedPath('assets/gep/capsules.json', defaultPolicy), false);
+    assert.equal(
+      isConstraintCountedPath('assets/gep/capsules.json', defaultPolicy),
+      false
+    );
   });
 
   it('includes exact root files', () => {
@@ -83,7 +107,10 @@ describe('isConstraintCountedPath', () => {
   });
 
   it('includes by extension', () => {
-    assert.equal(isConstraintCountedPath('config/settings.json', defaultPolicy), true);
+    assert.equal(
+      isConstraintCountedPath('config/settings.json', defaultPolicy),
+      true
+    );
   });
 
   it('returns false for empty path', () => {
@@ -121,11 +148,17 @@ describe('isForbiddenPath', () => {
   });
 
   it('blocks prefix match', () => {
-    assert.equal(isForbiddenPath('node_modules/dotenv/index.js', ['.git', 'node_modules']), true);
+    assert.equal(
+      isForbiddenPath('node_modules/dotenv/index.js', ['.git', 'node_modules']),
+      true
+    );
   });
 
   it('allows non-forbidden paths', () => {
-    assert.equal(isForbiddenPath('src/evolve.js', ['.git', 'node_modules']), false);
+    assert.equal(
+      isForbiddenPath('src/evolve.js', ['.git', 'node_modules']),
+      false
+    );
   });
 
   it('handles empty forbidden list', () => {
@@ -135,32 +168,50 @@ describe('isForbiddenPath', () => {
 
 describe('classifyBlastSeverity', () => {
   it('returns within_limit for small changes', () => {
-    const r = classifyBlastSeverity({ blast: { files: 3, lines: 50 }, maxFiles: 20 });
+    const r = classifyBlastSeverity({
+      blast: { files: 3, lines: 50 },
+      maxFiles: 20,
+    });
     assert.equal(r.severity, 'within_limit');
   });
 
   it('returns approaching_limit above 80%', () => {
-    const r = classifyBlastSeverity({ blast: { files: 17, lines: 100 }, maxFiles: 20 });
+    const r = classifyBlastSeverity({
+      blast: { files: 17, lines: 100 },
+      maxFiles: 20,
+    });
     assert.equal(r.severity, 'approaching_limit');
   });
 
   it('returns exceeded when over limit', () => {
-    const r = classifyBlastSeverity({ blast: { files: 25, lines: 100 }, maxFiles: 20 });
+    const r = classifyBlastSeverity({
+      blast: { files: 25, lines: 100 },
+      maxFiles: 20,
+    });
     assert.equal(r.severity, 'exceeded');
   });
 
   it('returns critical_overrun at 2x limit', () => {
-    const r = classifyBlastSeverity({ blast: { files: 45, lines: 100 }, maxFiles: 20 });
+    const r = classifyBlastSeverity({
+      blast: { files: 45, lines: 100 },
+      maxFiles: 20,
+    });
     assert.equal(r.severity, 'critical_overrun');
   });
 
   it('returns hard_cap_breach above system limit', () => {
-    const r = classifyBlastSeverity({ blast: { files: BLAST_RADIUS_HARD_CAP_FILES + 1, lines: 0 }, maxFiles: 200 });
+    const r = classifyBlastSeverity({
+      blast: { files: BLAST_RADIUS_HARD_CAP_FILES + 1, lines: 0 },
+      maxFiles: 200,
+    });
     assert.equal(r.severity, 'hard_cap_breach');
   });
 
   it('returns hard_cap_breach for lines over system limit', () => {
-    const r = classifyBlastSeverity({ blast: { files: 1, lines: BLAST_RADIUS_HARD_CAP_LINES + 1 }, maxFiles: 200 });
+    const r = classifyBlastSeverity({
+      blast: { files: 1, lines: BLAST_RADIUS_HARD_CAP_LINES + 1 },
+      maxFiles: 200,
+    });
     assert.equal(r.severity, 'hard_cap_breach');
   });
 });
@@ -210,7 +261,10 @@ describe('isValidationCommandAllowed', () => {
 
   it('blocks shell operators', () => {
     assert.equal(isValidationCommandAllowed('node test.js && rm -rf /'), false);
-    assert.equal(isValidationCommandAllowed('node test.js; echo hacked'), false);
+    assert.equal(
+      isValidationCommandAllowed('node test.js; echo hacked'),
+      false
+    );
   });
 
   it('blocks backtick injection', () => {
@@ -218,11 +272,17 @@ describe('isValidationCommandAllowed', () => {
   });
 
   it('blocks node -e (eval)', () => {
-    assert.equal(isValidationCommandAllowed('node -e "process.exit(1)"'), false);
+    assert.equal(
+      isValidationCommandAllowed('node -e "process.exit(1)"'),
+      false
+    );
   });
 
   it('blocks node --eval', () => {
-    assert.equal(isValidationCommandAllowed('node --eval "console.log(1)"'), false);
+    assert.equal(
+      isValidationCommandAllowed('node --eval "console.log(1)"'),
+      false
+    );
   });
 
   it('blocks node -p (print)', () => {
@@ -230,11 +290,17 @@ describe('isValidationCommandAllowed', () => {
   });
 
   it('blocks node --print', () => {
-    assert.equal(isValidationCommandAllowed('node --print "require(\'fs\')"'), false);
+    assert.equal(
+      isValidationCommandAllowed('node --print "require(\'fs\')"'),
+      false
+    );
   });
 
   it('blocks $() command substitution', () => {
-    assert.equal(isValidationCommandAllowed('node $(echo malicious).js'), false);
+    assert.equal(
+      isValidationCommandAllowed('node $(echo malicious).js'),
+      false
+    );
   });
 
   it('blocks npx commands (GHSA-jxh8-jh77-xh6g)', () => {
@@ -243,11 +309,19 @@ describe('isValidationCommandAllowed', () => {
   });
 
   it('allows node scripts with arguments', () => {
-    assert.equal(isValidationCommandAllowed('node scripts/validate-modules.js ./src/evolve ./src/gep/solidify'), true);
+    assert.equal(
+      isValidationCommandAllowed(
+        'node scripts/validate-modules.js ./src/evolve ./src/gep/solidify'
+      ),
+      true
+    );
   });
 
   it('allows node scripts/validate-suite.js', () => {
-    assert.equal(isValidationCommandAllowed('node scripts/validate-suite.js'), true);
+    assert.equal(
+      isValidationCommandAllowed('node scripts/validate-suite.js'),
+      true
+    );
   });
 
   it('blocks non-allowed commands', () => {
@@ -281,7 +355,9 @@ describe('buildFailureReason', () => {
 
 describe('classifyFailureMode', () => {
   it('returns hard for destructive constraint violations', () => {
-    const r = classifyFailureMode({ constraintViolations: ['CRITICAL_FILE_DELETED: MEMORY.md'] });
+    const r = classifyFailureMode({
+      constraintViolations: ['CRITICAL_FILE_DELETED: MEMORY.md'],
+    });
     assert.equal(r.mode, 'hard');
     assert.equal(r.retryable, false);
   });
@@ -312,9 +388,17 @@ describe('computeProcessScores', () => {
       protocolViolations: [],
       canary: { ok: true, skipped: true },
       blast: { files: 1, lines: 10 },
-      geneUsed: { type: 'Gene', id: 'gene_test', constraints: { max_files: 20 } },
+      geneUsed: {
+        type: 'Gene',
+        id: 'gene_test',
+        constraints: { max_files: 20 },
+      },
       signals: ['error'],
-      mutation: { rationale: 'test fix', category: 'repair', risk_level: 'low' },
+      mutation: {
+        rationale: 'test fix',
+        category: 'repair',
+        risk_level: 'low',
+      },
     });
     assert.equal(scores.validation_pass_rate, 0.5);
   });
@@ -326,9 +410,17 @@ describe('computeProcessScores', () => {
       protocolViolations: [],
       canary: { ok: true, skipped: true },
       blast: { files: 1, lines: 10 },
-      geneUsed: { type: 'Gene', id: 'gene_test', constraints: { max_files: 20 } },
+      geneUsed: {
+        type: 'Gene',
+        id: 'gene_test',
+        constraints: { max_files: 20 },
+      },
       signals: ['error'],
-      mutation: { rationale: 'test fix', category: 'repair', risk_level: 'low' },
+      mutation: {
+        rationale: 'test fix',
+        category: 'repair',
+        risk_level: 'low',
+      },
     });
     assert.equal(scores.validation_pass_rate, 1.0);
   });
@@ -340,7 +432,11 @@ describe('computeProcessScores', () => {
       protocolViolations: [],
       canary: { ok: true, skipped: true },
       blast: { files: 1, lines: 10 },
-      geneUsed: { type: 'Gene', id: 'gene_test', constraints: { max_files: 20 } },
+      geneUsed: {
+        type: 'Gene',
+        id: 'gene_test',
+        constraints: { max_files: 20 },
+      },
       signals: ['error'],
       mutation: null,
     });
@@ -350,14 +446,21 @@ describe('computeProcessScores', () => {
   it('computes partial validation score when some results fail', () => {
     const scores = computeProcessScores({
       constraintCheck: { ok: true, violations: [] },
-      validation: { ok: false, results: [
-        { ok: true, cmd: 'node a.js' },
-        { ok: false, cmd: 'node b.js' },
-      ] },
+      validation: {
+        ok: false,
+        results: [
+          { ok: true, cmd: 'node a.js' },
+          { ok: false, cmd: 'node b.js' },
+        ],
+      },
       protocolViolations: [],
       canary: { ok: true, skipped: true },
       blast: { files: 1, lines: 10 },
-      geneUsed: { type: 'Gene', id: 'gene_test', constraints: { max_files: 20 } },
+      geneUsed: {
+        type: 'Gene',
+        id: 'gene_test',
+        constraints: { max_files: 20 },
+      },
       signals: ['error'],
       mutation: { rationale: 'fix', category: 'repair' },
     });
@@ -366,12 +469,29 @@ describe('computeProcessScores', () => {
 
   it('gives blast_control of 0 for hollow commit (GEP-only changes)', () => {
     const scores = computeProcessScores({
-      constraintCheck: { ok: false, violations: ['hollow_commit: 3 file(s) changed but 0 are constraint-counted code.'] },
+      constraintCheck: {
+        ok: false,
+        violations: [
+          'hollow_commit: 3 file(s) changed but 0 are constraint-counted code.',
+        ],
+      },
       validation: { ok: true, results: [{ ok: true, cmd: 'node test.js' }] },
       protocolViolations: [],
       canary: { ok: true, skipped: true },
-      blast: { files: 0, lines: 0, all_changed_files: ['assets/gep/capsules.json', 'assets/gep/events.jsonl', 'assets/gep/genes.json'] },
-      geneUsed: { type: 'Gene', id: 'gene_test', constraints: { max_files: 20 } },
+      blast: {
+        files: 0,
+        lines: 0,
+        all_changed_files: [
+          'assets/gep/capsules.json',
+          'assets/gep/events.jsonl',
+          'assets/gep/genes.json',
+        ],
+      },
+      geneUsed: {
+        type: 'Gene',
+        id: 'gene_test',
+        constraints: { max_files: 20 },
+      },
       signals: ['evolution_stagnation_detected'],
       mutation: { rationale: 'optimize', category: 'optimize' },
     });
@@ -380,16 +500,31 @@ describe('computeProcessScores', () => {
 });
 
 describe('checkConstraints hollow commit guard', () => {
-  const baseGene = { type: 'Gene', id: 'gene_test', constraints: { max_files: 20 }, strategy: ['evolve'], description: 'test' };
+  const baseGene = {
+    type: 'Gene',
+    id: 'gene_test',
+    constraints: { max_files: 20 },
+    strategy: ['evolve'],
+    description: 'test',
+  };
 
   it('flags hollow commit when all changes are GEP metadata only', () => {
     const blast = {
       files: 0,
       lines: 0,
       changed_files: [],
-      all_changed_files: ['assets/gep/capsules.json', 'assets/gep/events.jsonl', 'assets/gep/genes.json'],
+      all_changed_files: [
+        'assets/gep/capsules.json',
+        'assets/gep/events.jsonl',
+        'assets/gep/genes.json',
+      ],
     };
-    const result = checkConstraints({ gene: baseGene, blast, blastRadiusEstimate: null, repoRoot: null });
+    const result = checkConstraints({
+      gene: baseGene,
+      blast,
+      blastRadiusEstimate: null,
+      repoRoot: null,
+    });
     assert.equal(result.ok, false);
     assert.ok(result.violations.some(v => v.startsWith('hollow_commit')));
   });
@@ -399,15 +534,34 @@ describe('checkConstraints hollow commit guard', () => {
       files: 2,
       lines: 30,
       changed_files: ['src/evolve.js', 'src/gep/solidify.js'],
-      all_changed_files: ['src/evolve.js', 'src/gep/solidify.js', 'assets/gep/events.jsonl'],
+      all_changed_files: [
+        'src/evolve.js',
+        'src/gep/solidify.js',
+        'assets/gep/events.jsonl',
+      ],
     };
-    const result = checkConstraints({ gene: baseGene, blast, blastRadiusEstimate: null, repoRoot: null });
+    const result = checkConstraints({
+      gene: baseGene,
+      blast,
+      blastRadiusEstimate: null,
+      repoRoot: null,
+    });
     assert.ok(!result.violations.some(v => v.startsWith('hollow_commit')));
   });
 
   it('does not flag hollow commit when nothing changed at all', () => {
-    const blast = { files: 0, lines: 0, changed_files: [], all_changed_files: [] };
-    const result = checkConstraints({ gene: baseGene, blast, blastRadiusEstimate: null, repoRoot: null });
+    const blast = {
+      files: 0,
+      lines: 0,
+      changed_files: [],
+      all_changed_files: [],
+    };
+    const result = checkConstraints({
+      gene: baseGene,
+      blast,
+      blastRadiusEstimate: null,
+      repoRoot: null,
+    });
     assert.ok(!result.violations.some(v => v.startsWith('hollow_commit')));
   });
 });

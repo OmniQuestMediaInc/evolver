@@ -7,7 +7,13 @@
 // pipeline entry points before any processing begins.
 // ---------------------------------------------------------------------------
 
-const VALID_TASK_STATUSES = ['open', 'claimed', 'completed', 'expired', 'cancelled'];
+const VALID_TASK_STATUSES = [
+  'open',
+  'claimed',
+  'completed',
+  'expired',
+  'cancelled',
+];
 
 const TASK_DEFAULTS = {
   type: 'Task',
@@ -42,9 +48,9 @@ function createTask(partial) {
     : [];
 
   // Normalize string fields
-  if (typeof t.title !== 'string')       t.title = '';
-  if (typeof t.signals !== 'string')     t.signals = '';
-  if (typeof t.body !== 'string')        t.body = '';
+  if (typeof t.title !== 'string') t.title = '';
+  if (typeof t.signals !== 'string') t.signals = '';
+  if (typeof t.body !== 'string') t.body = '';
   if (typeof t.description !== 'string') t.description = '';
 
   // Normalize numeric fields
@@ -63,12 +69,22 @@ function createTask(partial) {
 // validateTask: throw if required fields are missing or malformed.
 // Use at pipeline entry points before processing or claiming a task.
 function validateTask(t) {
-  if (!t || typeof t !== 'object')           throw new Error('Task must be an object');
+  if (!t || typeof t !== 'object') throw new Error('Task must be an object');
   if (!t.task_id || typeof t.task_id !== 'string')
-                                             throw new Error('Task.task_id is required and must be a string');
+    throw new Error('Task.task_id is required and must be a string');
   if (!VALID_TASK_STATUSES.includes(t.status))
-                                             throw new Error('Task.status must be one of: ' + VALID_TASK_STATUSES.join(', ') + ', got: ' + t.status);
+    throw new Error(
+      'Task.status must be one of: ' +
+        VALID_TASK_STATUSES.join(', ') +
+        ', got: ' +
+        t.status
+    );
   return true;
 }
 
-module.exports = { createTask, validateTask, TASK_DEFAULTS, VALID_TASK_STATUSES };
+module.exports = {
+  createTask,
+  validateTask,
+  TASK_DEFAULTS,
+  VALID_TASK_STATUSES,
+};

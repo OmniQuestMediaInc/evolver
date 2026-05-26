@@ -14,9 +14,14 @@ describe('getRepoRoot', () => {
   let tmpDir;
   const savedEnv = {};
   const envKeys = [
-    'EVOLVER_REPO_ROOT', 'EVOLVER_USE_PARENT_GIT', 'EVOLVER_NO_PARENT_GIT',
+    'EVOLVER_REPO_ROOT',
+    'EVOLVER_USE_PARENT_GIT',
+    'EVOLVER_NO_PARENT_GIT',
     'EVOLVER_QUIET_PARENT_GIT',
-    'OPENCLAW_WORKSPACE', 'MEMORY_DIR', 'EVOLUTION_DIR', 'GEP_ASSETS_DIR',
+    'OPENCLAW_WORKSPACE',
+    'MEMORY_DIR',
+    'EVOLUTION_DIR',
+    'GEP_ASSETS_DIR',
   ];
 
   beforeEach(() => {
@@ -106,7 +111,14 @@ describe('getRepoRoot', () => {
     const host = fs.mkdtempSync(path.join(os.tmpdir(), 'host-git-'));
     fs.mkdirSync(path.join(host, '.git'));
     // Simulate evolver living under node_modules/@scope/pkg/src/gep.
-    const fakeGepDir = path.join(host, 'node_modules', '@evomap', 'evolver', 'src', 'gep');
+    const fakeGepDir = path.join(
+      host,
+      'node_modules',
+      '@evomap',
+      'evolver',
+      'src',
+      'gep'
+    );
     fs.mkdirSync(fakeGepDir, { recursive: true });
     const pathsSrc = fs.readFileSync(
       path.resolve(__dirname, '..', 'src', 'gep', 'paths.js'),
@@ -134,7 +146,14 @@ describe('getRepoRoot', () => {
   it('respects EVOLVER_NO_PARENT_GIT=true as opt-out', () => {
     const host = fs.mkdtempSync(path.join(os.tmpdir(), 'host-git-'));
     fs.mkdirSync(path.join(host, '.git'));
-    const fakeGepDir = path.join(host, 'node_modules', '@evomap', 'evolver', 'src', 'gep');
+    const fakeGepDir = path.join(
+      host,
+      'node_modules',
+      '@evomap',
+      'evolver',
+      'src',
+      'gep'
+    );
     fs.mkdirSync(fakeGepDir, { recursive: true });
     const pathsSrc = fs.readFileSync(
       path.resolve(__dirname, '..', 'src', 'gep', 'paths.js'),
@@ -157,7 +176,14 @@ describe('getRepoRoot', () => {
   it('legacy EVOLVER_USE_PARENT_GIT=false still opts out', () => {
     const host = fs.mkdtempSync(path.join(os.tmpdir(), 'host-git-'));
     fs.mkdirSync(path.join(host, '.git'));
-    const fakeGepDir = path.join(host, 'node_modules', '@evomap', 'evolver', 'src', 'gep');
+    const fakeGepDir = path.join(
+      host,
+      'node_modules',
+      '@evomap',
+      'evolver',
+      'src',
+      'gep'
+    );
     fs.mkdirSync(fakeGepDir, { recursive: true });
     const pathsSrc = fs.readFileSync(
       path.resolve(__dirname, '..', 'src', 'gep', 'paths.js'),
@@ -246,7 +272,10 @@ describe('getSessionScope', () => {
     const { getSessionScope } = freshRequire('../src/gep/paths');
     const result = getSessionScope();
     assert.ok(result);
-    assert.ok(!/[\/\\:*]/.test(result), 'should not contain path-unsafe characters');
+    assert.ok(
+      !/[\/\\:*]/.test(result),
+      'should not contain path-unsafe characters'
+    );
   });
 
   it('rejects path traversal attempts', () => {
@@ -272,10 +301,19 @@ describe('getSessionScope', () => {
 
 describe('getEvolutionDir', () => {
   let saved = {};
-  const envKeys = ['EVOLUTION_DIR', 'EVOLVER_SESSION_SCOPE', 'MEMORY_DIR', 'OPENCLAW_WORKSPACE', 'EVOLVER_REPO_ROOT'];
+  const envKeys = [
+    'EVOLUTION_DIR',
+    'EVOLVER_SESSION_SCOPE',
+    'MEMORY_DIR',
+    'OPENCLAW_WORKSPACE',
+    'EVOLVER_REPO_ROOT',
+  ];
 
   beforeEach(() => {
-    for (const k of envKeys) { saved[k] = process.env[k]; delete process.env[k]; }
+    for (const k of envKeys) {
+      saved[k] = process.env[k];
+      delete process.env[k];
+    }
   });
 
   afterEach(() => {
@@ -310,10 +348,17 @@ describe('getEvolutionDir', () => {
 
 describe('getGepAssetsDir', () => {
   let saved = {};
-  const envKeys = ['GEP_ASSETS_DIR', 'EVOLVER_SESSION_SCOPE', 'EVOLVER_REPO_ROOT'];
+  const envKeys = [
+    'GEP_ASSETS_DIR',
+    'EVOLVER_SESSION_SCOPE',
+    'EVOLVER_REPO_ROOT',
+  ];
 
   beforeEach(() => {
-    for (const k of envKeys) { saved[k] = process.env[k]; delete process.env[k]; }
+    for (const k of envKeys) {
+      saved[k] = process.env[k];
+      delete process.env[k];
+    }
   });
 
   afterEach(() => {
@@ -346,7 +391,10 @@ describe('getWorkspaceRoot', () => {
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ws-test-'));
-    for (const k of envKeys) { saved[k] = process.env[k]; delete process.env[k]; }
+    for (const k of envKeys) {
+      saved[k] = process.env[k];
+      delete process.env[k];
+    }
   });
 
   afterEach(() => {
@@ -403,17 +451,32 @@ describe('getWorkspaceRoot', () => {
 
   it('derived paths (memoryDir, logsDir, skillsDir) resolve under workspaceRoot', () => {
     process.env.EVOLVER_REPO_ROOT = tmpDir;
-    const { getWorkspaceRoot, getMemoryDir, getLogsDir, getSkillsDir } = freshRequire('../src/gep/paths');
+    const { getWorkspaceRoot, getMemoryDir, getLogsDir, getSkillsDir } =
+      freshRequire('../src/gep/paths');
     const ws = getWorkspaceRoot();
-    assert.ok(getMemoryDir().startsWith(ws), 'memoryDir should be under workspaceRoot');
-    assert.ok(getLogsDir().startsWith(ws), 'logsDir should be under workspaceRoot');
-    assert.ok(getSkillsDir().startsWith(ws), 'skillsDir should be under workspaceRoot');
+    assert.ok(
+      getMemoryDir().startsWith(ws),
+      'memoryDir should be under workspaceRoot'
+    );
+    assert.ok(
+      getLogsDir().startsWith(ws),
+      'logsDir should be under workspaceRoot'
+    );
+    assert.ok(
+      getSkillsDir().startsWith(ws),
+      'skillsDir should be under workspaceRoot'
+    );
   });
 });
 
 describe('getAgentSessionsDir', () => {
   const savedEnv = {};
-  const envKeys = ['AGENT_SESSIONS_DIR', 'AGENT_NAME', 'EVOLVER_SESSION_SCOPE', 'HOME'];
+  const envKeys = [
+    'AGENT_SESSIONS_DIR',
+    'AGENT_NAME',
+    'EVOLVER_SESSION_SCOPE',
+    'HOME',
+  ];
 
   beforeEach(() => {
     for (const k of envKeys) {
@@ -441,7 +504,7 @@ describe('getAgentSessionsDir', () => {
     const { getAgentSessionsDir } = freshRequire('../src/gep/paths');
     assert.equal(
       getAgentSessionsDir(),
-      path.join('/tmp/home', '.openclaw', 'agents', 'helperclaw', 'sessions'),
+      path.join('/tmp/home', '.openclaw', 'agents', 'helperclaw', 'sessions')
     );
   });
 
@@ -452,7 +515,7 @@ describe('getAgentSessionsDir', () => {
     const { getAgentSessionsDir } = freshRequire('../src/gep/paths');
     assert.equal(
       getAgentSessionsDir(),
-      path.join('/tmp/home', '.openclaw', 'agents', 'custom-agent', 'sessions'),
+      path.join('/tmp/home', '.openclaw', 'agents', 'custom-agent', 'sessions')
     );
   });
 
@@ -461,7 +524,7 @@ describe('getAgentSessionsDir', () => {
     const { getAgentSessionsDir } = freshRequire('../src/gep/paths');
     assert.equal(
       getAgentSessionsDir(),
-      path.join('/tmp/home', '.openclaw', 'agents', 'main', 'sessions'),
+      path.join('/tmp/home', '.openclaw', 'agents', 'main', 'sessions')
     );
   });
 });
@@ -487,7 +550,10 @@ describe('readSessionCwdFromHead', () => {
     const body = JSON.stringify({ type: 'user', text: 'hello' });
     fs.writeFileSync(file, header + '\n' + body + '\n');
     const { readSessionCwdFromHead } = freshRequire('../src/gep/paths');
-    assert.equal(readSessionCwdFromHead(file), '/Users/test/workspaces/helperclaw');
+    assert.equal(
+      readSessionCwdFromHead(file),
+      '/Users/test/workspaces/helperclaw'
+    );
   });
 
   it('returns null when the header has no cwd field', () => {
@@ -499,7 +565,10 @@ describe('readSessionCwdFromHead', () => {
 
   it('returns null when the file does not exist', () => {
     const { readSessionCwdFromHead } = freshRequire('../src/gep/paths');
-    assert.equal(readSessionCwdFromHead(path.join(tmpDir, 'missing.jsonl')), null);
+    assert.equal(
+      readSessionCwdFromHead(path.join(tmpDir, 'missing.jsonl')),
+      null
+    );
   });
 
   it('returns null when the first line is not valid JSON', () => {
@@ -511,7 +580,11 @@ describe('readSessionCwdFromHead', () => {
 
   it('caps read size to the configured maxBytes', () => {
     const file = path.join(tmpDir, 'session.jsonl');
-    const header = JSON.stringify({ type: 'session_start', cwd: '/ok', pad: 'x'.repeat(2048) });
+    const header = JSON.stringify({
+      type: 'session_start',
+      cwd: '/ok',
+      pad: 'x'.repeat(2048),
+    });
     fs.writeFileSync(file, header + '\n');
     const { readSessionCwdFromHead } = freshRequire('../src/gep/paths');
     // default 800-byte cap means the JSON slice won't parse; helper returns null

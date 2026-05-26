@@ -3,7 +3,9 @@ const { readAllEvents } = require('./assetStore');
 const { computeAssetId, SCHEMA_VERSION } = require('./contentHash');
 const { unwrapAssetFromMessage } = require('./a2aProtocol');
 
-function nowIso() { return new Date().toISOString(); }
+function nowIso() {
+  return new Date().toISOString();
+}
 
 function isAllowedA2AAsset(obj) {
   if (!obj || typeof obj !== 'object') return false;
@@ -28,8 +30,14 @@ function getBlastRadiusLimits() {
 
 function isBlastRadiusSafe(blastRadius) {
   var lim = getBlastRadiusLimits();
-  var files = blastRadius && Number.isFinite(Number(blastRadius.files)) ? Math.max(0, Number(blastRadius.files)) : 0;
-  var lines = blastRadius && Number.isFinite(Number(blastRadius.lines)) ? Math.max(0, Number(blastRadius.lines)) : 0;
+  var files =
+    blastRadius && Number.isFinite(Number(blastRadius.files))
+      ? Math.max(0, Number(blastRadius.files))
+      : 0;
+  var lines =
+    blastRadius && Number.isFinite(Number(blastRadius.lines))
+      ? Math.max(0, Number(blastRadius.lines))
+      : 0;
   return files <= lim.maxFiles && lines <= lim.maxLines;
 }
 
@@ -47,8 +55,10 @@ function lowerConfidence(asset, opts) {
   var cloned = JSON.parse(JSON.stringify(asset || {}));
   if (!isAllowedA2AAsset(cloned)) return null;
   if (cloned.type === 'Capsule') {
-    if (typeof cloned.confidence === 'number') cloned.confidence = clamp01(cloned.confidence * factor);
-    else if (cloned.confidence != null) cloned.confidence = clamp01(Number(cloned.confidence) * factor);
+    if (typeof cloned.confidence === 'number')
+      cloned.confidence = clamp01(cloned.confidence * factor);
+    else if (cloned.confidence != null)
+      cloned.confidence = clamp01(Number(cloned.confidence) * factor);
   }
   if (!cloned.a2a || typeof cloned.a2a !== 'object') cloned.a2a = {};
   cloned.a2a.status = 'external_candidate';
@@ -56,13 +66,21 @@ function lowerConfidence(asset, opts) {
   cloned.a2a.received_at = receivedAt;
   cloned.a2a.confidence_factor = factor;
   if (!cloned.schema_version) cloned.schema_version = SCHEMA_VERSION;
-  if (!cloned.asset_id) { try { cloned.asset_id = computeAssetId(cloned); } catch (e) {} }
+  if (!cloned.asset_id) {
+    try {
+      cloned.asset_id = computeAssetId(cloned);
+    } catch (e) {}
+  }
   return cloned;
 }
 
 function readEvolutionEvents() {
   var events = readAllEvents();
-  return Array.isArray(events) ? events.filter(function (e) { return e && e.type === 'EvolutionEvent'; }) : [];
+  return Array.isArray(events)
+    ? events.filter(function (e) {
+        return e && e.type === 'EvolutionEvent';
+      })
+    : [];
 }
 
 function normalizeEventsList(events) {
@@ -80,8 +98,10 @@ function computeCapsuleSuccessStreak(params) {
     var ev = list[i];
     if (!ev || ev.type !== 'EvolutionEvent') continue;
     if (!ev.capsule_id || String(ev.capsule_id) !== id) continue;
-    var st = ev.outcome && ev.outcome.status ? String(ev.outcome.status) : 'unknown';
-    if (st === 'success') streak += 1; else break;
+    var st =
+      ev.outcome && ev.outcome.status ? String(ev.outcome.status) : 'unknown';
+    if (st === 'success') streak += 1;
+    else break;
   }
   return streak;
 }
@@ -89,12 +109,21 @@ function computeCapsuleSuccessStreak(params) {
 function isCapsuleBroadcastEligible(capsule, opts) {
   if (!opts) opts = {};
   if (!capsule || capsule.type !== 'Capsule') return false;
-  var score = capsule.outcome && capsule.outcome.score != null ? safeNumber(capsule.outcome.score, null) : null;
+  var score =
+    capsule.outcome && capsule.outcome.score != null
+      ? safeNumber(capsule.outcome.score, null)
+      : null;
   if (score == null || score < 0.7) return false;
-  var blast = capsule.blast_radius || (capsule.outcome && capsule.outcome.blast_radius) || null;
+  var blast =
+    capsule.blast_radius ||
+    (capsule.outcome && capsule.outcome.blast_radius) ||
+    null;
   if (!isBlastRadiusSafe(blast)) return false;
   var events = Array.isArray(opts.events) ? opts.events : readEvolutionEvents();
-  var streak = computeCapsuleSuccessStreak({ capsuleId: capsule.id, events: events });
+  var streak = computeCapsuleSuccessStreak({
+    capsuleId: capsule.id,
+    events: events,
+  });
   if (streak < 2) return false;
   return true;
 }
@@ -102,12 +131,20 @@ function isCapsuleBroadcastEligible(capsule, opts) {
 function exportEligibleCapsules(params) {
   if (!params) params = {};
   var list = Array.isArray(params.capsules) ? params.capsules : [];
-  var evs = Array.isArray(params.events) ? params.events : readEvolutionEvents();
-  var eligible = list.filter(function (c) { return isCapsuleBroadcastEligible(c, { events: evs }); });
+  var evs = Array.isArray(params.events)
+    ? params.events
+    : readEvolutionEvents();
+  var eligible = list.filter(function (c) {
+    return isCapsuleBroadcastEligible(c, { events: evs });
+  });
   for (var i = 0; i < eligible.length; i++) {
     var c = eligible[i];
     if (!c.schema_version) c.schema_version = SCHEMA_VERSION;
-    if (!c.asset_id) { try { c.asset_id = computeAssetId(c); } catch (e) {} }
+    if (!c.asset_id) {
+      try {
+        c.asset_id = computeAssetId(c);
+      } catch (e) {}
+    }
   }
   return eligible;
 }
@@ -116,18 +153,25 @@ function isGeneBroadcastEligible(gene) {
   if (!gene || gene.type !== 'Gene') return false;
   if (!gene.id || typeof gene.id !== 'string') return false;
   if (!Array.isArray(gene.strategy) || gene.strategy.length === 0) return false;
-  if (!Array.isArray(gene.validation) || gene.validation.length === 0) return false;
+  if (!Array.isArray(gene.validation) || gene.validation.length === 0)
+    return false;
   return true;
 }
 
 function exportEligibleGenes(params) {
   if (!params) params = {};
   var list = Array.isArray(params.genes) ? params.genes : [];
-  var eligible = list.filter(function (g) { return isGeneBroadcastEligible(g); });
+  var eligible = list.filter(function (g) {
+    return isGeneBroadcastEligible(g);
+  });
   for (var i = 0; i < eligible.length; i++) {
     var g = eligible[i];
     if (!g.schema_version) g.schema_version = SCHEMA_VERSION;
-    if (!g.asset_id) { try { g.asset_id = computeAssetId(g); } catch (e) {} }
+    if (!g.asset_id) {
+      try {
+        g.asset_id = computeAssetId(g);
+      } catch (e) {}
+    }
   }
   return eligible;
 }
@@ -138,21 +182,32 @@ function parseA2AInput(text) {
   try {
     var maybe = JSON.parse(raw);
     if (Array.isArray(maybe)) {
-      return maybe.map(function (item) { return unwrapAssetFromMessage(item) || item; }).filter(Boolean);
+      return maybe
+        .map(function (item) {
+          return unwrapAssetFromMessage(item) || item;
+        })
+        .filter(Boolean);
     }
     if (maybe && typeof maybe === 'object') {
       var unwrapped = unwrapAssetFromMessage(maybe);
       return unwrapped ? [unwrapped] : [maybe];
     }
   } catch (e) {}
-  var lines = raw.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+  var lines = raw
+    .split('\n')
+    .map(function (l) {
+      return l.trim();
+    })
+    .filter(Boolean);
   var items = [];
   for (var i = 0; i < lines.length; i++) {
     try {
       var obj = JSON.parse(lines[i]);
       var uw = unwrapAssetFromMessage(obj);
       items.push(uw || obj);
-    } catch (e) { continue; }
+    } catch (e) {
+      continue;
+    }
   }
   return items;
 }
@@ -162,12 +217,20 @@ function readTextIfExists(filePath) {
     if (!filePath) return '';
     if (!fs.existsSync(filePath)) return '';
     return fs.readFileSync(filePath, 'utf8');
-  } catch { return ''; }
+  } catch {
+    return '';
+  }
 }
 
 module.exports = {
-  isAllowedA2AAsset, lowerConfidence, isBlastRadiusSafe,
-  computeCapsuleSuccessStreak, isCapsuleBroadcastEligible,
-  exportEligibleCapsules, isGeneBroadcastEligible,
-  exportEligibleGenes, parseA2AInput, readTextIfExists,
+  isAllowedA2AAsset,
+  lowerConfidence,
+  isBlastRadiusSafe,
+  computeCapsuleSuccessStreak,
+  isCapsuleBroadcastEligible,
+  exportEligibleCapsules,
+  isGeneBroadcastEligible,
+  exportEligibleGenes,
+  parseA2AInput,
+  readTextIfExists,
 };

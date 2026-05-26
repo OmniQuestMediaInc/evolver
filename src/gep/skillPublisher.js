@@ -7,10 +7,22 @@ var { getHubUrl, buildHubHeaders, getNodeId } = require('./a2aProtocol');
  * Returns null if the name is unsalvageable (pure numbers, tool name, etc.).
  */
 function sanitizeSkillName(rawName) {
-  var name = rawName.replace(/[\r\n]+/g, '-').replace(/^gene_distilled_/, '').replace(/^gene_/, '').replace(/_/g, '-');
+  var name = rawName
+    .replace(/[\r\n]+/g, '-')
+    .replace(/^gene_distilled_/, '')
+    .replace(/^gene_/, '')
+    .replace(/_/g, '-');
   // Strip ALL embedded timestamps (10+ digit sequences) anywhere in the name
-  name = name.replace(/-?\d{10,}-?/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-  if (/^\d{8,}/.test(name) || /^(cursor|vscode|vim|emacs|windsurf|copilot|cline|codex)[-]?\d*$/i.test(name)) {
+  name = name
+    .replace(/-?\d{10,}-?/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  if (
+    /^\d{8,}/.test(name) ||
+    /^(cursor|vscode|vim|emacs|windsurf|copilot|cline|codex)[-]?\d*$/i.test(
+      name
+    )
+  ) {
     return null;
   }
   if (name.replace(/[-]/g, '').length < 6) return null;
@@ -22,10 +34,13 @@ function sanitizeSkillName(rawName) {
  * "retry-with-backoff" -> "Retry With Backoff"
  */
 function toTitleCase(kebabName) {
-  return kebabName.split('-').map(function (w) {
-    if (!w) return '';
-    return w.charAt(0).toUpperCase() + w.slice(1);
-  }).join(' ');
+  return kebabName
+    .split('-')
+    .map(function (w) {
+      if (!w) return '';
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    })
+    .join(' ');
 }
 
 /**
@@ -33,22 +48,57 @@ function toTitleCase(kebabName) {
  */
 function deriveFallbackName(gene) {
   var fallbackWords = [];
-  var STOP = new Set(['the', 'and', 'for', 'with', 'from', 'that', 'this', 'into', 'when', 'are', 'was', 'has', 'had', 'not', 'but', 'its']);
+  var STOP = new Set([
+    'the',
+    'and',
+    'for',
+    'with',
+    'from',
+    'that',
+    'this',
+    'into',
+    'when',
+    'are',
+    'was',
+    'has',
+    'had',
+    'not',
+    'but',
+    'its',
+  ]);
   if (Array.isArray(gene.signals_match)) {
     gene.signals_match.slice(0, 3).forEach(function (s) {
-      String(s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).forEach(function (w) {
-        if (w.length >= 3 && !STOP.has(w) && fallbackWords.length < 5) fallbackWords.push(w);
-      });
+      String(s)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+        .split(/\s+/)
+        .forEach(function (w) {
+          if (w.length >= 3 && !STOP.has(w) && fallbackWords.length < 5)
+            fallbackWords.push(w);
+        });
     });
   }
   if (fallbackWords.length < 2 && gene.summary) {
-    String(gene.summary).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).forEach(function (w) {
-      if (w.length >= 3 && !STOP.has(w) && fallbackWords.length < 5) fallbackWords.push(w);
-    });
+    String(gene.summary)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .forEach(function (w) {
+        if (w.length >= 3 && !STOP.has(w) && fallbackWords.length < 5)
+          fallbackWords.push(w);
+      });
   }
   var seen = {};
-  fallbackWords = fallbackWords.filter(function (w) { if (seen[w]) return false; seen[w] = true; return true; });
-  return fallbackWords.length >= 2 ? fallbackWords.join('-') : 'auto-distilled-skill';
+  fallbackWords = fallbackWords.filter(function (w) {
+    if (seen[w]) return false;
+    seen[w] = true;
+    return true;
+  });
+  return fallbackWords.length >= 2
+    ? fallbackWords.join('-')
+    : 'auto-distilled-skill';
 }
 
 /**
@@ -61,8 +111,12 @@ function geneToSkillMd(gene) {
   var rawName = gene.id || 'unnamed-skill';
   var name = sanitizeSkillName(rawName) || deriveFallbackName(gene);
   var displayName = toTitleCase(name);
-  var desc = (gene.summary || '').replace(/[\r\n]+/g, ' ').replace(/\s*\d{10,}\s*$/g, '').trim();
-  if (!desc || desc.length < 10) desc = 'AI agent skill distilled from evolution experience.';
+  var desc = (gene.summary || '')
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\s*\d{10,}\s*$/g, '')
+    .trim();
+  if (!desc || desc.length < 10)
+    desc = 'AI agent skill distilled from evolution experience.';
 
   var lines = [
     '---',
@@ -80,9 +134,15 @@ function geneToSkillMd(gene) {
   if (gene.signals_match && gene.signals_match.length > 0) {
     lines.push('## When to Use');
     lines.push('');
-    lines.push('- When your project encounters: ' + gene.signals_match.slice(0, 4).map(function (s) {
-      return '`' + s + '`';
-    }).join(', '));
+    lines.push(
+      '- When your project encounters: ' +
+        gene.signals_match
+          .slice(0, 4)
+          .map(function (s) {
+            return '`' + s + '`';
+          })
+          .join(', ')
+    );
     lines.push('');
   }
 
@@ -162,8 +222,18 @@ function geneToSkillMd(gene) {
     if (gene.constraints.max_files) {
       lines.push('- Max files per invocation: ' + gene.constraints.max_files);
     }
-    if (gene.constraints.forbidden_paths && gene.constraints.forbidden_paths.length > 0) {
-      lines.push('- Forbidden paths: ' + gene.constraints.forbidden_paths.map(function (p) { return '`' + p + '`'; }).join(', '));
+    if (
+      gene.constraints.forbidden_paths &&
+      gene.constraints.forbidden_paths.length > 0
+    ) {
+      lines.push(
+        '- Forbidden paths: ' +
+          gene.constraints.forbidden_paths
+            .map(function (p) {
+              return '`' + p + '`';
+            })
+            .join(', ')
+      );
     }
     lines.push('');
   }
@@ -186,13 +256,19 @@ function geneToSkillMd(gene) {
   lines.push('- Category: `' + (gene.category || 'innovate') + '`');
   lines.push('- Schema version: `' + (gene.schema_version || '1.6.0') + '`');
   if (gene._distilled_meta && gene._distilled_meta.source_capsule_count) {
-    lines.push('- Distilled from: ' + gene._distilled_meta.source_capsule_count + ' successful capsules');
+    lines.push(
+      '- Distilled from: ' +
+        gene._distilled_meta.source_capsule_count +
+        ' successful capsules'
+    );
   }
   lines.push('');
 
   lines.push('---');
   lines.push('');
-  lines.push('*This Skill was generated by [Evolver](https://github.com/autogame-17/evolver) and is distributed under the [EvoMap Skill License (ESL-1.0)](https://evomap.ai/terms). Unauthorized redistribution, bulk scraping, or republishing is prohibited. See LICENSE file for full terms.*');
+  lines.push(
+    '*This Skill was generated by [Evolver](https://github.com/autogame-17/evolver) and is distributed under the [EvoMap Skill License (ESL-1.0)](https://evomap.ai/terms). Unauthorized redistribution, bulk scraping, or republishing is prohibited. See LICENSE file for full terms.*'
+  );
   lines.push('');
 
   return lines.join('\n');
@@ -210,7 +286,8 @@ function geneToSkillMd(gene) {
  * anti-pattern list items in the dedicated "## Avoid" section instead.
  */
 function extractStepVerb(step) {
-  var ANTI_PATTERN_MARKERS = /^(AVOID|DO|DON'?T|NEVER|NOT|STOP|SKIP|IGNORE|FORBIDDEN|WARN|WARNING|CAUTION|NOTE)\b/i;
+  var ANTI_PATTERN_MARKERS =
+    /^(AVOID|DO|DON'?T|NEVER|NOT|STOP|SKIP|IGNORE|FORBIDDEN|WARN|WARNING|CAUTION|NOTE)\b/i;
   if (ANTI_PATTERN_MARKERS.test(step)) return '';
   // Only match a capitalized verb at the very start (no leading backtick/special chars)
   var match = step.match(/^([A-Z][a-z]+)/);
@@ -218,7 +295,15 @@ function extractStepVerb(step) {
   // Extra safety: do not treat single-capital-letter + no-lowercase abbreviations
   // (already filtered by the [a-z]+ requirement) or common non-verbs like
   // "The", "This", "These", "Those" as verbs.
-  var DETERMINERS = new Set(['The', 'This', 'These', 'Those', 'That', 'A', 'An']);
+  var DETERMINERS = new Set([
+    'The',
+    'This',
+    'These',
+    'Those',
+    'That',
+    'A',
+    'An',
+  ]);
   if (DETERMINERS.has(match[1])) return '';
   return match[1];
 }
@@ -249,20 +334,34 @@ function publishSkillToHub(gene, opts) {
 
   // Shallow-copy gene to avoid mutating the caller's object
   var geneCopy = {};
-  Object.keys(gene).forEach(function (k) { geneCopy[k] = gene[k]; });
+  Object.keys(gene).forEach(function (k) {
+    geneCopy[k] = gene[k];
+  });
   if (Array.isArray(geneCopy.signals_match)) {
     try {
       var distiller = require('./skillDistiller');
-      geneCopy.signals_match = distiller.sanitizeSignalsMatch(geneCopy.signals_match);
-    } catch (e) { /* distiller not available, skip */ }
+      geneCopy.signals_match = distiller.sanitizeSignalsMatch(
+        geneCopy.signals_match
+      );
+    } catch (e) {
+      /* distiller not available, skip */
+    }
   }
 
   var content = geneToSkillMd(geneCopy);
   var nodeId = getNodeId();
   var fmName = content.match(/^name:\s*(.+)$/m);
-  var derivedName = fmName ? fmName[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, '_') : (gene.id || 'unnamed').replace(/^gene_/, '');
+  var derivedName = fmName
+    ? fmName[1]
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+    : (gene.id || 'unnamed').replace(/^gene_/, '');
   // Strip ALL embedded timestamps from skillId
-  derivedName = derivedName.replace(/_?\d{10,}_?/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  derivedName = derivedName
+    .replace(/_?\d{10,}_?/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
   var skillId = 'skill_' + derivedName;
 
   // Clean tags: use already-sanitized signals from geneCopy
@@ -288,7 +387,11 @@ function publishSkillToHub(gene, opts) {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(15000),
   })
-    .then(function (res) { return res.json().then(function (data) { return { status: res.status, data: data }; }); })
+    .then(function (res) {
+      return res.json().then(function (data) {
+        return { status: res.status, data: data };
+      });
+    })
     .then(function (result) {
       if (result.status === 201 || result.status === 200) {
         return { ok: true, result: result.data };
@@ -296,7 +399,11 @@ function publishSkillToHub(gene, opts) {
       if (result.status === 409) {
         return updateSkillOnHub(nodeId, skillId, content, opts, gene);
       }
-      return { ok: false, error: result.data?.error || 'publish_failed', status: result.status };
+      return {
+        ok: false,
+        error: result.data?.error || 'publish_failed',
+        status: result.status,
+      };
     })
     .catch(function (err) {
       return { ok: false, error: err.message };
@@ -333,14 +440,24 @@ function updateSkillOnHub(nodeId, skillId, content, opts, gene) {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(15000),
   })
-    .then(function (res) { return res.json().then(function (data) { return { status: res.status, data: data }; }); })
+    .then(function (res) {
+      return res.json().then(function (data) {
+        return { status: res.status, data: data };
+      });
+    })
     .then(function (result) {
       if (result.status >= 200 && result.status < 300) {
         return { ok: true, result: result.data };
       }
-      return { ok: false, error: result.data?.error || 'update_failed', status: result.status };
+      return {
+        ok: false,
+        error: result.data?.error || 'update_failed',
+        status: result.status,
+      };
     })
-    .catch(function (err) { return { ok: false, error: err.message }; });
+    .catch(function (err) {
+      return { ok: false, error: err.message };
+    });
 }
 
 module.exports = {

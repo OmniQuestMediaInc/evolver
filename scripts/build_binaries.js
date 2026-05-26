@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+ 
 //
 // build_binaries.js — produce standalone CLI binaries of evolver via the
 // hardened "obfuscator -> bun bundle -> bun compile" pipeline.
@@ -72,9 +72,18 @@ for (const a of argv) {
   else if (a === '--dry-run') OPTS.dryRun = true;
   else if (a === '--keep-stage') OPTS.keepStage = true;
   else if (a.startsWith('--target=')) OPTS.target = a.slice('--target='.length);
-  else if (a.startsWith('--out-dir=')) OPTS.outDir = a.slice('--out-dir='.length);
+  else if (a.startsWith('--out-dir='))
+    OPTS.outDir = a.slice('--out-dir='.length);
   else if (a === '--help' || a === '-h') {
-    console.log(fs.readFileSync(__filename, 'utf8').split('\n').filter(l => l.startsWith('//')).map(l => l.replace(/^\/\/ ?/, '')).slice(0, 50).join('\n'));
+    console.log(
+      fs
+        .readFileSync(__filename, 'utf8')
+        .split('\n')
+        .filter(l => l.startsWith('//'))
+        .map(l => l.replace(/^\/\/ ?/, ''))
+        .slice(0, 50)
+        .join('\n')
+    );
     process.exit(0);
   } else {
     console.error(`build_binaries: unknown argument: ${a}`);
@@ -90,19 +99,23 @@ const STAGE_DIR = path.join(REPO_ROOT, '.binary-stage');
 const OUT_DIR = path.resolve(REPO_ROOT, OPTS.outDir);
 
 const ALL_TARGETS = [
-  { triple: 'bun-darwin-arm64',  name: 'evolver-darwin-arm64'  },
-  { triple: 'bun-darwin-x64',    name: 'evolver-darwin-x64'    },
-  { triple: 'bun-linux-x64',     name: 'evolver-linux-x64'     },
-  { triple: 'bun-linux-arm64',   name: 'evolver-linux-arm64'   },
-  { triple: 'bun-windows-x64',   name: 'evolver-windows-x64.exe' },
+  { triple: 'bun-darwin-arm64', name: 'evolver-darwin-arm64' },
+  { triple: 'bun-darwin-x64', name: 'evolver-darwin-x64' },
+  { triple: 'bun-linux-x64', name: 'evolver-linux-x64' },
+  { triple: 'bun-linux-arm64', name: 'evolver-linux-arm64' },
+  { triple: 'bun-windows-x64', name: 'evolver-windows-x64.exe' },
 ];
 
 const TARGETS = OPTS.target
-  ? ALL_TARGETS.filter(t => t.name.endsWith(OPTS.target) || t.triple.endsWith(OPTS.target))
+  ? ALL_TARGETS.filter(
+      t => t.name.endsWith(OPTS.target) || t.triple.endsWith(OPTS.target)
+    )
   : ALL_TARGETS;
 
 if (TARGETS.length === 0) {
-  console.error(`build_binaries: target "${OPTS.target}" matched no known triple. Known: ${ALL_TARGETS.map(t => t.triple).join(', ')}`);
+  console.error(
+    `build_binaries: target "${OPTS.target}" matched no known triple. Known: ${ALL_TARGETS.map(t => t.triple).join(', ')}`
+  );
   process.exit(1);
 }
 
@@ -119,7 +132,9 @@ function run(cmd, args, opts = {}) {
   }
   const r = spawnSync(cmd, args, { stdio: 'inherit', ...opts });
   if (r.status !== 0) {
-    console.error(`  command failed (exit ${r.status}): ${cmd} ${args.join(' ')}`);
+    console.error(
+      `  command failed (exit ${r.status}): ${cmd} ${args.join(' ')}`
+    );
     process.exit(2);
   }
   return r;
@@ -163,7 +178,9 @@ try {
     process.exit(1);
   }
 } catch (e) {
-  console.error('  ERROR: `bun` not found in PATH. Install from https://bun.com');
+  console.error(
+    '  ERROR: `bun` not found in PATH. Install from https://bun.com'
+  );
   process.exit(1);
 }
 
@@ -172,17 +189,24 @@ if (!OPTS.skipObfuscate) {
     require.resolve('javascript-obfuscator', { paths: [REPO_ROOT] });
     console.log('  javascript-obfuscator: present');
   } catch {
-    console.error('  ERROR: javascript-obfuscator not installed. Run `npm install` in repo root first.');
+    console.error(
+      '  ERROR: javascript-obfuscator not installed. Run `npm install` in repo root first.'
+    );
     process.exit(1);
   }
 }
 
-const releaseVersion = process.env.RELEASE_VERSION
-  || JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')).version;
+const releaseVersion =
+  process.env.RELEASE_VERSION ||
+  JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'))
+    .version;
 console.log(`  release version: ${releaseVersion}`);
 console.log(`  targets: ${TARGETS.map(t => t.name).join(', ')}`);
 console.log(`  out dir: ${OUT_DIR}`);
-if (OPTS.skipObfuscate) console.log('  WARN: --skip-obfuscate => DEV-grade binary, do NOT distribute');
+if (OPTS.skipObfuscate)
+  console.log(
+    '  WARN: --skip-obfuscate => DEV-grade binary, do NOT distribute'
+  );
 if (OPTS.dryRun) console.log('  mode: DRY RUN (no files will change)');
 
 // ---------- stage 1: bun bundle ----------
@@ -206,12 +230,21 @@ if (!OPTS.skipObfuscate) {
   const OBF_JS = path.join(STAGE_DIR, 'bundled.obf.js');
 
   if (!OPTS.dryRun) {
-    const O = require(require.resolve('javascript-obfuscator', { paths: [REPO_ROOT] }));
+    const O = require(
+      require.resolve('javascript-obfuscator', { paths: [REPO_ROOT] })
+    );
     const src = fs.readFileSync(BUNDLED_JS, 'utf8');
     // Deterministic obfuscation: same release version + same source = same
     // output. This makes binary diffs across re-runs meaningful and lets
     // SHA256SUMS be reproduced by anyone with the source tree.
-    const seed = parseInt(crypto.createHash('sha256').update(`evolver:${releaseVersion}`).digest('hex').slice(0, 8), 16);
+    const seed = parseInt(
+      crypto
+        .createHash('sha256')
+        .update(`evolver:${releaseVersion}`)
+        .digest('hex')
+        .slice(0, 8),
+      16
+    );
     const t0 = Date.now();
     const result = O.obfuscate(src, {
       seed,
@@ -240,9 +273,13 @@ if (!OPTS.skipObfuscate) {
     });
     fs.writeFileSync(OBF_JS, result.getObfuscatedCode());
     const obfSize = fs.statSync(OBF_JS).size;
-    console.log(`  obfuscation: ${((Date.now() - t0) / 1000).toFixed(1)}s, output ${(obfSize / 1024 / 1024).toFixed(2)} MB`);
+    console.log(
+      `  obfuscation: ${((Date.now() - t0) / 1000).toFixed(1)}s, output ${(obfSize / 1024 / 1024).toFixed(2)} MB`
+    );
   } else {
-    console.log('  [dry-run] would obfuscate stage/bundled.js -> stage/bundled.obf.js');
+    console.log(
+      '  [dry-run] would obfuscate stage/bundled.js -> stage/bundled.obf.js'
+    );
   }
 
   payloadJs = OBF_JS;
@@ -252,7 +289,9 @@ if (!OPTS.skipObfuscate) {
 
 // ---------- stage 3: per-target compile ----------
 
-step(`Stage 3 — bun compile (${TARGETS.length} target${TARGETS.length === 1 ? '' : 's'})`);
+step(
+  `Stage 3 — bun compile (${TARGETS.length} target${TARGETS.length === 1 ? '' : 's'})`
+);
 
 // Idempotency: scrub OUT_DIR up front so stale binaries from a prior partial
 // run can't leak into a subsequent `gh release upload dist-binaries/*`.
@@ -264,7 +303,9 @@ const sums = [];
 
 for (const t of TARGETS) {
   const outPath = path.join(OUT_DIR, t.name);
-  console.log(`\n  --- ${t.triple} -> ${path.relative(REPO_ROOT, outPath)} ---`);
+  console.log(
+    `\n  --- ${t.triple} -> ${path.relative(REPO_ROOT, outPath)} ---`
+  );
 
   run('bun', [
     'build',
@@ -281,7 +322,9 @@ for (const t of TARGETS) {
     const hash = sha256(outPath);
     fs.writeFileSync(`${outPath}.sha256`, `${hash}  ${t.name}\n`);
     sums.push(`${hash}  ${t.name}`);
-    console.log(`    size: ${(stat.size / 1024 / 1024).toFixed(1)} MB   sha256: ${hash.slice(0, 16)}…`);
+    console.log(
+      `    size: ${(stat.size / 1024 / 1024).toFixed(1)} MB   sha256: ${hash.slice(0, 16)}…`
+    );
   }
 }
 
@@ -289,10 +332,14 @@ for (const t of TARGETS) {
 // be executed on the build host without an emulator; skip them by design).
 const hostTriple = (() => {
   const arch = process.arch === 'arm64' ? 'arm64' : 'x64';
-  const plat = process.platform === 'darwin' ? 'darwin'
-             : process.platform === 'linux'  ? 'linux'
-             : process.platform === 'win32'  ? 'windows'
-             : null;
+  const plat =
+    process.platform === 'darwin'
+      ? 'darwin'
+      : process.platform === 'linux'
+        ? 'linux'
+        : process.platform === 'win32'
+          ? 'windows'
+          : null;
   return plat ? `${plat}-${arch}` : null;
 })();
 
@@ -331,11 +378,17 @@ if (!OPTS.dryRun) {
 if (!OPTS.keepStage && !OPTS.dryRun) {
   rmDir(STAGE_DIR);
 } else if (OPTS.keepStage) {
-  console.log(`\n  (kept stage at ${path.relative(REPO_ROOT, STAGE_DIR)} for inspection)`);
+  console.log(
+    `\n  (kept stage at ${path.relative(REPO_ROOT, STAGE_DIR)} for inspection)`
+  );
 }
 
-step(`Done. ${TARGETS.length} binar${TARGETS.length === 1 ? 'y' : 'ies'} in ${path.relative(REPO_ROOT, OUT_DIR)}/`);
-console.log('  next: gh release upload v<ver> dist-binaries/* --repo EvoMap/Evolver');
+step(
+  `Done. ${TARGETS.length} binar${TARGETS.length === 1 ? 'y' : 'ies'} in ${path.relative(REPO_ROOT, OUT_DIR)}/`
+);
+console.log(
+  '  next: gh release upload v<ver> dist-binaries/* --repo EvoMap/Evolver'
+);
 
 //
 // =====================================================================

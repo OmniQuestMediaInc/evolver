@@ -3,12 +3,17 @@
 const { PROXY_PROTOCOL_VERSION, SCHEMA_VERSION } = require('../mailbox/store');
 
 function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
-  const { dmHandler, skillUpdater, getHubMailboxStatus, sessionHandler } = extensions || {};
+  const { dmHandler, skillUpdater, getHubMailboxStatus, sessionHandler } =
+    extensions || {};
   return {
     // -- Mailbox --
     'POST /mailbox/send': async ({ body }) => {
-      if (!body.type) throw Object.assign(new Error('type is required'), { statusCode: 400 });
-      if (!body.payload) throw Object.assign(new Error('payload is required'), { statusCode: 400 });
+      if (!body.type)
+        throw Object.assign(new Error('type is required'), { statusCode: 400 });
+      if (!body.payload)
+        throw Object.assign(new Error('payload is required'), {
+          statusCode: 400,
+        });
       const result = store.send({
         type: body.type,
         payload: body.payload,
@@ -30,13 +35,19 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     },
 
     'POST /mailbox/ack': async ({ body }) => {
-      if (!body.message_ids) throw Object.assign(new Error('message_ids is required'), { statusCode: 400 });
+      if (!body.message_ids)
+        throw Object.assign(new Error('message_ids is required'), {
+          statusCode: 400,
+        });
       const count = store.ack(body.message_ids);
       return { body: { acknowledged: count } };
     },
 
     'GET /mailbox/list': async ({ query }) => {
-      if (!query.type) throw Object.assign(new Error('type query param is required'), { statusCode: 400 });
+      if (!query.type)
+        throw Object.assign(new Error('type query param is required'), {
+          statusCode: 400,
+        });
       const messages = store.list({
         type: query.type,
         direction: query.direction,
@@ -49,14 +60,19 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
 
     'GET /mailbox/status/:id': async ({ params }) => {
       const msg = store.getById(params.id);
-      if (!msg) throw Object.assign(new Error('Message not found'), { statusCode: 404 });
+      if (!msg)
+        throw Object.assign(new Error('Message not found'), {
+          statusCode: 404,
+        });
       return { body: msg };
     },
 
     // -- Asset (proxy HTTP) --
     'POST /asset/validate': async ({ body }) => {
       if (!body.asset_id && !body.assets) {
-        throw Object.assign(new Error('asset_id or assets is required'), { statusCode: 400 });
+        throw Object.assign(new Error('asset_id or assets is required'), {
+          statusCode: 400,
+        });
       }
       const result = await proxyHandlers.assetValidate(body);
       return { body: result };
@@ -74,7 +90,9 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
 
     'POST /asset/submit': async ({ body }) => {
       if (!body.assets && !body.asset_id) {
-        throw Object.assign(new Error('assets or asset_id is required'), { statusCode: 400 });
+        throw Object.assign(new Error('assets or asset_id is required'), {
+          statusCode: 400,
+        });
       }
       const result = store.send({
         type: 'asset_submit',
@@ -95,7 +113,8 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
       const submissionIds = new Set(submissions.map(s => s.id));
       const resultMap = {};
       for (const [, msg] of store._messages) {
-        if (msg.type !== 'asset_submit_result' || msg.direction !== 'inbound') continue;
+        if (msg.type !== 'asset_submit_result' || msg.direction !== 'inbound')
+          continue;
         const refId = msg.payload?.ref_id;
         if (refId && submissionIds.has(refId)) resultMap[refId] = msg;
       }
@@ -109,7 +128,9 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     // -- Task --
     'POST /task/subscribe': async ({ body }) => {
       if (taskMonitor) {
-        const result = taskMonitor.subscribe(body.capability_filter || body.filters || []);
+        const result = taskMonitor.subscribe(
+          body.capability_filter || body.filters || []
+        );
         return { body: result };
       }
       const result = store.send({
@@ -140,7 +161,10 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     },
 
     'POST /task/claim': async ({ body }) => {
-      if (!body.task_id) throw Object.assign(new Error('task_id is required'), { statusCode: 400 });
+      if (!body.task_id)
+        throw Object.assign(new Error('task_id is required'), {
+          statusCode: 400,
+        });
       const result = store.send({
         type: 'task_claim',
         payload: body,
@@ -151,12 +175,16 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     },
 
     'POST /task/complete': async ({ body }) => {
-      if (!body.task_id) throw Object.assign(new Error('task_id is required'), { statusCode: 400 });
+      if (!body.task_id)
+        throw Object.assign(new Error('task_id is required'), {
+          statusCode: 400,
+        });
       const result = store.send({
         type: 'task_complete',
         payload: body,
       });
-      if (taskMonitor) taskMonitor.recordComplete(body.task_id, body.started_at);
+      if (taskMonitor)
+        taskMonitor.recordComplete(body.task_id, body.started_at);
       return { body: result };
     },
 
@@ -170,10 +198,14 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     // -- DM (Direct Message) --
     'POST /dm/send': async ({ body }) => {
       if (!body.recipient_node_id) {
-        throw Object.assign(new Error('recipient_node_id is required'), { statusCode: 400 });
+        throw Object.assign(new Error('recipient_node_id is required'), {
+          statusCode: 400,
+        });
       }
       if (!body.content) {
-        throw Object.assign(new Error('content is required'), { statusCode: 400 });
+        throw Object.assign(new Error('content is required'), {
+          statusCode: 400,
+        });
       }
       if (dmHandler) {
         const result = dmHandler.send({
@@ -221,7 +253,10 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
 
     // -- Session (Collaboration) --
     'POST /session/create': async ({ body }) => {
-      if (!body.title) throw Object.assign(new Error('title is required'), { statusCode: 400 });
+      if (!body.title)
+        throw Object.assign(new Error('title is required'), {
+          statusCode: 400,
+        });
       if (sessionHandler) {
         const result = sessionHandler.createSession({
           title: body.title,
@@ -244,27 +279,46 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     },
 
     'POST /session/join': async ({ body }) => {
-      if (!body.session_id) throw Object.assign(new Error('session_id is required'), { statusCode: 400 });
+      if (!body.session_id)
+        throw Object.assign(new Error('session_id is required'), {
+          statusCode: 400,
+        });
       if (sessionHandler) {
-        const result = sessionHandler.joinSession({ sessionId: body.session_id });
+        const result = sessionHandler.joinSession({
+          sessionId: body.session_id,
+        });
         return { body: result };
       }
-      const result = store.send({ type: 'session_join', payload: { session_id: body.session_id } });
+      const result = store.send({
+        type: 'session_join',
+        payload: { session_id: body.session_id },
+      });
       return { body: result };
     },
 
     'POST /session/leave': async ({ body }) => {
-      if (!body.session_id) throw Object.assign(new Error('session_id is required'), { statusCode: 400 });
+      if (!body.session_id)
+        throw Object.assign(new Error('session_id is required'), {
+          statusCode: 400,
+        });
       if (sessionHandler) {
-        const result = sessionHandler.leaveSession({ sessionId: body.session_id });
+        const result = sessionHandler.leaveSession({
+          sessionId: body.session_id,
+        });
         return { body: result };
       }
-      const result = store.send({ type: 'session_leave', payload: { session_id: body.session_id } });
+      const result = store.send({
+        type: 'session_leave',
+        payload: { session_id: body.session_id },
+      });
       return { body: result };
     },
 
     'POST /session/message': async ({ body }) => {
-      if (!body.session_id) throw Object.assign(new Error('session_id is required'), { statusCode: 400 });
+      if (!body.session_id)
+        throw Object.assign(new Error('session_id is required'), {
+          statusCode: 400,
+        });
       if (sessionHandler) {
         const result = sessionHandler.sendMessage({
           sessionId: body.session_id,
@@ -287,8 +341,14 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     },
 
     'POST /session/delegate': async ({ body }) => {
-      if (!body.session_id) throw Object.assign(new Error('session_id is required'), { statusCode: 400 });
-      if (!body.title) throw Object.assign(new Error('title is required'), { statusCode: 400 });
+      if (!body.session_id)
+        throw Object.assign(new Error('session_id is required'), {
+          statusCode: 400,
+        });
+      if (!body.title)
+        throw Object.assign(new Error('title is required'), {
+          statusCode: 400,
+        });
       if (sessionHandler) {
         const result = sessionHandler.delegateSubtask({
           sessionId: body.session_id,
@@ -314,8 +374,14 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     },
 
     'POST /session/submit': async ({ body }) => {
-      if (!body.session_id) throw Object.assign(new Error('session_id is required'), { statusCode: 400 });
-      if (!body.task_id) throw Object.assign(new Error('task_id is required'), { statusCode: 400 });
+      if (!body.session_id)
+        throw Object.assign(new Error('session_id is required'), {
+          statusCode: 400,
+        });
+      if (!body.task_id)
+        throw Object.assign(new Error('task_id is required'), {
+          statusCode: 400,
+        });
       if (sessionHandler) {
         const result = sessionHandler.submitResult({
           sessionId: body.session_id,
@@ -343,7 +409,10 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
         const messages = sessionHandler.pollInvites({ limit: body.limit });
         return { body: { messages, count: messages.length } };
       }
-      const messages = store.poll({ type: 'collaboration_invite', limit: body.limit || 10 });
+      const messages = store.poll({
+        type: 'collaboration_invite',
+        limit: body.limit || 10,
+      });
       return { body: { messages, count: messages.length } };
     },
 
@@ -352,7 +421,11 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
         const sessions = sessionHandler.listActiveSessions();
         return { body: { sessions, count: sessions.length } };
       }
-      const sessions = store.list({ type: 'session_create', direction: 'outbound', limit: Number(query.limit) || 20 });
+      const sessions = store.list({
+        type: 'session_create',
+        direction: 'outbound',
+        limit: Number(query.limit) || 20,
+      });
       return { body: { sessions, count: sessions.length } };
     },
 
@@ -401,31 +474,46 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     // Callers cannot impersonate another node through the proxy, even if they
     // pass a different sender_id in the body or query string.
     'POST /atp/order': async ({ body }) => {
-      const override = { ...(body || {}), sender_id: store.getState('node_id') };
+      const override = {
+        ...(body || {}),
+        sender_id: store.getState('node_id'),
+      };
       const result = await proxyHandlers.atpPost('/a2a/atp/order', override);
       return { body: result };
     },
 
     'POST /atp/deliver': async ({ body }) => {
-      const override = { ...(body || {}), sender_id: store.getState('node_id') };
+      const override = {
+        ...(body || {}),
+        sender_id: store.getState('node_id'),
+      };
       const result = await proxyHandlers.atpPost('/a2a/atp/deliver', override);
       return { body: result };
     },
 
     'POST /atp/verify': async ({ body }) => {
-      const override = { ...(body || {}), sender_id: store.getState('node_id') };
+      const override = {
+        ...(body || {}),
+        sender_id: store.getState('node_id'),
+      };
       const result = await proxyHandlers.atpPost('/a2a/atp/verify', override);
       return { body: result };
     },
 
     'POST /atp/settle': async ({ body }) => {
-      const override = { ...(body || {}), sender_id: store.getState('node_id') };
+      const override = {
+        ...(body || {}),
+        sender_id: store.getState('node_id'),
+      };
       const result = await proxyHandlers.atpPost('/a2a/atp/settle', override);
       return { body: result };
     },
 
     'POST /atp/dispute': async ({ body }) => {
-      const override = { ...(body || {}), sender_id: store.getState('node_id') };
+      const override = {
+        ...(body || {}),
+        sender_id: store.getState('node_id'),
+      };
       const result = await proxyHandlers.atpPost('/a2a/atp/dispute', override);
       return { body: result };
     },
@@ -439,7 +527,9 @@ function buildRoutes(store, proxyHandlers, taskMonitor, extensions) {
     },
 
     'GET /atp/order/:orderId': async ({ params }) => {
-      const result = await proxyHandlers.atpGet('/a2a/atp/order/' + encodeURIComponent(params.orderId));
+      const result = await proxyHandlers.atpGet(
+        '/a2a/atp/order/' + encodeURIComponent(params.orderId)
+      );
       return { body: result };
     },
 

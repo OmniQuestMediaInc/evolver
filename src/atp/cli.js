@@ -15,15 +15,25 @@
 // { exitCode: number, output?: string, data?: object }.
 
 function _parseNamed(args, longFlag, shortFlag) {
-  const long = args.findIndex(a => typeof a === 'string' && (a === longFlag || a.startsWith(longFlag + '=')));
+  const long = args.findIndex(
+    a =>
+      typeof a === 'string' && (a === longFlag || a.startsWith(longFlag + '='))
+  );
   if (long !== -1) {
     const token = args[long];
-    if (token.startsWith(longFlag + '=')) return token.slice(longFlag.length + 1);
-    if (args[long + 1] && !String(args[long + 1]).startsWith('--')) return args[long + 1];
+    if (token.startsWith(longFlag + '='))
+      return token.slice(longFlag.length + 1);
+    if (args[long + 1] && !String(args[long + 1]).startsWith('--'))
+      return args[long + 1];
   }
   if (shortFlag) {
     const short = args.indexOf(shortFlag);
-    if (short !== -1 && args[short + 1] && !String(args[short + 1]).startsWith('--')) return args[short + 1];
+    if (
+      short !== -1 &&
+      args[short + 1] &&
+      !String(args[short + 1]).startsWith('--')
+    )
+      return args[short + 1];
   }
   return null;
 }
@@ -36,7 +46,11 @@ function _toBool(v) {
 
 function parseBuyArgs(args) {
   if (!Array.isArray(args) || args.length === 0) {
-    return { ok: false, error: 'buy requires <capabilities>: comma-separated list (e.g. code_review,bug_fix)' };
+    return {
+      ok: false,
+      error:
+        'buy requires <capabilities>: comma-separated list (e.g. code_review,bug_fix)',
+    };
   }
 
   // First positional (not starting with --) is the capability list.
@@ -49,12 +63,21 @@ function parseBuyArgs(args) {
     }
   }
   if (!capabilitiesRaw) {
-    return { ok: false, error: 'buy requires <capabilities>: comma-separated list' };
+    return {
+      ok: false,
+      error: 'buy requires <capabilities>: comma-separated list',
+    };
   }
 
-  const capabilities = capabilitiesRaw.split(',').map(s => s.trim()).filter(Boolean);
+  const capabilities = capabilitiesRaw
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
   if (capabilities.length === 0) {
-    return { ok: false, error: 'no valid capabilities parsed from: ' + capabilitiesRaw };
+    return {
+      ok: false,
+      error: 'no valid capabilities parsed from: ' + capabilitiesRaw,
+    };
   }
 
   const budgetRaw = _parseNamed(args, '--budget', '-b');
@@ -65,7 +88,9 @@ function parseBuyArgs(args) {
   const verifyMode = _parseNamed(args, '--verify', null) || 'auto';
   const noWait = args.includes('--no-wait');
   const timeoutMsRaw = _parseNamed(args, '--timeout', null);
-  const timeoutMs = timeoutMsRaw ? Math.max(1000, Math.round(Number(timeoutMsRaw) * 1000)) : 300000;
+  const timeoutMs = timeoutMsRaw
+    ? Math.max(1000, Math.round(Number(timeoutMsRaw) * 1000))
+    : 300000;
 
   return {
     ok: true,
@@ -84,14 +109,22 @@ function parseBuyArgs(args) {
 function parseOrdersArgs(args) {
   const role = _parseNamed(args, '--role', null);
   if (role && !['consumer', 'merchant'].includes(role)) {
-    return { ok: false, error: 'invalid --role: ' + role + ' (expected consumer|merchant)' };
+    return {
+      ok: false,
+      error: 'invalid --role: ' + role + ' (expected consumer|merchant)',
+    };
   }
   const status = _parseNamed(args, '--status', null);
-  if (status && !['pending', 'verified', 'disputed', 'settled'].includes(status)) {
+  if (
+    status &&
+    !['pending', 'verified', 'disputed', 'settled'].includes(status)
+  ) {
     return { ok: false, error: 'invalid --status: ' + status };
   }
   const limitRaw = _parseNamed(args, '--limit', null);
-  const limit = limitRaw ? Math.max(1, Math.min(100, Math.round(Number(limitRaw)))) : 20;
+  const limit = limitRaw
+    ? Math.max(1, Math.min(100, Math.round(Number(limitRaw))))
+    : 20;
   const jsonOut = args.includes('--json');
   return {
     ok: true,
@@ -113,7 +146,10 @@ function parseVerifyArgs(args) {
   }
   const action = _parseNamed(args, '--action', null) || 'confirm';
   if (!['confirm', 'ai_judge'].includes(action)) {
-    return { ok: false, error: 'invalid --action: ' + action + ' (expected confirm|ai_judge)' };
+    return {
+      ok: false,
+      error: 'invalid --action: ' + action + ' (expected confirm|ai_judge)',
+    };
   }
   return { ok: true, opts: { orderId, action } };
 }
@@ -124,7 +160,14 @@ async function runBuy(opts, deps) {
   const log = (deps && deps.log) || console.log;
   const err = (deps && deps.err) || console.error;
 
-  log('[ATP] Placing order: capabilities=' + opts.capabilities.join(',') + ' budget=' + opts.budget + ' mode=' + opts.routingMode);
+  log(
+    '[ATP] Placing order: capabilities=' +
+      opts.capabilities.join(',') +
+      ' budget=' +
+      opts.budget +
+      ' mode=' +
+      opts.routingMode
+  );
 
   try {
     if (opts.noWait) {
@@ -162,7 +205,7 @@ async function runBuy(opts, deps) {
     }
     return { exitCode: 0, data: result };
   } catch (e) {
-    err('[ATP] buy error: ' + (e && e.message || e));
+    err('[ATP] buy error: ' + ((e && e.message) || e));
     return { exitCode: 1, error: String(e) };
   }
 }
@@ -190,17 +233,28 @@ async function runOrders(opts, deps) {
       return { exitCode: 0, data: proofs };
     }
     if (!Array.isArray(proofs) || proofs.length === 0) {
-      log('[ATP] No orders found for role=' + opts.role + (opts.status ? ' status=' + opts.status : ''));
+      log(
+        '[ATP] No orders found for role=' +
+          opts.role +
+          (opts.status ? ' status=' + opts.status : '')
+      );
       return { exitCode: 0, data: [] };
     }
     log('[ATP] Showing ' + proofs.length + ' order(s):');
     for (const p of proofs) {
       const when = p.createdAt || p.created_at || 'unknown';
-      log('  - ' + (p.taskId || p.order_id || p.id) + ' | status=' + p.status + ' | created=' + when);
+      log(
+        '  - ' +
+          (p.taskId || p.order_id || p.id) +
+          ' | status=' +
+          p.status +
+          ' | created=' +
+          when
+      );
     }
     return { exitCode: 0, data: proofs };
   } catch (e) {
-    err('[ATP] orders error: ' + (e && e.message || e));
+    err('[ATP] orders error: ' + ((e && e.message) || e));
     return { exitCode: 1, error: String(e) };
   }
 }
@@ -212,16 +266,21 @@ async function runVerify(opts, deps) {
   const err = (deps && deps.err) || console.error;
 
   try {
-    const fn = opts.action === 'ai_judge' ? consumerAgent.requestAiJudge : consumerAgent.confirmDelivery;
+    const fn =
+      opts.action === 'ai_judge'
+        ? consumerAgent.requestAiJudge
+        : consumerAgent.confirmDelivery;
     const result = await fn(opts.orderId);
     if (!result.ok) {
       err('[ATP] verify failed: ' + (result.error || 'unknown'));
       return { exitCode: 1, data: result };
     }
-    log('[ATP] verify ok (' + opts.action + '): ' + JSON.stringify(result.data));
+    log(
+      '[ATP] verify ok (' + opts.action + '): ' + JSON.stringify(result.data)
+    );
     return { exitCode: 0, data: result.data };
   } catch (e) {
-    err('[ATP] verify error: ' + (e && e.message || e));
+    err('[ATP] verify error: ' + ((e && e.message) || e));
     return { exitCode: 1, error: String(e) };
   }
 }

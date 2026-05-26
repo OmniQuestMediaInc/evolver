@@ -31,8 +31,10 @@ const os = require('os');
 const { buildHubHeaders, getHubUrl, getNodeId } = require('../a2aProtocol');
 const { resolveHubUrl: resolveDefaultHubUrl } = require('../../config');
 
-const DEFAULT_STAKE_AMOUNT = Number(process.env.EVOLVER_VALIDATOR_STAKE_AMOUNT) || 100;
-const STAKE_TIMEOUT_MS = Number(process.env.EVOLVER_VALIDATOR_STAKE_TIMEOUT_MS) || 10_000;
+const DEFAULT_STAKE_AMOUNT =
+  Number(process.env.EVOLVER_VALIDATOR_STAKE_AMOUNT) || 100;
+const STAKE_TIMEOUT_MS =
+  Number(process.env.EVOLVER_VALIDATOR_STAKE_TIMEOUT_MS) || 10_000;
 
 const BACKOFF_STEPS_TRANSIENT_MS = [
   5 * 60 * 1000,
@@ -40,10 +42,7 @@ const BACKOFF_STEPS_TRANSIENT_MS = [
   60 * 60 * 1000,
   4 * 60 * 60 * 1000,
 ];
-const BACKOFF_STEPS_FUNDS_MS = [
-  60 * 60 * 1000,
-  4 * 60 * 60 * 1000,
-];
+const BACKOFF_STEPS_FUNDS_MS = [60 * 60 * 1000, 4 * 60 * 60 * 1000];
 const SUCCESS_RECHECK_MS = 24 * 60 * 60 * 1000;
 
 function resolveHubUrl() {
@@ -56,7 +55,10 @@ function resolveHubUrl() {
 
 function logStakeEvent(event, data) {
   try {
-    const line = Object.assign({ evt: 'validator_stake', phase: event, ts: new Date().toISOString() }, data || {});
+    const line = Object.assign(
+      { evt: 'validator_stake', phase: event, ts: new Date().toISOString() },
+      data || {}
+    );
     console.log('[evomap-validator-stake] ' + JSON.stringify(line));
   } catch (_) {
     // best-effort
@@ -93,7 +95,7 @@ let _state = {
 
 const STATE_FILE = path.join(
   process.env.EVOLVER_HOME || path.join(os.homedir(), '.evomap'),
-  'validator_stake_state.json',
+  'validator_stake_state.json'
 );
 
 let _stateLoaded = false;
@@ -117,9 +119,10 @@ function _loadStateFromDisk() {
     // attempts on this host.
     const maxHorizonMs = 24 * 60 * 60 * 1000;
     const nowMs = Date.now();
-    const boundedNext = nextAttemptAt > nowMs + maxHorizonMs
-      ? nowMs + maxHorizonMs
-      : nextAttemptAt;
+    const boundedNext =
+      nextAttemptAt > nowMs + maxHorizonMs
+        ? nowMs + maxHorizonMs
+        : nextAttemptAt;
     _state.nextAttemptAt = boundedNext;
     _state.transientFailures = transientFailures;
     _state.fundsFailures = fundsFailures;
@@ -146,7 +149,10 @@ function _persistState() {
       // disabledUntilRestart intentionally omitted
       savedAt: Date.now(),
     };
-    fs.writeFileSync(STATE_FILE, JSON.stringify(snapshot), { encoding: 'utf8', mode: 0o600 });
+    fs.writeFileSync(STATE_FILE, JSON.stringify(snapshot), {
+      encoding: 'utf8',
+      mode: 0o600,
+    });
   } catch (_) {
     // best-effort: ignore disk failures (e.g. read-only FS in sandbox)
   }
@@ -161,14 +167,14 @@ function pickDelay(kind) {
   if (kind === 'transient') {
     const idx = Math.min(
       Math.max(0, _state.transientFailures - 1),
-      BACKOFF_STEPS_TRANSIENT_MS.length - 1,
+      BACKOFF_STEPS_TRANSIENT_MS.length - 1
     );
     return BACKOFF_STEPS_TRANSIENT_MS[idx];
   }
   if (kind === 'funds') {
     const idx = Math.min(
       Math.max(0, _state.fundsFailures - 1),
-      BACKOFF_STEPS_FUNDS_MS.length - 1,
+      BACKOFF_STEPS_FUNDS_MS.length - 1
     );
     return BACKOFF_STEPS_FUNDS_MS[idx];
   }
@@ -183,7 +189,9 @@ function classifyFailure(status, errorText) {
 }
 
 function parseShortfall(errorText) {
-  const match = String(errorText || '').match(/need\s+(\d+(?:\.\d+)?),\s*have\s+(\d+(?:\.\d+)?)/i);
+  const match = String(errorText || '').match(
+    /need\s+(\d+(?:\.\d+)?),\s*have\s+(\d+(?:\.\d+)?)/i
+  );
   if (!match) return null;
   return { need: Number(match[1]), have: Number(match[2]) };
 }
@@ -205,7 +213,11 @@ async function ensureValidatorStake(opts) {
   }
 
   if (!options.force && _state.nextAttemptAt > now) {
-    return { ok: true, skipped: 'backoff', nextAttemptAt: _state.nextAttemptAt };
+    return {
+      ok: true,
+      skipped: 'backoff',
+      nextAttemptAt: _state.nextAttemptAt,
+    };
   }
 
   const nodeId = getNodeId();
@@ -217,7 +229,10 @@ async function ensureValidatorStake(opts) {
 
   const hubUrl = resolveHubUrl();
   const url = hubUrl.replace(/\/+$/, '') + '/a2a/validator/stake';
-  const amount = Math.max(100, Math.round(Number(options.amount) || DEFAULT_STAKE_AMOUNT));
+  const amount = Math.max(
+    100,
+    Math.round(Number(options.amount) || DEFAULT_STAKE_AMOUNT)
+  );
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), STAKE_TIMEOUT_MS);
@@ -226,7 +241,11 @@ async function ensureValidatorStake(opts) {
     sender_id: nodeId,
     node_id: nodeId,
     payload: { stake_amount: amount },
-    message_id: 'msg_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex'),
+    message_id:
+      'msg_' +
+      Date.now().toString(36) +
+      '_' +
+      crypto.randomBytes(3).toString('hex'),
     timestamp: new Date().toISOString(),
   };
 
@@ -260,7 +279,11 @@ async function ensureValidatorStake(opts) {
 
   if (res.ok) {
     let parsed;
-    try { parsed = JSON.parse(text); } catch { parsed = { raw: text }; }
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = { raw: text };
+    }
     resetBackoff();
     _state.lastSuccessAt = now;
     _state.nextAttemptAt = now + SUCCESS_RECHECK_MS;
@@ -287,7 +310,12 @@ async function ensureValidatorStake(opts) {
       next_retry_in_ms: _state.nextAttemptAt - now,
       hint: 'earn credits by completing validation tasks or claim the node on evomap.ai to top up',
     });
-    return { ok: false, status: res.status, error: text.slice(0, 400), kind: 'funds' };
+    return {
+      ok: false,
+      status: res.status,
+      error: text.slice(0, 400),
+      kind: 'funds',
+    };
   }
 
   if (kind === 'permanent') {
@@ -298,7 +326,12 @@ async function ensureValidatorStake(opts) {
       error: text.slice(0, 400),
       note: 'stake disabled until process restart; check client version and hub compatibility',
     });
-    return { ok: false, status: res.status, error: text.slice(0, 400), kind: 'permanent' };
+    return {
+      ok: false,
+      status: res.status,
+      error: text.slice(0, 400),
+      kind: 'permanent',
+    };
   }
 
   _state.transientFailures += 1;
@@ -311,7 +344,12 @@ async function ensureValidatorStake(opts) {
     attempt: _state.transientFailures,
     next_retry_in_ms: _state.nextAttemptAt - now,
   });
-  return { ok: false, status: res.status, error: text.slice(0, 400), kind: 'transient' };
+  return {
+    ok: false,
+    status: res.status,
+    error: text.slice(0, 400),
+    kind: 'transient',
+  };
 }
 
 // Test-only reset hook: clears in-memory state, disk snapshot, and
@@ -326,7 +364,9 @@ function _resetStateForTests() {
     disabledUntilRestart: false,
   };
   _stateLoaded = false;
-  try { fs.unlinkSync(STATE_FILE); } catch (_) {}
+  try {
+    fs.unlinkSync(STATE_FILE);
+  } catch (_) {}
 }
 
 function _getStateForTests() {

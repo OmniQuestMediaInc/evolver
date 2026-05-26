@@ -16,17 +16,25 @@ const { ensureValidatorStake } = require('./stakeBootstrap');
 const { readFeatureFlag } = require('../featureFlags');
 const { resolveHubUrl: resolveDefaultHubUrl } = require('../../config');
 
-const FETCH_TIMEOUT_MS = Number(process.env.EVOLVER_VALIDATOR_FETCH_TIMEOUT_MS) || 8_000;
-const MAX_TASKS_PER_CYCLE = Math.max(1, Number(process.env.EVOLVER_VALIDATOR_MAX_TASKS_PER_CYCLE) || 2);
+const FETCH_TIMEOUT_MS =
+  Number(process.env.EVOLVER_VALIDATOR_FETCH_TIMEOUT_MS) || 8_000;
+const MAX_TASKS_PER_CYCLE = Math.max(
+  1,
+  Number(process.env.EVOLVER_VALIDATOR_MAX_TASKS_PER_CYCLE) || 2
+);
 
 // Three-tier resolution:
 //   1. Local env (highest priority - user escape hatch). Both ON and OFF are honored.
 //   2. Persisted feature flag from disk (set by hub mailbox).
 //   3. Code default: ON (validator role is opt-out as of v1.69.0).
 function isValidatorEnabled() {
-  const raw = String(process.env.EVOLVER_VALIDATOR_ENABLED || '').toLowerCase().trim();
-  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false;
-  if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on') return true;
+  const raw = String(process.env.EVOLVER_VALIDATOR_ENABLED || '')
+    .toLowerCase()
+    .trim();
+  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off')
+    return false;
+  if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on')
+    return true;
   try {
     const flag = readFeatureFlag('validator_enabled');
     if (typeof flag === 'boolean') return flag;
@@ -101,10 +109,16 @@ async function validateOneTask(task) {
   if (!task || !task.task_id || !task.nonce) {
     return { status: 'skipped', reason: 'invalid_task_shape' };
   }
-  const commands = Array.isArray(task.validation_commands) ? task.validation_commands : [];
+  const commands = Array.isArray(task.validation_commands)
+    ? task.validation_commands
+    : [];
   if (commands.length === 0) {
     // Nothing to run -- report overall_ok=false so the Hub records a fail and moves on.
-    const payload = buildReportPayload(task, { results: [], overallOk: false, durationMs: 0 });
+    const payload = buildReportPayload(task, {
+      results: [],
+      overallOk: false,
+      durationMs: 0,
+    });
     const r = await submitReport(payload);
     return { status: 'reported_empty', report: payload, response: r };
   }
@@ -114,15 +128,19 @@ async function validateOneTask(task) {
     execution = await runInSandbox(commands, {});
   } catch (err) {
     execution = {
-      results: [{
-        cmd: commands[0],
-        ok: false,
-        stdout: '',
-        stderr: 'sandbox_error: ' + (err && err.message ? err.message : String(err)),
-        exitCode: -1,
-        durationMs: 0,
-        timedOut: false,
-      }],
+      results: [
+        {
+          cmd: commands[0],
+          ok: false,
+          stdout: '',
+          stderr:
+            'sandbox_error: ' +
+            (err && err.message ? err.message : String(err)),
+          exitCode: -1,
+          durationMs: 0,
+          timedOut: false,
+        },
+      ],
       overallOk: false,
       durationMs: 0,
       stoppedEarly: true,
@@ -167,13 +185,18 @@ async function _ensurePreflight() {
       _preflightDisabled = true;
       try {
         console.warn(
-          '[Validator] Preflight FAILED (' + (_preflightResult.reason || 'unknown') + '): ' +
-          'cannot spawn `node <script>` inside the sandbox on this host. ' +
-          'Validator role is being SKIPPED to avoid flooding the Hub with env_fail reports. ' +
-          'Likely causes: node binary not on PATH for headless invocations, missing exec perm, ' +
-          'or unwritable TMPDIR. Diagnostic stderr: ' + (_preflightResult.stderrTail || '<empty>')
+          '[Validator] Preflight FAILED (' +
+            (_preflightResult.reason || 'unknown') +
+            '): ' +
+            'cannot spawn `node <script>` inside the sandbox on this host. ' +
+            'Validator role is being SKIPPED to avoid flooding the Hub with env_fail reports. ' +
+            'Likely causes: node binary not on PATH for headless invocations, missing exec perm, ' +
+            'or unwritable TMPDIR. Diagnostic stderr: ' +
+            (_preflightResult.stderrTail || '<empty>')
         );
-      } catch (_) { /* console unavailable -- non-fatal */ }
+      } catch (_) {
+        /* console unavailable -- non-fatal */
+      }
     }
     return _preflightResult;
   })();
@@ -243,13 +266,25 @@ function _envIntDefault(key, fallback) {
   const n = Number(raw);
   return Number.isFinite(n) ? n : fallback;
 }
-const DAEMON_INTERVAL_MS = Math.max(15000, _envIntDefault('EVOLVER_VALIDATOR_DAEMON_INTERVAL_MS', 60000));
-const DAEMON_FIRST_DELAY_MS = Math.max(0, _envIntDefault('EVOLVER_VALIDATOR_DAEMON_FIRST_DELAY_MS', 30000));
+const DAEMON_INTERVAL_MS = Math.max(
+  15000,
+  _envIntDefault('EVOLVER_VALIDATOR_DAEMON_INTERVAL_MS', 60000)
+);
+const DAEMON_FIRST_DELAY_MS = Math.max(
+  0,
+  _envIntDefault('EVOLVER_VALIDATOR_DAEMON_FIRST_DELAY_MS', 30000)
+);
 
 let _daemonTimer = null;
 let _daemonRunning = false;
 let _daemonInflight = false;
-let _daemonStats = { ticks: 0, processed: 0, lastError: null, lastRunAt: 0, preflight: null };
+let _daemonStats = {
+  ticks: 0,
+  processed: 0,
+  lastError: null,
+  lastRunAt: 0,
+  preflight: null,
+};
 let _preflightDisabled = false;
 
 async function _daemonTick() {
@@ -272,12 +307,20 @@ async function _daemonTick() {
     if (out && typeof out.processed === 'number') {
       _daemonStats.processed += out.processed;
       if (out.processed > 0) {
-        console.log('[ValidatorDaemon] processed ' + out.processed + '/' + (out.tasks || 0) + ' task(s).');
+        console.log(
+          '[ValidatorDaemon] processed ' +
+            out.processed +
+            '/' +
+            (out.tasks || 0) +
+            ' task(s).'
+        );
       }
     }
   } catch (err) {
-    _daemonStats.lastError = err && err.message || String(err);
-    console.warn('[ValidatorDaemon] tick failed (non-fatal): ' + _daemonStats.lastError);
+    _daemonStats.lastError = (err && err.message) || String(err);
+    console.warn(
+      '[ValidatorDaemon] tick failed (non-fatal): ' + _daemonStats.lastError
+    );
   } finally {
     _daemonInflight = false;
     if (_daemonRunning) {
@@ -300,10 +343,12 @@ function startValidatorDaemon() {
     try {
       console.log(
         '[Validator] Validator mode is ENABLED. Your node will participate in ' +
-        'Hub validation tasks: CPU, network bandwidth, and staked credits WILL ' +
-        'be used. To opt out, set EVOLVER_VALIDATOR_ENABLED=false (or unset it).'
+          'Hub validation tasks: CPU, network bandwidth, and staked credits WILL ' +
+          'be used. To opt out, set EVOLVER_VALIDATOR_ENABLED=false (or unset it).'
       );
-    } catch (_) { /* console unavailable -- non-fatal */ }
+    } catch (_) {
+      /* console unavailable -- non-fatal */
+    }
     // Fire preflight immediately so the user-visible warning lands before the
     // first DAEMON_FIRST_DELAY_MS tick. _ensurePreflight is idempotent and the
     // first call from runValidatorCycle will reuse this promise.
@@ -322,7 +367,10 @@ function stopValidatorDaemon() {
 }
 
 function getValidatorDaemonStats() {
-  return Object.assign({ running: _daemonRunning, intervalMs: DAEMON_INTERVAL_MS }, _daemonStats);
+  return Object.assign(
+    { running: _daemonRunning, intervalMs: DAEMON_INTERVAL_MS },
+    _daemonStats
+  );
 }
 
 function _resetPreflightForTests() {

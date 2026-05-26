@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { mergeJsonFile, copyHookScripts, removeEvolverHooks, removeHookScripts } = require('./hookAdapter');
+const {
+  mergeJsonFile,
+  copyHookScripts,
+  removeEvolverHooks,
+  removeHookScripts,
+} = require('./hookAdapter');
 
 const HOOK_SCRIPTS_DIR_NAME = 'hooks';
 
@@ -44,10 +49,14 @@ function install({ configRoot, evolverRoot, force }) {
     try {
       const existing = JSON.parse(fs.readFileSync(hooksJsonPath, 'utf8'));
       if (existing._evolver_managed) {
-        console.log('[cursor] Evolver hooks already installed. Use --force to overwrite.');
+        console.log(
+          '[cursor] Evolver hooks already installed. Use --force to overwrite.'
+        );
         return { ok: true, skipped: true };
       }
-    } catch { /* proceed */ }
+    } catch {
+      /* proceed */
+    }
   }
 
   fs.mkdirSync(cursorDir, { recursive: true });
@@ -56,11 +65,18 @@ function install({ configRoot, evolverRoot, force }) {
   mergeJsonFile(hooksJsonPath, hooksCfg);
   console.log('[cursor] Wrote ' + hooksJsonPath);
 
-  const copied = copyHookScripts(hooksDir, path.join(evolverRoot, 'src', 'adapters'));
-  console.log('[cursor] Copied ' + copied.length + ' hook scripts to ' + hooksDir);
+  const copied = copyHookScripts(
+    hooksDir,
+    path.join(evolverRoot, 'src', 'adapters')
+  );
+  console.log(
+    '[cursor] Copied ' + copied.length + ' hook scripts to ' + hooksDir
+  );
 
   console.log('[cursor] Installation complete.');
-  console.log('[cursor] Restart Cursor or open a new session to activate hooks.');
+  console.log(
+    '[cursor] Restart Cursor or open a new session to activate hooks.'
+  );
 
   return {
     ok: true,
@@ -78,7 +94,9 @@ function uninstall({ configRoot, evolverRoot }) {
   const scripts = removeHookScripts(hooksDir);
 
   if (removed || scripts > 0) {
-    console.log('[cursor] Uninstalled evolver hooks (' + scripts + ' scripts removed).');
+    console.log(
+      '[cursor] Uninstalled evolver hooks (' + scripts + ' scripts removed).'
+    );
   } else {
     console.log('[cursor] No evolver hooks found to uninstall.');
   }

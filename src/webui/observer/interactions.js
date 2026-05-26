@@ -21,10 +21,13 @@ async function getInteractions(query = {}) {
 }
 
 function readMailboxMessages(query = {}) {
-  const mailboxDir = query.mailboxDir || process.env.EVOMAP_MAILBOX_DIR || DEFAULT_MAILBOX_DIR;
-  const messages = readJsonl(path.join(mailboxDir, 'messages.jsonl'), { last: query.last || 500 })
-    .filter((row) => row && !row._op)
-    .map((row) => normalizeMessage(redactValue(row)));
+  const mailboxDir =
+    query.mailboxDir || process.env.EVOMAP_MAILBOX_DIR || DEFAULT_MAILBOX_DIR;
+  const messages = readJsonl(path.join(mailboxDir, 'messages.jsonl'), {
+    last: query.last || 500,
+  })
+    .filter(row => row && !row._op)
+    .map(row => normalizeMessage(redactValue(row)));
   return filterMessages(messages, query);
 }
 
@@ -43,22 +46,27 @@ async function readProxySnapshots(baseUrl) {
   // worst-case (every endpoint timing out at 1500ms each) blocked the
   // /webui/interactions response for ~12s; parallel keeps it ~1.5s.
   const entries = await Promise.all(
-    Object.entries(endpoints).map(async ([key, endpoint]) =>
-      [key, await requestJson(baseUrl + endpoint)],
-    ),
+    Object.entries(endpoints).map(async ([key, endpoint]) => [
+      key,
+      await requestJson(baseUrl + endpoint),
+    ])
   );
   return redactValue(Object.fromEntries(entries));
 }
 
 function requestJson(url) {
-  return new Promise((resolve) => {
-    const req = http.get(url, { timeout: 1500 }, (res) => {
+  return new Promise(resolve => {
+    const req = http.get(url, { timeout: 1500 }, res => {
       const chunks = [];
-      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => {
         const raw = Buffer.concat(chunks).toString();
         try {
-          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, body: JSON.parse(raw) });
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            body: JSON.parse(raw),
+          });
         } catch {
           resolve({ ok: false, status: res.statusCode, body: null });
         }
@@ -68,7 +76,9 @@ function requestJson(url) {
       req.destroy();
       resolve({ ok: false, status: 0, error: 'timeout' });
     });
-    req.on('error', (err) => resolve({ ok: false, status: 0, error: err.message }));
+    req.on('error', err =>
+      resolve({ ok: false, status: 0, error: err.message })
+    );
   });
 }
 
@@ -80,7 +90,7 @@ function normalizeMessage(msg) {
     type: msg.type || null,
     status: msg.status || null,
     timestamp: toIso(msg.created_at || msg.updated_at || msg.synced_at),
-    refId: msg.ref_id || msg.payload && msg.payload.ref_id || null,
+    refId: msg.ref_id || (msg.payload && msg.payload.ref_id) || null,
     priority: msg.priority || null,
     summary: summarizePayload(msg),
     payload: msg.payload || null,
@@ -88,12 +98,14 @@ function normalizeMessage(msg) {
 }
 
 function filterMessages(messages, query) {
-  return messages.filter((msg) => {
-    if (query.type && msg.type !== query.type) return false;
-    if (query.direction && msg.direction !== query.direction) return false;
-    if (query.status && msg.status !== query.status) return false;
-    return true;
-  }).reverse();
+  return messages
+    .filter(msg => {
+      if (query.type && msg.type !== query.type) return false;
+      if (query.direction && msg.direction !== query.direction) return false;
+      if (query.status && msg.status !== query.status) return false;
+      return true;
+    })
+    .reverse();
 }
 
 function summarizePayload(msg) {

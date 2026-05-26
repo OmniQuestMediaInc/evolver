@@ -2,14 +2,20 @@
 
 const http = require('http');
 const { buildWebUiRoutes } = require('./routes');
-const { getIndexHtml, getClientJs, getStylesCss, getVendorEcharts } = require('../client/static');
+const {
+  getIndexHtml,
+  getClientJs,
+  getStylesCss,
+  getVendorEcharts,
+} = require('../client/static');
 
 const DEFAULT_WEBUI_PORT = 19821;
 const MAX_PORT_ATTEMPTS = 50;
 
 class WebUiServer {
   constructor(opts = {}) {
-    this.port = opts.port || Number(process.env.EVOLVER_WEBUI_PORT) || DEFAULT_WEBUI_PORT;
+    this.port =
+      opts.port || Number(process.env.EVOLVER_WEBUI_PORT) || DEFAULT_WEBUI_PORT;
     this.logger = opts.logger || console;
     this.routes = opts.routes || buildWebUiRoutes();
     this.server = null;
@@ -29,31 +35,57 @@ class WebUiServer {
       }
       port++;
     }
-    throw new Error(`Could not find free Web UI port after ${MAX_PORT_ATTEMPTS} attempts`);
+    throw new Error(
+      `Could not find free Web UI port after ${MAX_PORT_ATTEMPTS} attempts`
+    );
   }
 
   async stop() {
     if (!this.server) return;
-    await new Promise((resolve) => this.server.close(resolve));
+    await new Promise(resolve => this.server.close(resolve));
     this.server = null;
   }
 
   async _handle(req, res) {
-    const url = new URL(req.url, `http://127.0.0.1:${this.actualPort || this.port}`);
-    if (req.method === 'GET' && url.pathname === '/') return sendText(res, 200, 'text/html; charset=utf-8', getIndexHtml());
-    if (req.method === 'GET' && url.pathname === '/app.js') return sendText(res, 200, 'application/javascript; charset=utf-8', getClientJs());
-    if (req.method === 'GET' && url.pathname === '/app.css') return sendText(res, 200, 'text/css; charset=utf-8', getStylesCss());
-    if (req.method === 'GET' && url.pathname === '/vendor/echarts.min.js') return sendText(res, 200, 'application/javascript; charset=utf-8', getVendorEcharts());
+    const url = new URL(
+      req.url,
+      `http://127.0.0.1:${this.actualPort || this.port}`
+    );
+    if (req.method === 'GET' && url.pathname === '/')
+      return sendText(res, 200, 'text/html; charset=utf-8', getIndexHtml());
+    if (req.method === 'GET' && url.pathname === '/app.js')
+      return sendText(
+        res,
+        200,
+        'application/javascript; charset=utf-8',
+        getClientJs()
+      );
+    if (req.method === 'GET' && url.pathname === '/app.css')
+      return sendText(res, 200, 'text/css; charset=utf-8', getStylesCss());
+    if (req.method === 'GET' && url.pathname === '/vendor/echarts.min.js')
+      return sendText(
+        res,
+        200,
+        'application/javascript; charset=utf-8',
+        getVendorEcharts()
+      );
 
     const matched = matchRoute(this.routes, req.method, url.pathname);
-    if (!matched) return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Not found', details: { path: url.pathname } } });
+    if (!matched)
+      return sendJson(res, 404, {
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Not found',
+          details: { path: url.pathname },
+        },
+      });
 
     try {
       const query = Object.fromEntries(url.searchParams);
       const result = await matched.handler({ query, params: matched.params });
       return sendJson(res, result.status || 200, result.body || result);
     } catch (err) {
-      this.logger.error('[webui] request failed:', err && err.message || err);
+      this.logger.error('[webui] request failed:', (err && err.message) || err);
       return sendJson(res, err.statusCode || 500, {
         error: {
           code: err.code || 'READ_FAILED',
@@ -103,7 +135,7 @@ function matchPath(pattern, pathname) {
 
 function tryListen(server, port) {
   return new Promise((resolve, reject) => {
-    const onError = (err) => {
+    const onError = err => {
       server.removeListener('listening', onListening);
       if (err.code === 'EADDRINUSE') return resolve(false);
       reject(err);

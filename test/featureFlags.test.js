@@ -26,7 +26,9 @@ describe('featureFlags persistence', function () {
 
   afterEach(() => {
     os.homedir = originalHome;
-    try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch (_) {}
+    try {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    } catch (_) {}
   });
 
   it('returns undefined for unset key', function () {
@@ -36,7 +38,10 @@ describe('featureFlags persistence', function () {
 
   it('persists value across cache resets', function () {
     const ff = freshRequire('../src/gep/featureFlags');
-    assert.equal(ff.writeFeatureFlag('validator_enabled', true, 'hub_mailbox'), true);
+    assert.equal(
+      ff.writeFeatureFlag('validator_enabled', true, 'hub_mailbox'),
+      true
+    );
 
     const ff2 = freshRequire('../src/gep/featureFlags');
     assert.equal(ff2.readFeatureFlag('validator_enabled'), true);
@@ -69,7 +74,9 @@ describe('isValidatorEnabled three-tier resolution', function () {
 
   afterEach(() => {
     os.homedir = originalHome;
-    try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch (_) {}
+    try {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    } catch (_) {}
     for (const k of Object.keys(process.env)) {
       if (!(k in originalEnv)) delete process.env[k];
     }

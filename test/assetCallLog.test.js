@@ -55,7 +55,11 @@ describe('assetCallLog', () => {
     });
 
     it('appends a newline-delimited JSON record with timestamp', () => {
-      mod.logAssetCall({ run_id: 'r1', action: 'asset_publish', asset_id: 'a1' });
+      mod.logAssetCall({
+        run_id: 'r1',
+        action: 'asset_publish',
+        asset_id: 'a1',
+      });
       const raw = fs.readFileSync(mod.getLogPath(), 'utf8');
       assert.ok(raw.endsWith('\n'));
       const parsed = JSON.parse(raw.trim());
@@ -123,7 +127,7 @@ describe('assetCallLog', () => {
       mod.logAssetCall({ run_id: 'r1', action: 'b' });
       const entries = mod.readCallLog({ run_id: 'r1' });
       assert.equal(entries.length, 2);
-      assert.ok(entries.every((e) => e.run_id === 'r1'));
+      assert.ok(entries.every(e => e.run_id === 'r1'));
     });
 
     it('filters by action', () => {
@@ -146,7 +150,9 @@ describe('assetCallLog', () => {
           '\n',
         'utf8'
       );
-      const entries = mod.readCallLog({ since: new Date(now - 1000).toISOString() });
+      const entries = mod.readCallLog({
+        since: new Date(now - 1000).toISOString(),
+      });
       assert.equal(entries.length, 1);
       assert.equal(entries[0].run_id, 'r2');
     });
@@ -191,7 +197,11 @@ describe('assetCallLog', () => {
     it('counts totals, unique assets/runs, and per-action buckets', () => {
       mod.logAssetCall({ run_id: 'r1', action: 'asset_reuse', asset_id: 'a1' });
       mod.logAssetCall({ run_id: 'r1', action: 'asset_reuse', asset_id: 'a2' });
-      mod.logAssetCall({ run_id: 'r2', action: 'asset_publish', asset_id: 'a1' });
+      mod.logAssetCall({
+        run_id: 'r2',
+        action: 'asset_publish',
+        asset_id: 'a1',
+      });
       const s = mod.summarizeCallLog();
       assert.equal(s.total_entries, 3);
       assert.equal(s.unique_assets, 2);

@@ -7,7 +7,14 @@
 //   const result = await consumer.orderService({ capabilities: ['code_review'], budget: 50 });
 
 const { getNodeId, sendHelloToHub } = require('../gep/a2aProtocol');
-const { placeOrder, verifyDelivery, settleOrder, disputeOrder, getOrderStatus, getAtpPolicy } = require('./hubClient');
+const {
+  placeOrder,
+  verifyDelivery,
+  settleOrder,
+  disputeOrder,
+  getOrderStatus,
+  getAtpPolicy,
+} = require('./hubClient');
 
 let _initialized = false;
 
@@ -15,7 +22,9 @@ async function ensureInitialized() {
   if (_initialized) return;
   const hello = await sendHelloToHub();
   if (!hello || !hello.ok) {
-    throw new Error('Failed to register with Hub: ' + (hello?.error || 'unknown'));
+    throw new Error(
+      'Failed to register with Hub: ' + (hello?.error || 'unknown')
+    );
   }
   _initialized = true;
 }
@@ -44,7 +53,12 @@ async function orderService(opts) {
   });
 
   if (result.ok) {
-    console.log('[ATP-Consumer] Order placed:', result.data.order_id, '-> merchant:', result.data.merchant?.node_id);
+    console.log(
+      '[ATP-Consumer] Order placed:',
+      result.data.order_id,
+      '-> merchant:',
+      result.data.merchant?.node_id
+    );
   }
 
   return result;
@@ -138,7 +152,12 @@ async function orderAndWait(opts) {
       return { ok: true, order: order.data, finalStatus: status.data };
     }
     if (proofStatus === 'disputed') {
-      return { ok: false, order: order.data, finalStatus: status.data, error: 'order_disputed' };
+      return {
+        ok: false,
+        order: order.data,
+        finalStatus: status.data,
+        error: 'order_disputed',
+      };
     }
   }
 

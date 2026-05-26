@@ -37,7 +37,9 @@ function withTempHome(run) {
       fs.renameSync(LOCAL_NODE_ID_FILE, LOCAL_STASH);
       stashed = true;
     }
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
 
   try {
     return run(tmpHome);
@@ -46,17 +48,23 @@ function withTempHome(run) {
     else process.env.HOME = originalHome;
     if (originalUserProfile === undefined) delete process.env.USERPROFILE;
     else process.env.USERPROFILE = originalUserProfile;
-    try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch {}
+    try {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    } catch {}
     if (stashed) {
       try {
         // Clean any spurious node_id written during the test so restore wins.
         if (fs.existsSync(LOCAL_NODE_ID_FILE)) fs.rmSync(LOCAL_NODE_ID_FILE);
         fs.renameSync(LOCAL_STASH, LOCAL_NODE_ID_FILE);
-      } catch { /* best effort */ }
+      } catch {
+        /* best effort */
+      }
     } else {
       // No pre-existing file, but test may have written one via the
       // LOCAL_NODE_ID_FILE fallback. Clean it up so we leave no trace.
-      try { if (fs.existsSync(LOCAL_NODE_ID_FILE)) fs.rmSync(LOCAL_NODE_ID_FILE); } catch {}
+      try {
+        if (fs.existsSync(LOCAL_NODE_ID_FILE)) fs.rmSync(LOCAL_NODE_ID_FILE);
+      } catch {}
     }
   }
 }
@@ -98,18 +106,21 @@ describe('getNodeId resolution', () => {
     process.env.A2A_NODE_ID = 'test-node';
     const warns = [];
     const origWarn = console.warn;
-    console.warn = (msg) => warns.push(String(msg));
+    console.warn = msg => warns.push(String(msg));
     try {
       const { getNodeId } = freshRequire('../src/gep/a2aProtocol');
       assert.equal(getNodeId(), 'test-node');
-      assert.ok(warns.some((m) => m.includes('unexpected format')), 'should warn');
+      assert.ok(
+        warns.some(m => m.includes('unexpected format')),
+        'should warn'
+      );
     } finally {
       console.warn = origWarn;
     }
   });
 
   it('loads persisted 12-hex node_id from ~/.evomap/node_id', () => {
-    withTempHome((tmpHome) => {
+    withTempHome(tmpHome => {
       const dir = path.join(tmpHome, '.evomap');
       fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
       fs.writeFileSync(path.join(dir, 'node_id'), 'node_112233445566', 'utf8');
@@ -119,18 +130,25 @@ describe('getNodeId resolution', () => {
   });
 
   it('loads persisted 16-hex node_id from ~/.evomap/node_id (hub-issued format, regression fix)', () => {
-    withTempHome((tmpHome) => {
+    withTempHome(tmpHome => {
       const dir = path.join(tmpHome, '.evomap');
       fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-      fs.writeFileSync(path.join(dir, 'node_id'), 'node_71c0a711a894cbf3', 'utf8');
+      fs.writeFileSync(
+        path.join(dir, 'node_id'),
+        'node_71c0a711a894cbf3',
+        'utf8'
+      );
       const { getNodeId } = freshRequire('../src/gep/a2aProtocol');
-      assert.equal(getNodeId(), 'node_71c0a711a894cbf3',
-        'Must not discard valid 16-hex node_id and regenerate a 12-hex fallback');
+      assert.equal(
+        getNodeId(),
+        'node_71c0a711a894cbf3',
+        'Must not discard valid 16-hex node_id and regenerate a 12-hex fallback'
+      );
     });
   });
 
   it('rejects obviously malformed persisted value and falls back to device fingerprint', () => {
-    withTempHome((tmpHome) => {
+    withTempHome(tmpHome => {
       const dir = path.join(tmpHome, '.evomap');
       fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
       fs.writeFileSync(path.join(dir, 'node_id'), 'not-a-valid-id', 'utf8');
@@ -142,18 +160,25 @@ describe('getNodeId resolution', () => {
   });
 
   it('fallback writes 12-hex node_id to ~/.evomap/node_id and is stable across repeated calls', () => {
-    withTempHome((tmpHome) => {
+    withTempHome(tmpHome => {
       process.env.EVOMAP_DEVICE_ID = 'a'.repeat(32);
       const mod1 = freshRequire('../src/gep/a2aProtocol');
       const first = mod1.getNodeId();
       assert.match(first, /^node_[a-f0-9]{12}$/);
 
       const persistedPath = path.join(tmpHome, '.evomap', 'node_id');
-      assert.ok(fs.existsSync(persistedPath), 'fallback should persist node_id');
+      assert.ok(
+        fs.existsSync(persistedPath),
+        'fallback should persist node_id'
+      );
       assert.equal(fs.readFileSync(persistedPath, 'utf8').trim(), first);
 
       const mod2 = freshRequire('../src/gep/a2aProtocol');
-      assert.equal(mod2.getNodeId(), first, 'second process should reuse persisted id');
+      assert.equal(
+        mod2.getNodeId(),
+        first,
+        'second process should reuse persisted id'
+      );
     });
   });
 });

@@ -57,15 +57,23 @@ describe('memoryGraph rotation (#519)', () => {
     const renamed = mg.maybeRotateMemoryGraph(activePath, { force: true });
 
     assert.ok(renamed, 'expected rotation to return the archive path');
-    assert.ok(!fs.existsSync(activePath) || fs.statSync(activePath).size === 0,
-      'active file should be absent or empty after rotation');
+    assert.ok(
+      !fs.existsSync(activePath) || fs.statSync(activePath).size === 0,
+      'active file should be absent or empty after rotation'
+    );
 
-    const archives = fs.readdirSync(tmpDir).filter(n => /memory_graph\.jsonl\.\d+/.test(n));
+    const archives = fs
+      .readdirSync(tmpDir)
+      .filter(n => /memory_graph\.jsonl\.\d+/.test(n));
     assert.ok(archives.length >= 1, 'expected at least one rotated archive');
     const gz = archives.find(n => n.endsWith('.gz'));
     assert.ok(gz, 'expected archive to be gzip-compressed');
     const decoded = zlib.gunzipSync(fs.readFileSync(path.join(tmpDir, gz)));
-    assert.equal(decoded.length, 20 * 1024, 'decoded archive should match original content size');
+    assert.equal(
+      decoded.length,
+      20 * 1024,
+      'decoded archive should match original content size'
+    );
   });
 
   it('rotates oversized file at module startup', () => {
@@ -75,10 +83,17 @@ describe('memoryGraph rotation (#519)', () => {
 
     freshRequire('../src/gep/memoryGraph');
 
-    assert.ok(!fs.existsSync(activePath) || fs.statSync(activePath).size === 0,
-      'active file should be rotated away at startup');
-    const archives = fs.readdirSync(tmpDir).filter(n => /memory_graph\.jsonl\.\d+/.test(n));
-    assert.ok(archives.length >= 1, 'startup rotation should produce at least one archive');
+    assert.ok(
+      !fs.existsSync(activePath) || fs.statSync(activePath).size === 0,
+      'active file should be rotated away at startup'
+    );
+    const archives = fs
+      .readdirSync(tmpDir)
+      .filter(n => /memory_graph\.jsonl\.\d+/.test(n));
+    assert.ok(
+      archives.length >= 1,
+      'startup rotation should produce at least one archive'
+    );
   });
 
   it('does not rotate when file is below threshold', () => {
@@ -91,7 +106,9 @@ describe('memoryGraph rotation (#519)', () => {
 
     assert.equal(renamed, null, 'rotation should not trigger under threshold');
     assert.ok(fs.existsSync(activePath), 'active file should still exist');
-    const archives = fs.readdirSync(tmpDir).filter(n => /memory_graph\.jsonl\.\d+/.test(n));
+    const archives = fs
+      .readdirSync(tmpDir)
+      .filter(n => /memory_graph\.jsonl\.\d+/.test(n));
     assert.equal(archives.length, 0, 'no archives should be produced');
   });
 
@@ -111,9 +128,18 @@ describe('memoryGraph rotation (#519)', () => {
   it('prunes rotated archives beyond retention count', () => {
     process.env.EVOLVER_MEMORY_GRAPH_RETENTION_COUNT = '2';
     const activePath = process.env.MEMORY_GRAPH_PATH;
-    const tsList = ['20260401000000', '20260402000000', '20260403000000', '20260404000000', '20260405000000'];
+    const tsList = [
+      '20260401000000',
+      '20260402000000',
+      '20260403000000',
+      '20260404000000',
+      '20260405000000',
+    ];
     for (const ts of tsList) {
-      fs.writeFileSync(path.join(tmpDir, `memory_graph.jsonl.${ts}.gz`), 'archive');
+      fs.writeFileSync(
+        path.join(tmpDir, `memory_graph.jsonl.${ts}.gz`),
+        'archive'
+      );
     }
 
     const mg = freshRequire('../src/gep/memoryGraph');
@@ -121,10 +147,15 @@ describe('memoryGraph rotation (#519)', () => {
     fs.writeFileSync(activePath, 'x'.repeat(10 * 1024));
     mg.maybeRotateMemoryGraph(activePath, { force: true });
 
-    const archives = fs.readdirSync(tmpDir)
+    const archives = fs
+      .readdirSync(tmpDir)
       .filter(n => /memory_graph\.jsonl\.\d+/.test(n))
       .sort();
-    assert.equal(archives.length, 2, 'only retention_count newest archives should remain');
+    assert.equal(
+      archives.length,
+      2,
+      'only retention_count newest archives should remain'
+    );
   });
 
   it('exposes config helpers that read current env', () => {
@@ -144,8 +175,16 @@ describe('memoryGraph rotation (#519)', () => {
     process.env.EVOLVER_MEMORY_GRAPH_MAX_SIZE_MB = 'not-a-number';
     process.env.EVOLVER_MEMORY_GRAPH_RETENTION_COUNT = '-1';
     const mg2 = freshRequire('../src/gep/memoryGraph');
-    assert.equal(mg2.rotationMaxSizeBytes(), 100 * 1024 * 1024, 'invalid MB falls back to default');
-    assert.equal(mg2.rotationRetentionCount(), 7, 'negative retention falls back to default');
+    assert.equal(
+      mg2.rotationMaxSizeBytes(),
+      100 * 1024 * 1024,
+      'invalid MB falls back to default'
+    );
+    assert.equal(
+      mg2.rotationRetentionCount(),
+      7,
+      'negative retention falls back to default'
+    );
   });
 
   it('accepts 0 as retention (delete all archives)', () => {
@@ -154,14 +193,26 @@ describe('memoryGraph rotation (#519)', () => {
     assert.equal(mg.rotationRetentionCount(), 0);
 
     const activePath = process.env.MEMORY_GRAPH_PATH;
-    fs.writeFileSync(path.join(tmpDir, 'memory_graph.jsonl.20260401000000.gz'), 'a');
-    fs.writeFileSync(path.join(tmpDir, 'memory_graph.jsonl.20260402000000.gz'), 'b');
+    fs.writeFileSync(
+      path.join(tmpDir, 'memory_graph.jsonl.20260401000000.gz'),
+      'a'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'memory_graph.jsonl.20260402000000.gz'),
+      'b'
+    );
 
     process.env.EVOLVER_MEMORY_GRAPH_MAX_SIZE_MB = '0.001';
     fs.writeFileSync(activePath, 'x'.repeat(10 * 1024));
     mg.maybeRotateMemoryGraph(activePath, { force: true });
 
-    const archives = fs.readdirSync(tmpDir).filter(n => /memory_graph\.jsonl\.\d+/.test(n));
-    assert.equal(archives.length, 0, 'retention=0 should delete every archive including the just-rotated one');
+    const archives = fs
+      .readdirSync(tmpDir)
+      .filter(n => /memory_graph\.jsonl\.\d+/.test(n));
+    assert.equal(
+      archives.length,
+      0,
+      'retention=0 should delete every archive including the just-rotated one'
+    );
   });
 });

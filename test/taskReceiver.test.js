@@ -26,15 +26,21 @@ describe('fetchTasks — invalid task filtering contract', () => {
   it('filter pattern used in fetchTasks keeps valid and drops invalid', () => {
     const raw = [
       { task_id: 'good_1', status: 'open' },
-      { status: 'open' },              // missing task_id — should be dropped
+      { status: 'open' }, // missing task_id — should be dropped
       { task_id: '', status: 'open' }, // empty task_id — should be dropped
       { task_id: 'good_2', status: 'claimed' },
     ];
 
     const filtered = raw
-      .map(function(t) { return createTask(t); })
-      .filter(function(t) {
-        try { return validateTask(t); } catch (e) { return false; }
+      .map(function (t) {
+        return createTask(t);
+      })
+      .filter(function (t) {
+        try {
+          return validateTask(t);
+        } catch (e) {
+          return false;
+        }
       });
 
     assert.equal(filtered.length, 2);
@@ -51,10 +57,28 @@ describe('fetchTasks — invalid task filtering contract', () => {
 
   it('filter is idempotent — running createTask twice before filter produces same result', () => {
     const raw = [{ task_id: 'task_1', status: 'open', bounty_amount: 50 }];
-    const once = raw.map(function(t) { return createTask(t); })
-      .filter(function(t) { try { return validateTask(t); } catch (e) { return false; } });
-    const twice = once.map(function(t) { return createTask(t); })
-      .filter(function(t) { try { return validateTask(t); } catch (e) { return false; } });
+    const once = raw
+      .map(function (t) {
+        return createTask(t);
+      })
+      .filter(function (t) {
+        try {
+          return validateTask(t);
+        } catch (e) {
+          return false;
+        }
+      });
+    const twice = once
+      .map(function (t) {
+        return createTask(t);
+      })
+      .filter(function (t) {
+        try {
+          return validateTask(t);
+        } catch (e) {
+          return false;
+        }
+      });
     assert.deepEqual(once, twice);
   });
 });

@@ -1,6 +1,10 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { expandSignals, geneTags, scoreTagOverlap } = require('../src/gep/learningSignals');
+const {
+  expandSignals,
+  geneTags,
+  scoreTagOverlap,
+} = require('../src/gep/learningSignals');
 
 describe('expandSignals', () => {
   it('returns an empty array for non-array / empty input', () => {
@@ -24,14 +28,14 @@ describe('expandSignals', () => {
   it('does not emit a standalone prefix when signal has no colon', () => {
     const tags = expandSignals(['plain_signal']);
     assert.deepEqual(
-      tags.filter((t) => t === 'plain_signal' || t === 'plain_signal:'),
+      tags.filter(t => t === 'plain_signal' || t === 'plain_signal:'),
       ['plain_signal']
     );
   });
 
   it('deduplicates identical tags', () => {
     const tags = expandSignals(['log_error', 'log_error', 'log_error']);
-    const count = tags.filter((t) => t === 'log_error').length;
+    const count = tags.filter(t => t === 'log_error').length;
     assert.equal(count, 1);
   });
 
@@ -99,7 +103,11 @@ describe('expandSignals', () => {
   });
 
   it('combines multiple classifications for multi-signal input', () => {
-    const tags = expandSignals(['log_error', 'perf_bottleneck', 'capability_gap']);
+    const tags = expandSignals([
+      'log_error',
+      'perf_bottleneck',
+      'capability_gap',
+    ]);
     assert.ok(tags.includes('problem:reliability'));
     assert.ok(tags.includes('problem:performance'));
     assert.ok(tags.includes('problem:capability'));
@@ -147,7 +155,10 @@ describe('geneTags', () => {
   });
 
   it('includes gene id and summary as raw inputs', () => {
-    const tags = geneTags({ id: 'gene_fix_timeouts', summary: 'handle perf issues' });
+    const tags = geneTags({
+      id: 'gene_fix_timeouts',
+      summary: 'handle perf issues',
+    });
     assert.ok(tags.includes('gene_fix_timeouts'));
     assert.ok(tags.includes('problem:performance'));
   });
@@ -195,7 +206,8 @@ describe('scoreTagOverlap', () => {
     };
     const signals = ['log_error'];
     assert.ok(
-      scoreTagOverlap(specificGene, signals) > scoreTagOverlap(unrelatedGene, signals)
+      scoreTagOverlap(specificGene, signals) >
+        scoreTagOverlap(unrelatedGene, signals)
     );
   });
 

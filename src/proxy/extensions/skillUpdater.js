@@ -16,7 +16,9 @@ class SkillUpdater {
 
   processSkillUpdate(message) {
     if (!this.skillPath) {
-      this.logger.warn('[skill-updater] No skill path configured, skipping update');
+      this.logger.warn(
+        '[skill-updater] No skill path configured, skipping update'
+      );
       return false;
     }
 
@@ -40,7 +42,9 @@ class SkillUpdater {
       fs.writeFileSync(this.skillPath, content, 'utf8');
       this.store.setState('last_skill_update', new Date().toISOString());
       this.store.setState('skill_version', payload.version || 'unknown');
-      this.logger.log(`[skill-updater] Updated skill.md (version: ${payload.version || 'unknown'})`);
+      this.logger.log(
+        `[skill-updater] Updated skill.md (version: ${payload.version || 'unknown'})`
+      );
       return true;
     } catch (err) {
       this.logger.error(`[skill-updater] Failed to update: ${err.message}`);

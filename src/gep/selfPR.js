@@ -66,7 +66,9 @@ const PUBLIC_INCLUDE_EXACT = new Set(['index.js', 'package.json']);
 const PUBLIC_EXCLUDE_PREFIXES = ['docs/', 'memory/', 'dist-public/'];
 
 function normalizeRel(filePath) {
-  return String(filePath || '').replace(/\\/g, '/').replace(/^\.\/+/, '');
+  return String(filePath || '')
+    .replace(/\\/g, '/')
+    .replace(/^\.\/+/, '');
 }
 
 function isPublicNonObfuscated(filePath) {
@@ -104,7 +106,11 @@ function writeState(state) {
     fs.writeFileSync(getStatePath(), JSON.stringify(state, null, 2) + '\n');
   } catch (e) {
     if (process.env.DEBUG || process.env.EVOLVER_DEBUG) {
-      try { process.stderr.write('selfPR.writeState failed: ' + String(e && e.message || e) + '\n'); } catch (_) {}
+      try {
+        process.stderr.write(
+          'selfPR.writeState failed: ' + String((e && e.message) || e) + '\n'
+        );
+      } catch (_) {}
     }
   }
 }
@@ -126,18 +132,26 @@ function computeDiffHash(changedFiles, repoRoot) {
       }
     } catch (_) {}
   }
-  return crypto.createHash('sha256').update(diffParts.join('\n---\n')).digest('hex').slice(0, 16);
+  return crypto
+    .createHash('sha256')
+    .update(diffParts.join('\n---\n'))
+    .digest('hex')
+    .slice(0, 16);
 }
 
 function isDuplicateDiff(diffHash) {
   const state = readState();
-  const recent = Array.isArray(state.recentDiffHashes) ? state.recentDiffHashes : [];
+  const recent = Array.isArray(state.recentDiffHashes)
+    ? state.recentDiffHashes
+    : [];
   return recent.includes(diffHash);
 }
 
 function recordPR(diffHash) {
   const state = readState();
-  let recent = Array.isArray(state.recentDiffHashes) ? state.recentDiffHashes : [];
+  let recent = Array.isArray(state.recentDiffHashes)
+    ? state.recentDiffHashes
+    : [];
   recent.push(diffHash);
   if (recent.length > 20) recent = recent.slice(-20);
   writeState({
@@ -151,25 +165,33 @@ function buildPRBody({ capsule, mutation, gene, blastRadius }) {
   const streak = capsule ? capsule.success_streak : 0;
   const capsuleId = capsule ? capsule.id : 'unknown';
   const geneId = gene ? gene.id : 'unknown';
-  const signals = capsule && Array.isArray(capsule.trigger)
-    ? capsule.trigger.slice(0, 5).join(', ')
-    : '';
+  const signals =
+    capsule && Array.isArray(capsule.trigger)
+      ? capsule.trigger.slice(0, 5).join(', ')
+      : '';
   const category = mutation ? mutation.category : 'unknown';
   const risk = mutation ? mutation.risk : 'unknown';
-  const rationale = mutation && mutation.rationale
-    ? redactString(String(mutation.rationale).slice(0, 500))
-    : '';
-  const files = blastRadius && Array.isArray(blastRadius.all_changed_files)
-    ? blastRadius.all_changed_files.map(normalizeRel)
-    : [];
-  const filesStr = files.map(function (f) { return '- `' + f + '`'; }).join('\n');
+  const rationale =
+    mutation && mutation.rationale
+      ? redactString(String(mutation.rationale).slice(0, 500))
+      : '';
+  const files =
+    blastRadius && Array.isArray(blastRadius.all_changed_files)
+      ? blastRadius.all_changed_files.map(normalizeRel)
+      : [];
+  const filesStr = files
+    .map(function (f) {
+      return '- `' + f + '`';
+    })
+    .join('\n');
 
   return [
     '## Mutation Summary',
     '',
     '- **Category:** ' + category,
     '- **Risk:** ' + risk,
-    '- **PRM Score:** ' + (typeof score === 'number' ? score.toFixed(3) : String(score)),
+    '- **PRM Score:** ' +
+      (typeof score === 'number' ? score.toFixed(3) : String(score)),
     '- **Success Streak:** ' + streak,
     '- **Gene:** `' + geneId + '`',
     '- **Signals:** ' + (signals || 'none'),
@@ -196,9 +218,13 @@ function buildPRBody({ capsule, mutation, gene, blastRadius }) {
 }
 
 function buildPRTitle(mutation) {
-  const rationale = mutation && mutation.rationale
-    ? String(mutation.rationale).replace(/[\r\n]+/g, ' ').trim().slice(0, 80)
-    : 'self-optimization';
+  const rationale =
+    mutation && mutation.rationale
+      ? String(mutation.rationale)
+          .replace(/[\r\n]+/g, ' ')
+          .trim()
+          .slice(0, 80)
+      : 'self-optimization';
   return '[Auto-Mutation] ' + rationale;
 }
 
@@ -211,11 +237,16 @@ function runGh(args, opts) {
       timeout: timeoutMs,
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: Object.assign({}, process.env), maxBuffer: MAX_EXEC_BUFFER
+      env: Object.assign({}, process.env),
+      maxBuffer: MAX_EXEC_BUFFER,
     });
     return { ok: true, out: String(result || '').trim() };
   } catch (e) {
-    return { ok: false, out: '', err: String(e && e.stderr ? e.stderr : e.message || e).slice(0, 500) };
+    return {
+      ok: false,
+      out: '',
+      err: String(e && e.stderr ? e.stderr : e.message || e).slice(0, 500),
+    };
   }
 }
 
@@ -224,18 +255,24 @@ function getGitDiff(changedFiles, repoRoot) {
   for (const f of changedFiles) {
     const before = parts.length;
     try {
-      const result = execSync(
-        'git diff HEAD -- "' + f + '"',
-        { cwd: repoRoot, timeout: 10000, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: MAX_EXEC_BUFFER }
-      );
+      const result = execSync('git diff HEAD -- "' + f + '"', {
+        cwd: repoRoot,
+        timeout: 10000,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        maxBuffer: MAX_EXEC_BUFFER,
+      });
       if (result && result.trim()) parts.push(result.trim());
     } catch (_) {}
     if (parts.length === before) {
       try {
-        const result = execSync(
-          'git diff -- "' + f + '"',
-          { cwd: repoRoot, timeout: 10000, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: MAX_EXEC_BUFFER }
-        );
+        const result = execSync('git diff -- "' + f + '"', {
+          cwd: repoRoot,
+          timeout: 10000,
+          encoding: 'utf8',
+          stdio: ['pipe', 'pipe', 'pipe'],
+          maxBuffer: MAX_EXEC_BUFFER,
+        });
         if (result && result.trim()) parts.push(result.trim());
       } catch (_) {}
     }
@@ -244,10 +281,11 @@ function getGitDiff(changedFiles, repoRoot) {
 }
 
 async function maybeCreatePR({ capsule, event, mutation, gene, blastRadius }) {
-  if (String(process.env.EVOLVER_SELF_PR || '').toLowerCase() !== 'true') return null;
+  if (String(process.env.EVOLVER_SELF_PR || '').toLowerCase() !== 'true')
+    return null;
 
-  const score = capsule && capsule.outcome ? (capsule.outcome.score || 0) : 0;
-  const streak = capsule ? (capsule.success_streak || 0) : 0;
+  const score = capsule && capsule.outcome ? capsule.outcome.score || 0 : 0;
+  const streak = capsule ? capsule.success_streak || 0 : 0;
 
   if (score < SELF_PR_MIN_SCORE) return null;
   if (streak < SELF_PR_MIN_STREAK) return null;
@@ -255,14 +293,18 @@ async function maybeCreatePR({ capsule, event, mutation, gene, blastRadius }) {
   if (!mutation || mutation.category !== 'optimize') return null;
   if (!mutation || mutation.risk !== 'low') return null;
 
-  const filesChanged = blastRadius ? (blastRadius.files || 0) : 0;
-  const linesChanged = blastRadius ? (blastRadius.lines || 0) : 0;
+  const filesChanged = blastRadius ? blastRadius.files || 0 : 0;
+  const linesChanged = blastRadius ? blastRadius.lines || 0 : 0;
   if (filesChanged > SELF_PR_MAX_FILES || filesChanged === 0) return null;
   if (linesChanged > SELF_PR_MAX_LINES || linesChanged === 0) return null;
 
-  const changedFiles = (blastRadius && Array.isArray(blastRadius.all_changed_files)
-    ? blastRadius.all_changed_files
-    : []).map(normalizeRel).filter(Boolean);
+  const changedFiles = (
+    blastRadius && Array.isArray(blastRadius.all_changed_files)
+      ? blastRadius.all_changed_files
+      : []
+  )
+    .map(normalizeRel)
+    .filter(Boolean);
 
   if (changedFiles.length === 0) return null;
   if (!changedFiles.every(isPublicNonObfuscated)) return null;
@@ -286,23 +328,45 @@ async function maybeCreatePR({ capsule, event, mutation, gene, blastRadius }) {
   }
   const leakResult = fullLeakCheck(diffContent);
   if (leakResult.found) {
-    const leakSummary = leakResult.leaks.map(function (l) { return l.type; }).join(', ');
-    console.warn('[SelfPR] Skipping: leak detected in diff (' + leakSummary + ')');
-    return { attempted: false, reason: 'leak_detected', leaks: leakResult.leaks.length };
+    const leakSummary = leakResult.leaks
+      .map(function (l) {
+        return l.type;
+      })
+      .join(', ');
+    console.warn(
+      '[SelfPR] Skipping: leak detected in diff (' + leakSummary + ')'
+    );
+    return {
+      attempted: false,
+      reason: 'leak_detected',
+      leaks: leakResult.leaks.length,
+    };
   }
 
   const repo = SELF_PR_REPO;
-  const capsuleIdShort = capsule && capsule.id ? String(capsule.id).slice(0, 8) : crypto.randomBytes(4).toString('hex');
+  const capsuleIdShort =
+    capsule && capsule.id
+      ? String(capsule.id).slice(0, 8)
+      : crypto.randomBytes(4).toString('hex');
   const branch = 'evolver-bot/mutation-' + capsuleIdShort;
   const title = buildPRTitle(mutation);
   const body = buildPRBody({ capsule, mutation, gene, blastRadius });
 
   try {
-    console.log('[SelfPR] Creating PR on ' + repo + ' branch ' + branch + '...');
+    console.log(
+      '[SelfPR] Creating PR on ' + repo + ' branch ' + branch + '...'
+    );
 
-    const forkCheck = runGh('repo view ' + repo + ' --json name', { timeoutMs: 15000 });
+    const forkCheck = runGh('repo view ' + repo + ' --json name', {
+      timeoutMs: 15000,
+    });
     if (!forkCheck.ok) {
-      console.warn('[SelfPR] Cannot access repo ' + repo + ': ' + (forkCheck.err || 'unknown'));
+      console.warn(
+        '[SelfPR] Cannot access repo ' +
+          repo +
+          ': ' +
+          (forkCheck.err || 'unknown')
+      );
       return { attempted: false, reason: 'repo_access_failed' };
     }
 
@@ -322,7 +386,11 @@ async function maybeCreatePR({ capsule, event, mutation, gene, blastRadius }) {
     }
 
     try {
-      execSync('git checkout -b "' + branch + '"', { cwd: tmpDir, timeout: 10000, maxBuffer: MAX_EXEC_BUFFER });
+      execSync('git checkout -b "' + branch + '"', {
+        cwd: tmpDir,
+        timeout: 10000,
+        maxBuffer: MAX_EXEC_BUFFER,
+      });
     } catch (e) {
       console.warn('[SelfPR] Branch creation failed: ' + (e.message || e));
       return { attempted: false, reason: 'branch_failed' };
@@ -339,23 +407,41 @@ async function maybeCreatePR({ capsule, event, mutation, gene, blastRadius }) {
     }
 
     try {
-      execSync('git add -A', { cwd: tmpDir, timeout: 10000, maxBuffer: MAX_EXEC_BUFFER });
-      const statusOut = execSync('git status --porcelain', { cwd: tmpDir, timeout: 10000, encoding: 'utf8', maxBuffer: MAX_EXEC_BUFFER });
+      execSync('git add -A', {
+        cwd: tmpDir,
+        timeout: 10000,
+        maxBuffer: MAX_EXEC_BUFFER,
+      });
+      const statusOut = execSync('git status --porcelain', {
+        cwd: tmpDir,
+        timeout: 10000,
+        encoding: 'utf8',
+        maxBuffer: MAX_EXEC_BUFFER,
+      });
       if (!statusOut || !statusOut.trim()) {
         console.log('[SelfPR] No changes to commit in public repo clone.');
         return { attempted: false, reason: 'no_public_diff' };
       }
-      execSync(
-        'git commit -m "' + title.replace(/"/g, '\\"') + '"',
-        { cwd: tmpDir, timeout: 10000, env: Object.assign({}, process.env, { GIT_AUTHOR_NAME: 'evolver-bot', GIT_AUTHOR_EMAIL: 'evolver-bot@evomap.ai', GIT_COMMITTER_NAME: 'evolver-bot', GIT_COMMITTER_EMAIL: 'evolver-bot@evomap.ai' }) }
-      );
+      execSync('git commit -m "' + title.replace(/"/g, '\\"') + '"', {
+        cwd: tmpDir,
+        timeout: 10000,
+        env: Object.assign({}, process.env, {
+          GIT_AUTHOR_NAME: 'evolver-bot',
+          GIT_AUTHOR_EMAIL: 'evolver-bot@evomap.ai',
+          GIT_COMMITTER_NAME: 'evolver-bot',
+          GIT_COMMITTER_EMAIL: 'evolver-bot@evomap.ai',
+        }),
+      });
     } catch (e) {
       console.warn('[SelfPR] Commit failed: ' + (e.message || e));
       return { attempted: false, reason: 'commit_failed' };
     }
 
     try {
-      execSync('git push origin "' + branch + '"', { cwd: tmpDir, timeout: 30000 });
+      execSync('git push origin "' + branch + '"', {
+        cwd: tmpDir,
+        timeout: 30000,
+      });
     } catch (e) {
       console.warn('[SelfPR] Push failed: ' + (e.message || e));
       return { attempted: false, reason: 'push_failed' };
@@ -365,30 +451,58 @@ async function maybeCreatePR({ capsule, event, mutation, gene, blastRadius }) {
     fs.writeFileSync(bodyFile, body);
 
     const prResult = runGh(
-      'pr create --repo ' + repo +
-      ' --head "' + branch + '"' +
-      ' --title "' + title.replace(/"/g, '\\"') + '"' +
-      ' --body-file "' + bodyFile + '"' +
-      ' --label "auto-mutation"',
+      'pr create --repo ' +
+        repo +
+        ' --head "' +
+        branch +
+        '"' +
+        ' --title "' +
+        title.replace(/"/g, '\\"') +
+        '"' +
+        ' --body-file "' +
+        bodyFile +
+        '"' +
+        ' --label "auto-mutation"',
       { cwd: tmpDir, timeoutMs: 30000 }
     );
 
     if (fs.existsSync(tmpDir)) {
-      try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+      try {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      } catch (_) {}
     }
 
     if (!prResult.ok) {
-      console.warn('[SelfPR] PR creation failed: ' + (prResult.err || 'unknown'));
-      return { attempted: true, reason: 'pr_create_failed', error: prResult.err };
+      console.warn(
+        '[SelfPR] PR creation failed: ' + (prResult.err || 'unknown')
+      );
+      return {
+        attempted: true,
+        reason: 'pr_create_failed',
+        error: prResult.err,
+      };
     }
 
     const prUrl = prResult.out || '';
     console.log('[SelfPR] PR created: ' + prUrl);
     recordPR(diffHash);
-    return { attempted: true, ok: true, pr_url: prUrl, branch: branch, diff_hash: diffHash };
+    return {
+      attempted: true,
+      ok: true,
+      pr_url: prUrl,
+      branch: branch,
+      diff_hash: diffHash,
+    };
   } catch (e) {
-    console.warn('[SelfPR] Unexpected error (non-fatal): ' + (e && e.message ? e.message : e));
-    return { attempted: false, reason: 'unexpected_error', error: String(e && e.message || e).slice(0, 200) };
+    console.warn(
+      '[SelfPR] Unexpected error (non-fatal): ' +
+        (e && e.message ? e.message : e)
+    );
+    return {
+      attempted: false,
+      reason: 'unexpected_error',
+      error: String((e && e.message) || e).slice(0, 200),
+    };
   }
 }
 

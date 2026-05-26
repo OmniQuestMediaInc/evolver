@@ -17,18 +17,20 @@ const os = require('os');
 
 const CLAIM_NUDGE_COOLDOWN_MS = Math.max(
   60_000,
-  Number(process.env.EVOLVER_CLAIM_NUDGE_COOLDOWN_MS) || 6 * 60 * 60 * 1000,
+  Number(process.env.EVOLVER_CLAIM_NUDGE_COOLDOWN_MS) || 6 * 60 * 60 * 1000
 );
 
 const STATE_FILE = path.join(
   process.env.EVOLVER_HOME || path.join(os.homedir(), '.evomap'),
-  'claim_nudge_state.json',
+  'claim_nudge_state.json'
 );
 
 let _memory = { lastPrintedCode: null, lastPrintedAt: 0 };
 
 function _ensureDir(file) {
-  try { fs.mkdirSync(path.dirname(file), { recursive: true }); } catch (_) {}
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+  } catch (_) {}
 }
 
 function _loadState() {
@@ -55,7 +57,10 @@ function _shouldPrint(claimCode, now) {
 
   const disk = _loadState();
   const state = disk && typeof disk === 'object' ? disk : _memory;
-  if (state.lastPrintedCode === claimCode && (now - Number(state.lastPrintedAt || 0)) < CLAIM_NUDGE_COOLDOWN_MS) {
+  if (
+    state.lastPrintedCode === claimCode &&
+    now - Number(state.lastPrintedAt || 0) < CLAIM_NUDGE_COOLDOWN_MS
+  ) {
     return false;
   }
   return true;
@@ -79,14 +84,18 @@ function _markPrinted(claimCode, now) {
 function maybePrintClaimNudge(responsePayload, opts) {
   const options = opts || {};
   const now = typeof options.now === 'number' ? options.now : Date.now();
-  const payload = responsePayload && typeof responsePayload === 'object' ? responsePayload : {};
+  const payload =
+    responsePayload && typeof responsePayload === 'object'
+      ? responsePayload
+      : {};
   const code = payload.claim_code || null;
   const url = payload.claim_url || null;
 
   if (!options.force && !_shouldPrint(code, now)) return false;
   if (!code || !url) return false;
 
-  const rule = '--------------------------------------------------------------------------------';
+  const rule =
+    '--------------------------------------------------------------------------------';
   const lines = [
     '',
     rule,
@@ -102,7 +111,9 @@ function maybePrintClaimNudge(responsePayload, opts) {
     '',
   ];
   for (const line of lines) {
-    try { console.log(line); } catch (_) {}
+    try {
+      console.log(line);
+    } catch (_) {}
   }
   _markPrinted(code, now);
   return true;
@@ -110,7 +121,9 @@ function maybePrintClaimNudge(responsePayload, opts) {
 
 function _resetForTests() {
   _memory = { lastPrintedCode: null, lastPrintedAt: 0 };
-  try { fs.unlinkSync(STATE_FILE); } catch (_) {}
+  try {
+    fs.unlinkSync(STATE_FILE);
+  } catch (_) {}
 }
 
 module.exports = {

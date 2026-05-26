@@ -32,11 +32,15 @@ function startMock(handlers) {
       return;
     }
     let body = '';
-    req.on('data', (c) => { body += c; });
+    req.on('data', c => {
+      body += c;
+    });
     req.on('end', () => {
       try {
         const result = route({ url, body, headers: req.headers });
-        res.writeHead(result.status || 200, { 'Content-Type': 'application/json' });
+        res.writeHead(result.status || 200, {
+          'Content-Type': 'application/json',
+        });
         res.end(JSON.stringify(result.body || {}));
       } catch (e) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -44,7 +48,7 @@ function startMock(handlers) {
       }
     });
   });
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     server.listen(0, '127.0.0.1', () => {
       const addr = server.address();
       resolve({ server, url: 'http://127.0.0.1:' + addr.port });
@@ -57,7 +61,9 @@ function startMock(handlers) {
 // deadlock against our own mock.
 function runSync(env, extraArgs) {
   const cwd = path.resolve(__dirname, '..');
-  const argv = ['index.js', 'sync', '--scope=published'].concat(extraArgs || []);
+  const argv = ['index.js', 'sync', '--scope=published'].concat(
+    extraArgs || []
+  );
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, argv, {
       cwd,
@@ -65,17 +71,26 @@ function runSync(env, extraArgs) {
     });
     let stdout = '';
     let stderr = '';
-    child.stdout.on('data', (d) => { stdout += d.toString('utf8'); });
-    child.stderr.on('data', (d) => { stderr += d.toString('utf8'); });
+    child.stdout.on('data', d => {
+      stdout += d.toString('utf8');
+    });
+    child.stderr.on('data', d => {
+      stderr += d.toString('utf8');
+    });
     const t = setTimeout(() => {
       child.kill('SIGTERM');
-      reject(new Error('runSync timed out\nstdout=' + stdout + '\nstderr=' + stderr));
+      reject(
+        new Error('runSync timed out\nstdout=' + stdout + '\nstderr=' + stderr)
+      );
     }, 15000);
     child.on('exit', (status, signal) => {
       clearTimeout(t);
       resolve({ stdout, stderr, status, signal });
     });
-    child.on('error', (e) => { clearTimeout(t); reject(e); });
+    child.on('error', e => {
+      clearTimeout(t);
+      reject(e);
+    });
   });
 }
 
@@ -105,10 +120,22 @@ describe('sync dedup (id collision vs hub_asset_id)', () => {
     };
     mock = await startMock({
       '/a2a/assets/published-by-me': () => ({
-        body: { assets: [hubAsset], count: 1, has_more: false, next_cursor: null, node_ids: ['node-test'] },
+        body: {
+          assets: [hubAsset],
+          count: 1,
+          has_more: false,
+          next_cursor: null,
+          node_ids: ['node-test'],
+        },
       }),
       '/a2a/assets/purchased': () => ({
-        body: { assets: [], count: 0, has_more: false, next_cursor: null, node_ids: ['node-test'] },
+        body: {
+          assets: [],
+          count: 0,
+          has_more: false,
+          next_cursor: null,
+          node_ids: ['node-test'],
+        },
       }),
       // Detail endpoint not needed because we ship payload inline.
     });
@@ -121,7 +148,16 @@ describe('sync dedup (id collision vs hub_asset_id)', () => {
     const { assetsDir } = mkSandbox();
     fs.writeFileSync(
       path.join(assetsDir, 'genes.json'),
-      JSON.stringify({ version: 1, genes: [{ id: 'gene_gep_repair_from_errors', strategy: ['local-default'] }] }, null, 2)
+      JSON.stringify(
+        {
+          version: 1,
+          genes: [
+            { id: 'gene_gep_repair_from_errors', strategy: ['local-default'] },
+          ],
+        },
+        null,
+        2
+      )
     );
 
     const r = await runSync({
@@ -131,34 +167,70 @@ describe('sync dedup (id collision vs hub_asset_id)', () => {
       GEP_ASSETS_DIR: assetsDir,
     });
 
-    assert.equal(r.status, 0, 'sync should exit 0; stdout=' + r.stdout + ' stderr=' + r.stderr);
+    assert.equal(
+      r.status,
+      0,
+      'sync should exit 0; stdout=' + r.stdout + ' stderr=' + r.stderr
+    );
     assert.match(r.stdout, /id_collision=1/);
     assert.match(r.stdout, /--force/);
-    const genes = JSON.parse(fs.readFileSync(path.join(assetsDir, 'genes.json'), 'utf8')).genes;
+    const genes = JSON.parse(
+      fs.readFileSync(path.join(assetsDir, 'genes.json'), 'utf8')
+    ).genes;
     assert.equal(genes.length, 1);
-    assert.equal(genes[0].strategy[0], 'local-default', 'local default must be preserved');
-    assert.equal(genes[0].hub_asset_id, undefined, 'no hub_asset_id should be written without --force');
+    assert.equal(
+      genes[0].strategy[0],
+      'local-default',
+      'local default must be preserved'
+    );
+    assert.equal(
+      genes[0].hub_asset_id,
+      undefined,
+      'no hub_asset_id should be written without --force'
+    );
   });
 
   it('overwrites the default-seed gene with the Hub copy when --force is set', async () => {
     const { assetsDir } = mkSandbox();
     fs.writeFileSync(
       path.join(assetsDir, 'genes.json'),
-      JSON.stringify({ version: 1, genes: [{ id: 'gene_gep_repair_from_errors', strategy: ['local-default'] }] }, null, 2)
+      JSON.stringify(
+        {
+          version: 1,
+          genes: [
+            { id: 'gene_gep_repair_from_errors', strategy: ['local-default'] },
+          ],
+        },
+        null,
+        2
+      )
     );
 
-    const r = await runSync({
-      A2A_HUB_URL: mock.url,
-      A2A_NODE_ID: 'node_aaaaaaaaaaaa',
-      A2A_NODE_SECRET: 'a'.repeat(64),
-      GEP_ASSETS_DIR: assetsDir,
-    }, ['--force']);
+    const r = await runSync(
+      {
+        A2A_HUB_URL: mock.url,
+        A2A_NODE_ID: 'node_aaaaaaaaaaaa',
+        A2A_NODE_SECRET: 'a'.repeat(64),
+        GEP_ASSETS_DIR: assetsDir,
+      },
+      ['--force']
+    );
 
-    assert.equal(r.status, 0, 'sync should exit 0; stdout=' + r.stdout + ' stderr=' + r.stderr);
+    assert.equal(
+      r.status,
+      0,
+      'sync should exit 0; stdout=' + r.stdout + ' stderr=' + r.stderr
+    );
     assert.match(r.stdout, /synced=1/);
-    const genes = JSON.parse(fs.readFileSync(path.join(assetsDir, 'genes.json'), 'utf8')).genes;
+    const genes = JSON.parse(
+      fs.readFileSync(path.join(assetsDir, 'genes.json'), 'utf8')
+    ).genes;
     assert.equal(genes.length, 1);
-    assert.equal(genes[0].strategy[0], 'hub-strategy-step', 'Hub strategy must overwrite local default');
+    assert.equal(
+      genes[0].strategy[0],
+      'hub-strategy-step',
+      'Hub strategy must overwrite local default'
+    );
     assert.equal(genes[0].hub_asset_id, 'hub-asset-aaaa1111');
   });
 
@@ -166,15 +238,21 @@ describe('sync dedup (id collision vs hub_asset_id)', () => {
     const { assetsDir } = mkSandbox();
     fs.writeFileSync(
       path.join(assetsDir, 'genes.json'),
-      JSON.stringify({
-        version: 1,
-        genes: [{
-          id: 'gene_gep_repair_from_errors',
-          strategy: ['hub-strategy-step'],
-          hub_asset_id: 'hub-asset-aaaa1111',
-          synced_at: '2026-05-04T00:00:00.000Z',
-        }],
-      }, null, 2)
+      JSON.stringify(
+        {
+          version: 1,
+          genes: [
+            {
+              id: 'gene_gep_repair_from_errors',
+              strategy: ['hub-strategy-step'],
+              hub_asset_id: 'hub-asset-aaaa1111',
+              synced_at: '2026-05-04T00:00:00.000Z',
+            },
+          ],
+        },
+        null,
+        2
+      )
     );
 
     const r = await runSync({
@@ -187,6 +265,10 @@ describe('sync dedup (id collision vs hub_asset_id)', () => {
     assert.equal(r.status, 0);
     assert.match(r.stdout, /already_synced=1/);
     assert.match(r.stdout, /id_collision=0/);
-    assert.doesNotMatch(r.stdout, /--force/, 'no --force suggestion when there is no real id collision');
+    assert.doesNotMatch(
+      r.stdout,
+      /--force/,
+      'no --force suggestion when there is no real id collision'
+    );
   });
 });

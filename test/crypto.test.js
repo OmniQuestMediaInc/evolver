@@ -94,11 +94,17 @@ describe('encrypt key validation', () => {
   });
 
   it('rejects too-short key', () => {
-    assert.throws(() => encrypt('x', Buffer.alloc(16)), /key must be exactly 32 bytes/);
+    assert.throws(
+      () => encrypt('x', Buffer.alloc(16)),
+      /key must be exactly 32 bytes/
+    );
   });
 
   it('rejects too-long key', () => {
-    assert.throws(() => encrypt('x', Buffer.alloc(64)), /key must be exactly 32 bytes/);
+    assert.throws(
+      () => encrypt('x', Buffer.alloc(64)),
+      /key must be exactly 32 bytes/
+    );
   });
 });
 
@@ -116,7 +122,8 @@ describe('decrypt key validation', () => {
     const key = generateKey();
     const parts = encrypt('x', key);
     assert.throws(
-      () => decrypt(parts.ciphertext, Buffer.alloc(16), parts.iv, parts.authTag),
+      () =>
+        decrypt(parts.ciphertext, Buffer.alloc(16), parts.iv, parts.authTag),
       /key must be exactly 32 bytes/
     );
   });
@@ -143,7 +150,9 @@ describe('decrypt authentication', () => {
     const keyA = generateKey();
     const keyB = generateKey();
     const parts = encrypt('secret', keyA);
-    assert.throws(() => decrypt(parts.ciphertext, keyB, parts.iv, parts.authTag));
+    assert.throws(() =>
+      decrypt(parts.ciphertext, keyB, parts.iv, parts.authTag)
+    );
   });
 
   it('fails when IV is wrong', () => {
@@ -176,7 +185,10 @@ describe('pack / unpack', () => {
     const parts = encrypt('payload', key);
     const roundTripped = unpack(pack(parts));
     assert.equal(roundTripped.iv.toString('hex'), parts.iv.toString('hex'));
-    assert.equal(roundTripped.authTag.toString('hex'), parts.authTag.toString('hex'));
+    assert.equal(
+      roundTripped.authTag.toString('hex'),
+      parts.authTag.toString('hex')
+    );
     assert.equal(
       roundTripped.ciphertext.toString('hex'),
       parts.ciphertext.toString('hex')

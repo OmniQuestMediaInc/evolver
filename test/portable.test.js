@@ -15,21 +15,39 @@ function mkTmpAssets() {
 
   fs.writeFileSync(
     path.join(assetsDir, 'genes.json'),
-    JSON.stringify({ version: 1, genes: [{ id: 'gene_a', summary: 'test a' }, { id: 'gene_b' }] }, null, 2)
+    JSON.stringify(
+      {
+        version: 1,
+        genes: [{ id: 'gene_a', summary: 'test a' }, { id: 'gene_b' }],
+      },
+      null,
+      2
+    )
   );
   fs.writeFileSync(
     path.join(assetsDir, 'capsules.json'),
-    JSON.stringify({ version: 1, capsules: [{ id: 'caps_a', summary: 'c' }] }, null, 2)
+    JSON.stringify(
+      { version: 1, capsules: [{ id: 'caps_a', summary: 'c' }] },
+      null,
+      2
+    )
   );
   fs.writeFileSync(
     path.join(assetsDir, 'events.jsonl'),
-    JSON.stringify({ ts: 'x', kind: 'k' }) + '\n' + JSON.stringify({ ts: 'y', kind: 'z' }) + '\n'
+    JSON.stringify({ ts: 'x', kind: 'k' }) +
+      '\n' +
+      JSON.stringify({ ts: 'y', kind: 'z' }) +
+      '\n'
   );
   fs.writeFileSync(
     path.join(memDir, 'memory_graph.jsonl'),
     JSON.stringify({ node: 'm1' }) + '\n'
   );
-  return { root, assetsDir, memoryGraphPath: path.join(memDir, 'memory_graph.jsonl') };
+  return {
+    root,
+    assetsDir,
+    memoryGraphPath: path.join(memDir, 'memory_graph.jsonl'),
+  };
 }
 
 describe('portable.exportGepx', () => {
@@ -57,21 +75,32 @@ describe('portable.exportGepx', () => {
     fs.mkdirSync(extractDir, { recursive: true });
     // Use cwd + relative path to avoid GNU tar on Windows misreading "C:" as
     // a remote hostname when absolute paths are passed to -xzf or -C.
-    execFileSync('tar', ['-xzf', path.relative(extractDir, outputPath)], { cwd: extractDir });
+    execFileSync('tar', ['-xzf', path.relative(extractDir, outputPath)], {
+      cwd: extractDir,
+    });
 
     assert.ok(fs.existsSync(path.join(extractDir, 'manifest.json')));
     assert.ok(fs.existsSync(path.join(extractDir, 'checksum.sha256')));
     assert.ok(fs.existsSync(path.join(extractDir, 'genes', 'genes.json')));
-    assert.ok(fs.existsSync(path.join(extractDir, 'capsules', 'capsules.json')));
+    assert.ok(
+      fs.existsSync(path.join(extractDir, 'capsules', 'capsules.json'))
+    );
     assert.ok(fs.existsSync(path.join(extractDir, 'events', 'events.jsonl')));
-    assert.ok(fs.existsSync(path.join(extractDir, 'memory', 'memory_graph.jsonl')));
+    assert.ok(
+      fs.existsSync(path.join(extractDir, 'memory', 'memory_graph.jsonl'))
+    );
 
-    const manifest = JSON.parse(fs.readFileSync(path.join(extractDir, 'manifest.json'), 'utf8'));
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(extractDir, 'manifest.json'), 'utf8')
+    );
     assert.equal(manifest.source.platform, 'evolver');
     assert.equal(manifest.source.component, 'sync');
     assert.ok(manifest.created_at, 'manifest.created_at must be set');
 
-    const checksums = fs.readFileSync(path.join(extractDir, 'checksum.sha256'), 'utf8');
+    const checksums = fs.readFileSync(
+      path.join(extractDir, 'checksum.sha256'),
+      'utf8'
+    );
     assert.match(checksums, /genes\/genes\.json/);
     assert.match(checksums, /capsules\/capsules\.json/);
   });
@@ -108,9 +137,22 @@ describe('portable.exportGepx', () => {
   it('is idempotent: running twice produces a valid archive each time', () => {
     const { root, assetsDir, memoryGraphPath } = mkTmpAssets();
     const outputPath = path.join(root, 'idem.gepx');
-    const r1 = exportGepx({ assetsDir, memoryGraphPath, outputPath, agentId: 'n' });
-    const r2 = exportGepx({ assetsDir, memoryGraphPath, outputPath, agentId: 'n' });
-    assert.equal(r1.manifest.statistics.total_genes, r2.manifest.statistics.total_genes);
+    const r1 = exportGepx({
+      assetsDir,
+      memoryGraphPath,
+      outputPath,
+      agentId: 'n',
+    });
+    const r2 = exportGepx({
+      assetsDir,
+      memoryGraphPath,
+      outputPath,
+      agentId: 'n',
+    });
+    assert.equal(
+      r1.manifest.statistics.total_genes,
+      r2.manifest.statistics.total_genes
+    );
     assert.ok(fs.existsSync(outputPath));
   });
 });

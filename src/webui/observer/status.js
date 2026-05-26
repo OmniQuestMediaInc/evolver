@@ -21,7 +21,9 @@ function getStatus() {
   return {
     mode: inferMode(cycle, solidify, proxy),
     heartbeat: redactValue(cycle),
-    lastRun: redactValue(solidify && solidify.last_run ? solidify.last_run : null),
+    lastRun: redactValue(
+      solidify && solidify.last_run ? solidify.last_run : null
+    ),
     evolutionState: redactValue(evolution),
     proxy,
     filesPresent: filesPresent(paths),
@@ -43,7 +45,10 @@ function isFresh(timestamp, maxAgeMs) {
 
 function getProxySettings() {
   try {
-    const { readSettings, isStaleProxy } = require('../../proxy/server/settings');
+    const {
+      readSettings,
+      isStaleProxy,
+    } = require('../../proxy/server/settings');
     const settings = readSettings();
     const proxy = settings.proxy || null;
     if (!proxy) return { running: false, url: null };

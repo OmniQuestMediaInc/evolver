@@ -1,7 +1,12 @@
 'use strict';
 
 const http = require('http');
-const { writeSettings, readSettings, clearSettings, clearIfStale } = require('./settings');
+const {
+  writeSettings,
+  readSettings,
+  clearSettings,
+  clearIfStale,
+} = require('./settings');
 
 const MAX_PORT_ATTEMPTS = 100;
 const DEFAULT_PORT = 19820;
@@ -22,9 +27,10 @@ function resolveMaxBodyBytes() {
 }
 
 function parseBody(req, opts) {
-  const maxBytes = (opts && Number.isFinite(opts.maxBytes) && opts.maxBytes > 0)
-    ? opts.maxBytes
-    : resolveMaxBodyBytes();
+  const maxBytes =
+    opts && Number.isFinite(opts.maxBytes) && opts.maxBytes > 0
+      ? opts.maxBytes
+      : resolveMaxBodyBytes();
   return new Promise((resolve, reject) => {
     const declared = Number(req.headers['content-length']);
     if (Number.isFinite(declared) && declared > maxBytes) {
@@ -35,13 +41,17 @@ function parseBody(req, opts) {
     const chunks = [];
     let received = 0;
     let settled = false;
-    const fail = (err) => {
+    const fail = err => {
       if (settled) return;
       settled = true;
-      try { req.destroy(); } catch { /* ignore */ }
+      try {
+        req.destroy();
+      } catch {
+        /* ignore */
+      }
       reject(err);
     };
-    req.on('data', (c) => {
+    req.on('data', c => {
       if (settled) return;
       received += c.length;
       if (received > maxBytes) {
@@ -56,8 +66,11 @@ function parseBody(req, opts) {
       settled = true;
       const raw = Buffer.concat(chunks).toString();
       if (!raw) return resolve({});
-      try { resolve(JSON.parse(raw)); }
-      catch (e) { reject(new Error('Invalid JSON body')); }
+      try {
+        resolve(JSON.parse(raw));
+      } catch (e) {
+        reject(new Error('Invalid JSON body'));
+      }
     });
     req.on('error', fail);
   });
@@ -74,7 +87,7 @@ function sendJson(res, status, body) {
 
 function tryListen(server, port) {
   return new Promise((resolve, reject) => {
-    server.once('error', (err) => {
+    server.once('error', err => {
       if (err.code === 'EADDRINUSE') return resolve(false);
       reject(err);
     });
@@ -85,7 +98,8 @@ function tryListen(server, port) {
 class ProxyHttpServer {
   constructor(routes, { port, logger } = {}) {
     this.routes = routes;
-    this.basePort = port || Number(process.env.EVOMAP_PROXY_PORT) || DEFAULT_PORT;
+    this.basePort =
+      port || Number(process.env.EVOMAP_PROXY_PORT) || DEFAULT_PORT;
     this.actualPort = null;
     this.logger = logger || console;
     this.server = null;
@@ -93,7 +107,9 @@ class ProxyHttpServer {
 
   async start() {
     clearIfStale();
-    this.server = http.createServer((req, res) => this._handleRequest(req, res));
+    this.server = http.createServer((req, res) =>
+      this._handleRequest(req, res)
+    );
 
     let port = this.basePort;
     for (let i = 0; i < MAX_PORT_ATTEMPTS; i++) {
@@ -113,12 +129,14 @@ class ProxyHttpServer {
       }
       port++;
     }
-    throw new Error(`Could not find free port after ${MAX_PORT_ATTEMPTS} attempts starting from ${this.basePort}`);
+    throw new Error(
+      `Could not find free port after ${MAX_PORT_ATTEMPTS} attempts starting from ${this.basePort}`
+    );
   }
 
   async stop() {
     if (this.server) {
-      await new Promise((resolve) => this.server.close(resolve));
+      await new Promise(resolve => this.server.close(resolve));
       this.server = null;
     }
     clearSettings();
@@ -137,7 +155,10 @@ class ProxyHttpServer {
     const { handler, params } = paramMatch;
 
     try {
-      const body = (req.method === 'POST' || req.method === 'PUT') ? await parseBody(req) : {};
+      const body =
+        req.method === 'POST' || req.method === 'PUT'
+          ? await parseBody(req)
+          : {};
       const query = Object.fromEntries(url.searchParams);
       const result = await handler({ body, query, params });
       sendJson(res, result.status || 200, result.body || result);
@@ -178,4 +199,11 @@ function matchPath(pattern, pathname) {
   return params;
 }
 
-module.exports = { ProxyHttpServer, parseBody, sendJson, DEFAULT_PORT, DEFAULT_MAX_BODY_BYTES, resolveMaxBodyBytes };
+module.exports = {
+  ProxyHttpServer,
+  parseBody,
+  sendJson,
+  DEFAULT_PORT,
+  DEFAULT_MAX_BODY_BYTES,
+  resolveMaxBodyBytes,
+};

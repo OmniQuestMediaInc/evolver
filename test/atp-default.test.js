@@ -3,11 +3,17 @@ const assert = require('node:assert/strict');
 
 const savedEnv = {};
 const envKeys = [
-  'EVOLVER_ATP', 'EVOLVER_ATP_SERVICES', 'EVOLVER_AGENT_NAME', 'EVOLVER_MODEL_NAME',
+  'EVOLVER_ATP',
+  'EVOLVER_ATP_SERVICES',
+  'EVOLVER_AGENT_NAME',
+  'EVOLVER_MODEL_NAME',
 ];
 
 beforeEach(() => {
-  for (const k of envKeys) { savedEnv[k] = process.env[k]; delete process.env[k]; }
+  for (const k of envKeys) {
+    savedEnv[k] = process.env[k];
+    delete process.env[k];
+  }
 });
 
 afterEach(() => {
@@ -18,7 +24,11 @@ afterEach(() => {
 });
 
 describe('defaultHandler', () => {
-  const { defaultOrderHandler, resolveAtpServices, getAtpMode } = require('../src/atp/defaultHandler');
+  const {
+    defaultOrderHandler,
+    resolveAtpServices,
+    getAtpMode,
+  } = require('../src/atp/defaultHandler');
 
   describe('getAtpMode', () => {
     it('defaults to auto', () => {
@@ -97,24 +107,36 @@ describe('defaultHandler', () => {
 
   describe('defaultOrderHandler', () => {
     it('returns code review result for review signal', () => {
-      const result = defaultOrderHandler({ title: '', signals: 'code_review,javascript' });
+      const result = defaultOrderHandler({
+        title: '',
+        signals: 'code_review,javascript',
+      });
       assert.ok(result.result.includes('review'));
       assert.equal(result.pass_rate, 1.0);
       assert.equal(result.processor, 'evolver-default');
     });
 
     it('returns translation result for translation title', () => {
-      const result = defaultOrderHandler({ title: 'Translate this document', signals: '' });
+      const result = defaultOrderHandler({
+        title: 'Translate this document',
+        signals: '',
+      });
       assert.ok(result.result.includes('Translation'));
     });
 
     it('returns summary result for summarization signal', () => {
-      const result = defaultOrderHandler({ title: '', signals: 'summarization' });
+      const result = defaultOrderHandler({
+        title: '',
+        signals: 'summarization',
+      });
       assert.ok(result.result.includes('Summarization'));
     });
 
     it('returns generic result for unknown task', () => {
-      const result = defaultOrderHandler({ title: 'Unknown task', signals: 'random' });
+      const result = defaultOrderHandler({
+        title: 'Unknown task',
+        signals: 'random',
+      });
       assert.ok(result.result.includes('processed by evolver'));
     });
 

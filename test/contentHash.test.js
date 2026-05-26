@@ -1,6 +1,11 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { canonicalize, computeAssetId, verifyAssetId, SCHEMA_VERSION } = require('../src/gep/contentHash');
+const {
+  canonicalize,
+  computeAssetId,
+  verifyAssetId,
+  SCHEMA_VERSION,
+} = require('../src/gep/contentHash');
 
 describe('canonicalize', () => {
   it('serializes null and undefined as "null"', () => {
@@ -28,7 +33,10 @@ describe('canonicalize', () => {
 
   it('serializes objects with sorted keys', () => {
     assert.equal(canonicalize({ b: 2, a: 1 }), '{"a":1,"b":2}');
-    assert.equal(canonicalize({ z: 'last', a: 'first' }), '{"a":"first","z":"last"}');
+    assert.equal(
+      canonicalize({ z: 'last', a: 'first' }),
+      '{"a":"first","z":"last"}'
+    );
   });
 
   it('produces deterministic output regardless of key insertion order', () => {
@@ -131,6 +139,9 @@ describe('@evomap/gep-sdk facade', () => {
       validation: ['npm test'],
     };
     const id = computeAssetId(gene);
-    assert.equal(id, 'sha256:327aa3452cde16a9aa2416431bbb2c75339cca05306e4933498cef63fc8a3d08');
+    assert.equal(
+      id,
+      'sha256:327aa3452cde16a9aa2416431bbb2c75339cca05306e4933498cef63fc8a3d08'
+    );
   });
 });

@@ -26,8 +26,12 @@ describe('SkillUpdater', () => {
 
   after(() => {
     store.close();
-    try { fs.rmSync(dataDir, { recursive: true }); } catch {}
-    try { fs.rmSync(skillDir, { recursive: true }); } catch {}
+    try {
+      fs.rmSync(dataDir, { recursive: true });
+    } catch {}
+    try {
+      fs.rmSync(skillDir, { recursive: true });
+    } catch {}
   });
 
   it('updates skill.md from inbound message', () => {
@@ -39,10 +43,16 @@ describe('SkillUpdater', () => {
     });
 
     const result = updater.processSkillUpdate({
-      payload: { content: '# Updated Skill\nNew content here.', version: '1.1.0' },
+      payload: {
+        content: '# Updated Skill\nNew content here.',
+        version: '1.1.0',
+      },
     });
     assert.equal(result, true);
-    assert.equal(fs.readFileSync(skillPath, 'utf8'), '# Updated Skill\nNew content here.');
+    assert.equal(
+      fs.readFileSync(skillPath, 'utf8'),
+      '# Updated Skill\nNew content here.'
+    );
     assert.equal(store.getState('skill_version'), '1.1.0');
   });
 
@@ -60,7 +70,10 @@ describe('SkillUpdater', () => {
       payload: { content: 'updated content', version: '2.0' },
     });
     assert.equal(fs.readFileSync(skillPath, 'utf8'), 'updated content');
-    assert.equal(fs.readFileSync(skillPath + '.bak', 'utf8'), 'original content');
+    assert.equal(
+      fs.readFileSync(skillPath + '.bak', 'utf8'),
+      'original content'
+    );
   });
 
   it('returns false without skill path', () => {
@@ -68,7 +81,10 @@ describe('SkillUpdater', () => {
       store,
       logger: { log: () => {}, warn: () => {}, error: () => {} },
     });
-    assert.equal(updater.processSkillUpdate({ payload: { content: 'x' } }), false);
+    assert.equal(
+      updater.processSkillUpdate({ payload: { content: 'x' } }),
+      false
+    );
   });
 
   it('returns false without content', () => {
@@ -100,7 +116,9 @@ describe('SkillUpdater', () => {
     assert.equal(applied, 1);
     assert.equal(fs.readFileSync(sp, 'utf8'), '# Polled skill');
     s2.close();
-    try { fs.rmSync(dir2, { recursive: true }); } catch {}
+    try {
+      fs.rmSync(dir2, { recursive: true });
+    } catch {}
   });
 });
 
@@ -115,7 +133,9 @@ describe('DmHandler', () => {
 
   after(() => {
     store.close();
-    try { fs.rmSync(dataDir, { recursive: true }); } catch {}
+    try {
+      fs.rmSync(dataDir, { recursive: true });
+    } catch {}
   });
 
   it('sends a DM and creates outbound message', () => {
@@ -149,7 +169,10 @@ describe('DmHandler', () => {
   });
 
   it('acks DM messages', () => {
-    const id = store.writeInbound({ type: 'dm', payload: { content: 'to ack' } });
+    const id = store.writeInbound({
+      type: 'dm',
+      payload: { content: 'to ack' },
+    });
     const count = handler.ack(id);
     assert.equal(count, 1);
     const msg = store.getById(id);
@@ -173,7 +196,9 @@ describe('SessionHandler', () => {
 
   after(() => {
     store.close();
-    try { fs.rmSync(dataDir, { recursive: true }); } catch {}
+    try {
+      fs.rmSync(dataDir, { recursive: true });
+    } catch {}
   });
 
   it('creates a session and stores outbound message', () => {
@@ -231,10 +256,14 @@ describe('SessionHandler', () => {
 
   it('throws on send message with oversized payload', () => {
     const bigPayload = { data: 'x'.repeat(17000) };
-    assert.throws(() => handler.sendMessage({
-      sessionId: 'sess_big',
-      payload: bigPayload,
-    }), /too large/);
+    assert.throws(
+      () =>
+        handler.sendMessage({
+          sessionId: 'sess_big',
+          payload: bigPayload,
+        }),
+      /too large/
+    );
   });
 
   it('delegates a subtask', () => {
@@ -275,7 +304,10 @@ describe('SessionHandler', () => {
   });
 
   it('polls session invites', () => {
-    store.writeInbound({ type: 'collaboration_invite', payload: { session_id: 's1' } });
+    store.writeInbound({
+      type: 'collaboration_invite',
+      payload: { session_id: 's1' },
+    });
     const msgs = handler.pollInvites();
     assert.ok(msgs.length >= 1);
   });

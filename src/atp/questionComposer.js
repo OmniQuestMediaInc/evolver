@@ -64,7 +64,10 @@ const TEMPLATES = {
 };
 
 function _normalize(s) {
-  return String(s || '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }
 
 function _pickTemplate(key, hashSeed) {
@@ -103,12 +106,19 @@ function _clip(s, maxLen) {
  * @returns {string} -- composed question (never empty)
  */
 function compose(opts) {
-  const capabilities = Array.isArray(opts && opts.capabilities) ? opts.capabilities : [];
+  const capabilities = Array.isArray(opts && opts.capabilities)
+    ? opts.capabilities
+    : [];
   const signals = Array.isArray(opts && opts.signals) ? opts.signals : [];
   const maxLen = Number(opts && opts.maxLen) || DEFAULT_MAX_LEN;
 
   const keys = capabilities.map(_normalize).filter(Boolean);
-  const primary = keys.find(function (k) { return TEMPLATES[k]; }) || keys[0] || 'general';
+  const primary =
+    keys.find(function (k) {
+      return TEMPLATES[k];
+    }) ||
+    keys[0] ||
+    'general';
   const tmplKey = TEMPLATES[primary] ? primary : 'general';
 
   const seed = _hashFor(keys.concat(signals.slice(0, 4)));
@@ -117,9 +127,14 @@ function compose(opts) {
   if (tmpl) return _clip(tmpl, maxLen);
 
   // Generic fallback when TEMPLATES does not have `general` (defensive).
-  const capsText = capabilities.length ? capabilities.slice(0, 3).join(', ') : 'a common task';
-  const fb = (opts && opts.fallback && String(opts.fallback).trim())
-    || 'I would like help with ' + capsText + '. Please provide one concrete, actionable answer.';
+  const capsText = capabilities.length
+    ? capabilities.slice(0, 3).join(', ')
+    : 'a common task';
+  const fb =
+    (opts && opts.fallback && String(opts.fallback).trim()) ||
+    'I would like help with ' +
+      capsText +
+      '. Please provide one concrete, actionable answer.';
   return _clip(fb, maxLen);
 }
 

@@ -33,7 +33,10 @@ async function submitPrivacyTask(opts) {
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
-    console.warn('[PrivacyClient] submitPrivacyTask failed:', err?.message || err);
+    console.warn(
+      '[PrivacyClient] submitPrivacyTask failed:',
+      err?.message || err
+    );
     return null;
   }
 }
@@ -77,7 +80,10 @@ async function uploadEncryptedBlob(plaintext, opts) {
       authTag: parts.authTag,
     };
   } catch (err) {
-    console.warn('[PrivacyClient] uploadEncryptedBlob failed:', err?.message || err);
+    console.warn(
+      '[PrivacyClient] uploadEncryptedBlob failed:',
+      err?.message || err
+    );
     return null;
   }
 }
@@ -108,7 +114,10 @@ async function executeSealedTool(opts) {
     }
     return await res.json();
   } catch (err) {
-    console.warn('[PrivacyClient] executeSealedTool failed:', err?.message || err);
+    console.warn(
+      '[PrivacyClient] executeSealedTool failed:',
+      err?.message || err
+    );
     return { error: err?.message || 'network_error' };
   }
 }
@@ -121,10 +130,13 @@ async function executeSealedTool(opts) {
 async function getPrivacyStatus(taskId) {
   if (!taskId) return null;
   try {
-    const res = await fetch(privacyUrl(`/status/${encodeURIComponent(taskId)}`), {
-      headers: buildHubHeaders(),
-      signal: AbortSignal.timeout(PRIVACY_TIMEOUT_MS),
-    });
+    const res = await fetch(
+      privacyUrl(`/status/${encodeURIComponent(taskId)}`),
+      {
+        headers: buildHubHeaders(),
+        signal: AbortSignal.timeout(PRIVACY_TIMEOUT_MS),
+      }
+    );
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -141,10 +153,13 @@ async function getPrivacyStatus(taskId) {
 async function getPrivacyResult(taskId, key) {
   if (!taskId || !key) return null;
   try {
-    const res = await fetch(privacyUrl(`/result/${encodeURIComponent(taskId)}`), {
-      headers: buildHubHeaders(),
-      signal: AbortSignal.timeout(PRIVACY_TIMEOUT_MS),
-    });
+    const res = await fetch(
+      privacyUrl(`/result/${encodeURIComponent(taskId)}`),
+      {
+        headers: buildHubHeaders(),
+        signal: AbortSignal.timeout(PRIVACY_TIMEOUT_MS),
+      }
+    );
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.encrypted_result_base64) return null;
@@ -154,7 +169,10 @@ async function getPrivacyResult(taskId, key) {
     const plaintext = decrypt(parts.ciphertext, key, parts.iv, parts.authTag);
     return { plaintext, resultHash: data.result_hash };
   } catch (err) {
-    console.warn('[PrivacyClient] getPrivacyResult failed:', err?.message || err);
+    console.warn(
+      '[PrivacyClient] getPrivacyResult failed:',
+      err?.message || err
+    );
     return null;
   }
 }
@@ -190,7 +208,10 @@ function parsePrivacyParams(body) {
   if (start === -1 || end === -1 || end <= start) return null;
 
   const block = body.substring(start + '[PRIVACY_PARAMS]'.length, end).trim();
-  const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+  const lines = block
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
   const params = {};
   for (const line of lines) {
     const colon = line.indexOf(':');
@@ -201,7 +222,10 @@ function parsePrivacyParams(body) {
   }
 
   if (!params.tool_id) return null;
-  const blobIds = (params.blob_ids || '').split(',').map(s => s.trim()).filter(Boolean);
+  const blobIds = (params.blob_ids || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
   return { toolId: params.tool_id, blobIds };
 }
 

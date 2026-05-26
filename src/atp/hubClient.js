@@ -26,7 +26,8 @@ function _isProxyMode() {
 
 function _proxyRequest(method, path, body, timeoutMs) {
   const proxyUrl = getProxyUrl();
-  if (!proxyUrl) return Promise.resolve({ ok: false, error: 'proxy_not_running' });
+  if (!proxyUrl)
+    return Promise.resolve({ ok: false, error: 'proxy_not_running' });
 
   const url = new URL(path, proxyUrl);
   const timeout = timeoutMs || require('../config').HTTP_TRANSPORT_TIMEOUT_MS;
@@ -47,20 +48,34 @@ function _proxyRequest(method, path, body, timeoutMs) {
       },
       function (res) {
         const chunks = [];
-        res.on('data', function (c) { chunks.push(c); });
+        res.on('data', function (c) {
+          chunks.push(c);
+        });
         res.on('end', function () {
           const raw = Buffer.concat(chunks).toString();
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            try { resolve({ ok: true, data: JSON.parse(raw) }); }
-            catch (_) { resolve({ ok: true, data: { raw: raw } }); }
+            try {
+              resolve({ ok: true, data: JSON.parse(raw) });
+            } catch (_) {
+              resolve({ ok: true, data: { raw: raw } });
+            }
           } else {
-            resolve({ ok: false, status: res.statusCode, error: raw.slice(0, 400) });
+            resolve({
+              ok: false,
+              status: res.statusCode,
+              error: raw.slice(0, 400),
+            });
           }
         });
       }
     );
-    req.on('error', function (err) { resolve({ ok: false, error: err.message }); });
-    req.on('timeout', function () { req.destroy(); resolve({ ok: false, error: 'proxy_timeout' }); });
+    req.on('error', function (err) {
+      resolve({ ok: false, error: err.message });
+    });
+    req.on('timeout', function () {
+      req.destroy();
+      resolve({ ok: false, error: 'proxy_timeout' });
+    });
     if (payload) req.write(payload);
     req.end();
   });
@@ -78,10 +93,17 @@ function _hubPost(pathSuffix, body, timeoutMs) {
     signal: AbortSignal.timeout(timeout),
   })
     .then(function (res) {
-      if (!res.ok) return res.text().then(function (t) { return { ok: false, status: res.status, error: t.slice(0, 400) }; });
-      return res.json().then(function (data) { return { ok: true, data: data }; });
+      if (!res.ok)
+        return res.text().then(function (t) {
+          return { ok: false, status: res.status, error: t.slice(0, 400) };
+        });
+      return res.json().then(function (data) {
+        return { ok: true, data: data };
+      });
     })
-    .catch(function (err) { return { ok: false, error: err.message }; });
+    .catch(function (err) {
+      return { ok: false, error: err.message };
+    });
 }
 
 function _hubGet(pathSuffix, timeoutMs) {
@@ -95,10 +117,17 @@ function _hubGet(pathSuffix, timeoutMs) {
     signal: AbortSignal.timeout(timeout),
   })
     .then(function (res) {
-      if (!res.ok) return res.text().then(function (t) { return { ok: false, status: res.status, error: t.slice(0, 400) }; });
-      return res.json().then(function (data) { return { ok: true, data: data }; });
+      if (!res.ok)
+        return res.text().then(function (t) {
+          return { ok: false, status: res.status, error: t.slice(0, 400) };
+        });
+      return res.json().then(function (data) {
+        return { ok: true, data: data };
+      });
     })
-    .catch(function (err) { return { ok: false, error: err.message }; });
+    .catch(function (err) {
+      return { ok: false, error: err.message };
+    });
 }
 
 // Dispatcher: choose proxy or direct hub based on env + proxy availability.

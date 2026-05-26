@@ -21,21 +21,30 @@ const PHASE_ORDER = [
 // this with no outcome is reclassified `abandoned`. This stops phantom
 // "running" rows piling up after crashes, kills, or selectors that bailed
 // out early (e.g. no matching gene found). Override via env if needed.
-const STUCK_THRESHOLD_MS = parseInt(process.env.EVOLVER_RUN_STUCK_THRESHOLD_MS, 10) || (30 * 60 * 1000);
+const STUCK_THRESHOLD_MS =
+  parseInt(process.env.EVOLVER_RUN_STUCK_THRESHOLD_MS, 10) || 30 * 60 * 1000;
 
 function listRuns(query = {}) {
-  const runs = buildRuns().sort((a, b) => timestampOf(b.updatedAt) - timestampOf(a.updatedAt));
+  const runs = buildRuns().sort(
+    (a, b) => timestampOf(b.updatedAt) - timestampOf(a.updatedAt)
+  );
   return paginate(runs, query);
 }
 
 function getRun(runId) {
   const runs = buildRuns();
-  const run = runs.find((entry) => entry.runId === runId);
+  const run = runs.find(entry => entry.runId === runId);
   if (!run) return null;
   const paths = getObserverPaths();
-  const events = readJsonl(paths.eventsPath).map(redactValue).filter((e) => belongsToRun(e, runId));
-  const assetCalls = readJsonl(paths.assetCallLogPath).map(redactValue).filter((e) => belongsToRun(e, runId));
-  const pipelineEvents = readPipelineEvents().filter((e) => belongsToRun(e, runId));
+  const events = readJsonl(paths.eventsPath)
+    .map(redactValue)
+    .filter(e => belongsToRun(e, runId));
+  const assetCalls = readJsonl(paths.assetCallLogPath)
+    .map(redactValue)
+    .filter(e => belongsToRun(e, runId));
+  const pipelineEvents = readPipelineEvents().filter(e =>
+    belongsToRun(e, runId)
+  );
   const detail = buildRunDetail(runId);
   return {
     ...run,
@@ -81,7 +90,9 @@ function simplifyMutation(mutation) {
     triggerSignals: mutation.trigger_signals || [],
     targetType: mutation.target_type || null,
     summary: mutation.summary || null,
-    strategySteps: Array.isArray(mutation.strategy) ? mutation.strategy.length : null,
+    strategySteps: Array.isArray(mutation.strategy)
+      ? mutation.strategy.length
+      : null,
     constraints: mutation.constraints || null,
   };
 }
@@ -98,10 +109,11 @@ function buildRuns() {
   addCycleRun(runs, cycle, solidify);
   for (const event of events) mergeRun(runs, summaryFromEvent(event));
   for (const call of assetCalls) mergeRun(runs, summaryFromAssetCall(call));
-  for (const event of pipelineEvents) mergeRun(runs, summaryFromPipelineEvent(event));
+  for (const event of pipelineEvents)
+    mergeRun(runs, summaryFromPipelineEvent(event));
 
   const now = Date.now();
-  return Array.from(runs.values()).map((run) => ({
+  return Array.from(runs.values()).map(run => ({
     ...run,
     status: maybeAbandon(run, now),
     requiresConfirmation: Boolean(run.requiresConfirmation),
@@ -117,20 +129,40 @@ function maybeAbandon(run, now) {
 
 function addCycleRun(runs, cycle, solidify) {
   if (!cycle && !(solidify && solidify.last_run)) return;
-  const last = solidify && solidify.last_run || {};
-  const lastSolidify = solidify && solidify.last_solidify || null;
+  const last = (solidify && solidify.last_run) || {};
+  const lastSolidify = (solidify && solidify.last_solidify) || null;
   const pending = isPending(last, lastSolidify);
-  const runId = String(cycle && (cycle.run_id || cycle.outer_cycle) || last.run_id || last.mutation_id || 'current');
+  const runId = String(
+    (cycle && (cycle.run_id || cycle.outer_cycle)) ||
+      last.run_id ||
+      last.mutation_id ||
+      'current'
+  );
   mergeRun(runs, {
     runId,
-    cycleId: cycle && String(cycle.outer_cycle || cycle.cycle_id || last.cycleId || ''),
+    cycleId:
+      cycle &&
+      String(cycle.outer_cycle || cycle.cycle_id || last.cycleId || ''),
     status: deriveCycleStatus(cycle, last, lastSolidify, pending),
-    startedAt: toIso(cycle && cycle.started_at || last.started_at || last.created_at),
-    updatedAt: toIso(cycle && cycle.updated_at || lastSolidify && lastSolidify.timestamp || last.finished_at || last.created_at),
-    finishedAt: toIso(last.finished_at || lastSolidify && lastSolidify.timestamp),
+    startedAt: toIso(
+      (cycle && cycle.started_at) || last.started_at || last.created_at
+    ),
+    updatedAt: toIso(
+      (cycle && cycle.updated_at) ||
+        (lastSolidify && lastSolidify.timestamp) ||
+        last.finished_at ||
+        last.created_at
+    ),
+    finishedAt: toIso(
+      last.finished_at || (lastSolidify && lastSolidify.timestamp)
+    ),
     activeTaskTitle: last.active_task_title || null,
     selectedGeneId: last.selected_gene_id || null,
-    outcome: last.outcome || (lastSolidify && lastSolidify.rejected ? { status: 'failed', reason: lastSolidify.reason } : null),
+    outcome:
+      last.outcome ||
+      (lastSolidify && lastSolidify.rejected
+        ? { status: 'failed', reason: lastSolidify.reason }
+        : null),
     validationResult: validationResult(last),
     requiresConfirmation: pending,
   });
@@ -206,20 +238,24 @@ function summaryFromPipelineEvent(event) {
 
 function mergeRun(runs, next) {
   if (!next || !next.runId) return;
-  const current = runs.get(next.runId) || { runId: next.runId, status: 'unknown' };
+  const current = runs.get(next.runId) || {
+    runId: next.runId,
+    status: 'unknown',
+  };
   runs.set(next.runId, {
     ...current,
     ...emptyFiltered(next),
     startedAt: earliest(current.startedAt, next.startedAt),
     updatedAt: latest(current.updatedAt, next.updatedAt),
     finishedAt: latest(current.finishedAt, next.finishedAt),
-    requiresConfirmation: current.requiresConfirmation || next.requiresConfirmation,
+    requiresConfirmation:
+      current.requiresConfirmation || next.requiresConfirmation,
   });
 }
 
 function buildPhases(run, pipelineEvents, events, assetCalls) {
   if (pipelineEvents.length > 0) return pipelineEvents.map(eventToPhase);
-  return PHASE_ORDER.map((phase) => inferPhase(phase, run, events, assetCalls));
+  return PHASE_ORDER.map(phase => inferPhase(phase, run, events, assetCalls));
 }
 
 function eventToPhase(event) {
@@ -242,19 +278,35 @@ function inferPhase(phase, run, events, assetCalls) {
     phase,
     status,
     startedAt: run.startedAt || null,
-    finishedAt: status === 'success' ? run.finishedAt || run.updatedAt || null : null,
+    finishedAt:
+      status === 'success' ? run.finishedAt || run.updatedAt || null : null,
     summary: summaryForPhase(phase, run, events, assetCalls),
-    evidenceRefs: events.map((event) => ({ type: 'event', id: event.id })).filter((e) => e.id),
-    assetRefs: assetCalls.map((call) => ({ type: call.asset_type || 'asset', id: call.asset_id, action: call.action })).filter((a) => a.id || a.action),
+    evidenceRefs: events
+      .map(event => ({ type: 'event', id: event.id }))
+      .filter(e => e.id),
+    assetRefs: assetCalls
+      .map(call => ({
+        type: call.asset_type || 'asset',
+        id: call.asset_id,
+        action: call.action,
+      }))
+      .filter(a => a.id || a.action),
     validationRefs: validationRefs(events),
     requiresConfirmation: phase === 'confirmation' && run.requiresConfirmation,
   };
 }
 
 function inferPhaseStatus(phase, run, events, assetCalls) {
-  if (phase === 'asset_search') return assetCalls.length ? 'success' : 'skipped';
-  if (phase === 'confirmation') return run.requiresConfirmation ? 'blocked' : 'skipped';
-  if (phase === 'validate') return run.validationResult === 'fail' ? 'failed' : run.validationResult === 'pass' ? 'success' : 'skipped';
+  if (phase === 'asset_search')
+    return assetCalls.length ? 'success' : 'skipped';
+  if (phase === 'confirmation')
+    return run.requiresConfirmation ? 'blocked' : 'skipped';
+  if (phase === 'validate')
+    return run.validationResult === 'fail'
+      ? 'failed'
+      : run.validationResult === 'pass'
+        ? 'success'
+        : 'skipped';
   if (phase === 'solidify') {
     if (events.length) return 'success';
     if (run.status === 'review_pending') return 'blocked';
@@ -262,7 +314,11 @@ function inferPhaseStatus(phase, run, events, assetCalls) {
     return 'skipped';
   }
   if (phase === 'detect_signals' || phase === 'select_gene') {
-    return run.selectedGeneId ? 'success' : run.status === 'running' ? 'running' : 'skipped';
+    return run.selectedGeneId
+      ? 'success'
+      : run.status === 'running'
+        ? 'running'
+        : 'skipped';
   }
   if (phase === 'mutate_strategy') {
     return run.selectedGeneId ? 'success' : 'skipped';
@@ -271,10 +327,22 @@ function inferPhaseStatus(phase, run, events, assetCalls) {
 }
 
 function summaryForPhase(phase, run, events, assetCalls) {
-  if (phase === 'select_gene') return run.selectedGeneId ? `Selected ${run.selectedGeneId}` : 'No selected Gene recorded yet.';
-  if (phase === 'asset_search') return assetCalls.length ? `${assetCalls.length} asset call(s) recorded.` : 'No asset calls recorded.';
-  if (phase === 'solidify') return events.length ? `${events.length} EvolutionEvent record(s) found.` : 'No solidified event recorded.';
-  if (phase === 'confirmation') return run.requiresConfirmation ? 'Human confirmation is required.' : 'No confirmation required.';
+  if (phase === 'select_gene')
+    return run.selectedGeneId
+      ? `Selected ${run.selectedGeneId}`
+      : 'No selected Gene recorded yet.';
+  if (phase === 'asset_search')
+    return assetCalls.length
+      ? `${assetCalls.length} asset call(s) recorded.`
+      : 'No asset calls recorded.';
+  if (phase === 'solidify')
+    return events.length
+      ? `${events.length} EvolutionEvent record(s) found.`
+      : 'No solidified event recorded.';
+  if (phase === 'confirmation')
+    return run.requiresConfirmation
+      ? 'Human confirmation is required.'
+      : 'No confirmation required.';
   return phase.replace(/_/g, ' ');
 }
 
@@ -282,13 +350,15 @@ function belongsToRun(entry, runId) {
   if (!entry || runId == null || runId === '') return false;
   const target = String(runId);
   return [entry.run_id, entry.mutation_id, entry.id, entry.cycle_id]
-    .filter((value) => value != null && value !== '')
+    .filter(value => value != null && value !== '')
     .map(String)
     .includes(target);
 }
 
 function validationRefs(events) {
-  return events.flatMap((event) => event.validation || event.validation_results || []).filter(Boolean);
+  return events
+    .flatMap(event => event.validation || event.validation_results || [])
+    .filter(Boolean);
 }
 
 function validationResult(entry) {
@@ -307,7 +377,8 @@ function phaseStatusToRunStatus(status) {
 }
 
 function inferOutcome(outcome) {
-  const value = typeof outcome === 'string' ? outcome : outcome && outcome.status;
+  const value =
+    typeof outcome === 'string' ? outcome : outcome && outcome.status;
   if (value === 'success') return 'completed';
   if (value === 'failed') return 'failed';
   return 'unknown';
@@ -318,7 +389,12 @@ function firstGene(genes) {
 }
 
 function isConfirmationAction(action) {
-  return ['asset_publish', 'asset_fetch', 'task_claim', 'validator_stake'].includes(action);
+  return [
+    'asset_publish',
+    'asset_fetch',
+    'task_claim',
+    'validator_stake',
+  ].includes(action);
 }
 
 function toIso(value) {
@@ -334,7 +410,11 @@ function timestampOf(value) {
 }
 
 function emptyFiltered(obj) {
-  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== null && value !== undefined && value !== ''));
+  return Object.fromEntries(
+    Object.entries(obj).filter(
+      ([, value]) => value !== null && value !== undefined && value !== ''
+    )
+  );
 }
 
 function earliest(a, b) {

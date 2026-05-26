@@ -157,13 +157,14 @@ describe('runPreflightChecks', () => {
   it('returns { abort: true } when system load exceeds EVOLVE_LOAD_MAX', async () => {
     const origLoad = process.env.EVOLVE_LOAD_MAX;
     const origBackoff = process.env.EVOLVE_AGENT_QUEUE_BACKOFF_MS;
-    process.env.EVOLVE_LOAD_MAX = '-1';      // always exceeded (Windows loadavg returns 0)
-    process.env.EVOLVE_AGENT_QUEUE_BACKOFF_MS = '0';  // skip sleep
+    process.env.EVOLVE_LOAD_MAX = '-1'; // always exceeded (Windows loadavg returns 0)
+    process.env.EVOLVE_AGENT_QUEUE_BACKOFF_MS = '0'; // skip sleep
     const result = await guards.runPreflightChecks(false, false);
     assert.equal(result.abort, true);
     if (origLoad === undefined) delete process.env.EVOLVE_LOAD_MAX;
     else process.env.EVOLVE_LOAD_MAX = origLoad;
-    if (origBackoff === undefined) delete process.env.EVOLVE_AGENT_QUEUE_BACKOFF_MS;
+    if (origBackoff === undefined)
+      delete process.env.EVOLVE_AGENT_QUEUE_BACKOFF_MS;
     else process.env.EVOLVE_AGENT_QUEUE_BACKOFF_MS = origBackoff;
   });
 });

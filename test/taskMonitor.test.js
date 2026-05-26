@@ -24,7 +24,9 @@ describe('TaskMonitor', () => {
 
   after(() => {
     store.close();
-    try { fs.rmSync(dataDir, { recursive: true }); } catch {}
+    try {
+      fs.rmSync(dataDir, { recursive: true });
+    } catch {}
   });
 
   describe('subscription', () => {
@@ -118,7 +120,9 @@ describe('TaskMonitor', () => {
       const metrics = m2.getMetrics();
       assert.ok(metrics.tasks_pending >= 0);
       s2.close();
-      try { fs.rmSync(dir2, { recursive: true }); } catch {}
+      try {
+        fs.rmSync(dir2, { recursive: true });
+      } catch {}
     });
   });
 });

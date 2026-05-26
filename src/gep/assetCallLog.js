@@ -69,7 +69,9 @@ function readCallLog(opts) {
   for (const line of lines) {
     try {
       entries.push(JSON.parse(line));
-    } catch (e) { /* skip corrupt lines */ }
+    } catch (e) {
+      /* skip corrupt lines */
+    }
   }
 
   if (o.since) {

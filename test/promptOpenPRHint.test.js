@@ -54,26 +54,30 @@ describe('buildOpenPRHintBlock', () => {
 
   it('truncates long titles to 80 chars', () => {
     const longTitle = 'x'.repeat(200);
-    const block = buildOpenPRHintBlock([{
-      number: 1,
-      title: longTitle,
-      headRefName: 'b',
-      files: ['a.js'],
-      tokenOverlap: 0.7,
-    }]);
+    const block = buildOpenPRHintBlock([
+      {
+        number: 1,
+        title: longTitle,
+        headRefName: 'b',
+        files: ['a.js'],
+        tokenOverlap: 0.7,
+      },
+    ]);
     // The truncated title appears in the block but not the full 200-char one
     assert.ok(block.includes('x'.repeat(80)));
     assert.ok(!block.includes('x'.repeat(81)));
   });
 
   it('handles missing files array gracefully', () => {
-    const block = buildOpenPRHintBlock([{
-      number: 1,
-      title: 'no files pr',
-      headRefName: 'b',
-      // intentionally no files field
-      tokenOverlap: 0.9,
-    }]);
+    const block = buildOpenPRHintBlock([
+      {
+        number: 1,
+        title: 'no files pr',
+        headRefName: 'b',
+        // intentionally no files field
+        tokenOverlap: 0.9,
+      },
+    ]);
     assert.ok(block.includes('PR #1'));
     assert.ok(block.includes('(no files listed)'));
   });

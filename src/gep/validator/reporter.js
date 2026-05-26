@@ -10,7 +10,8 @@ const { buildHubHeaders, getHubUrl, getNodeId } = require('../a2aProtocol');
 const { captureEnvFingerprint } = require('../envFingerprint');
 const { resolveHubUrl: resolveDefaultHubUrl } = require('../../config');
 
-const REPORT_TIMEOUT_MS = Number(process.env.EVOLVER_VALIDATOR_REPORT_TIMEOUT_MS) || 10_000;
+const REPORT_TIMEOUT_MS =
+  Number(process.env.EVOLVER_VALIDATOR_REPORT_TIMEOUT_MS) || 10_000;
 
 // Per-command stderr/stdout tail bundled into the report. Bounded so a noisy
 // validator cannot blow up the Hub's a2a/report payload size.
@@ -41,12 +42,16 @@ function classifyCommandFailure(result) {
   // because assertNodeCommandSafe wraps its rejection inside the
   // `command_parse_failed:` stderr prefix; a plain prefix check would
   // misclassify the Gene/Hub-incompatibility case as a parse error.
-  if (stderr.includes('node flag not allowed in sandbox')
-      || stderr.includes('node requires a script file argument')) {
+  if (
+    stderr.includes('node flag not allowed in sandbox') ||
+    stderr.includes('node requires a script file argument')
+  ) {
     return FAILURE_CLASS.SANDBOX_BLOCK_NODE_FLAG;
   }
-  if (stderr.startsWith('executable_not_allowed:')) return FAILURE_CLASS.EXEC_NOT_ALLOWED;
-  if (stderr.startsWith('command_parse_failed:')) return FAILURE_CLASS.PARSE_FAILED;
+  if (stderr.startsWith('executable_not_allowed:'))
+    return FAILURE_CLASS.EXEC_NOT_ALLOWED;
+  if (stderr.startsWith('command_parse_failed:'))
+    return FAILURE_CLASS.PARSE_FAILED;
   if (stderr.startsWith('spawn_failed:')) return FAILURE_CLASS.SPAWN_FAILED;
   if (typeof result.exitCode === 'number' && result.exitCode !== 0) {
     return FAILURE_CLASS.EXIT_NONZERO;
@@ -76,10 +81,13 @@ function summarizeResult(result) {
 // Surfaces a single label in `failure_class` at the top of the report so that
 // the Hub can route on it without iterating per-command.
 function aggregateFailureClass(commands) {
-  if (!Array.isArray(commands) || commands.length === 0) return FAILURE_CLASS.UNKNOWN;
-  if (commands.every((c) => c.failure_class === FAILURE_CLASS.OK)) return FAILURE_CLASS.OK;
+  if (!Array.isArray(commands) || commands.length === 0)
+    return FAILURE_CLASS.UNKNOWN;
+  if (commands.every(c => c.failure_class === FAILURE_CLASS.OK))
+    return FAILURE_CLASS.OK;
   for (const c of commands) {
-    if (c.failure_class && c.failure_class !== FAILURE_CLASS.OK) return c.failure_class;
+    if (c.failure_class && c.failure_class !== FAILURE_CLASS.OK)
+      return c.failure_class;
   }
   return FAILURE_CLASS.UNKNOWN;
 }
@@ -119,14 +127,18 @@ function hashExecutionLog(results) {
  */
 function buildReportPayload(task, execution, opts) {
   const options = opts || {};
-  const results = Array.isArray(execution && execution.results) ? execution.results : [];
+  const results = Array.isArray(execution && execution.results)
+    ? execution.results
+    : [];
   const commandsTotal = results.length;
-  const commandsPassed = results.filter((r) => r && r.ok).length;
+  const commandsPassed = results.filter(r => r && r.ok).length;
   const env = captureEnvFingerprint();
 
   const reproductionScore = Number.isFinite(options.reproductionScore)
     ? options.reproductionScore
-    : (commandsTotal > 0 ? commandsPassed / commandsTotal : 0);
+    : commandsTotal > 0
+      ? commandsPassed / commandsTotal
+      : 0;
 
   // Per-command summaries. Bounded to REPORT_MAX_COMMANDS so a runaway batch
   // cannot blow up the Hub payload size.
@@ -165,7 +177,11 @@ async function submitReport(payload) {
     protocol: 'gep-a2a',
     protocol_version: '1.0.0',
     message_type: 'report',
-    message_id: 'msg_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex'),
+    message_id:
+      'msg_' +
+      Date.now().toString(36) +
+      '_' +
+      crypto.randomBytes(3).toString('hex'),
     sender_id: nodeId,
     timestamp: new Date().toISOString(),
     payload,

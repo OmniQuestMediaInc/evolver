@@ -63,7 +63,10 @@ describe('isPublicNonObfuscated', () => {
   });
 
   it('covers all obfuscated files from manifest', () => {
-    assert.ok(_OBFUSCATED_FILES.size >= 26, 'at least 26 obfuscated files expected');
+    assert.ok(
+      _OBFUSCATED_FILES.size >= 26,
+      'at least 26 obfuscated files expected'
+    );
     for (const f of _OBFUSCATED_FILES) {
       assert.equal(isPublicNonObfuscated(f), false, f + ' should be rejected');
     }
@@ -74,7 +77,11 @@ describe('isPublicNonObfuscated', () => {
 
 describe('buildPRTitle', () => {
   it('includes mutation rationale', () => {
-    const title = buildPRTitle({ category: 'optimize', risk: 'low', rationale: 'Improve signal extraction performance' });
+    const title = buildPRTitle({
+      category: 'optimize',
+      risk: 'low',
+      rationale: 'Improve signal extraction performance',
+    });
     assert.ok(title.startsWith('[Auto-Mutation]'));
     assert.ok(title.includes('Improve signal extraction performance'));
   });
@@ -92,7 +99,9 @@ describe('buildPRTitle', () => {
   });
 
   it('strips newlines from rationale', () => {
-    const title = buildPRTitle({ rationale: 'Line one\nLine two\r\nLine three' });
+    const title = buildPRTitle({
+      rationale: 'Line one\nLine two\r\nLine three',
+    });
     assert.ok(!title.includes('\n'));
     assert.ok(!title.includes('\r'));
   });
@@ -109,9 +118,17 @@ describe('buildPRBody', () => {
         success_streak: 3,
         trigger: ['perf_bottleneck', 'log_error'],
       },
-      mutation: { category: 'optimize', risk: 'low', rationale: 'Speed up signal extraction' },
+      mutation: {
+        category: 'optimize',
+        risk: 'low',
+        rationale: 'Speed up signal extraction',
+      },
       gene: { id: 'gene_perf_opt' },
-      blastRadius: { files: 2, lines: 45, all_changed_files: ['src/gep/signals.js', 'src/gep/a2a.js'] },
+      blastRadius: {
+        files: 2,
+        lines: 45,
+        all_changed_files: ['src/gep/signals.js', 'src/gep/a2a.js'],
+      },
     });
 
     assert.ok(body.includes('## Mutation Summary'));
@@ -157,7 +174,9 @@ describe('state management', () => {
     } else {
       delete process.env.EVOLUTION_DIR;
     }
-    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch (_) {}
   });
 
   it('readState returns defaults when no state file', () => {
@@ -168,7 +187,10 @@ describe('state management', () => {
   });
 
   it('writeState and readState round-trip', () => {
-    const testState = { lastPRAt: '2026-01-01T00:00:00.000Z', recentDiffHashes: ['abc123'] };
+    const testState = {
+      lastPRAt: '2026-01-01T00:00:00.000Z',
+      recentDiffHashes: ['abc123'],
+    };
     writeState(testState);
     const loaded = readState();
     assert.equal(loaded.lastPRAt, testState.lastPRAt);
@@ -238,14 +260,18 @@ describe('state management', () => {
     };
 
     try {
-      assert.doesNotThrow(() => writeState({ lastPRAt: null, recentDiffHashes: [] }));
+      assert.doesNotThrow(() =>
+        writeState({ lastPRAt: null, recentDiffHashes: [] })
+      );
       assert.equal(captured, '', 'no stderr output without DEBUG');
     } finally {
       process.stderr.write = origWrite;
-      if (origEvolutionDir !== undefined) process.env.EVOLUTION_DIR = origEvolutionDir;
+      if (origEvolutionDir !== undefined)
+        process.env.EVOLUTION_DIR = origEvolutionDir;
       else delete process.env.EVOLUTION_DIR;
       if (origDebug !== undefined) process.env.DEBUG = origDebug;
-      if (origEvolverDebug !== undefined) process.env.EVOLVER_DEBUG = origEvolverDebug;
+      if (origEvolverDebug !== undefined)
+        process.env.EVOLVER_DEBUG = origEvolverDebug;
     }
   });
 
@@ -256,7 +282,10 @@ describe('state management', () => {
     // Use a regular file as the parent so mkdirSync fails on all platforms
     // (Unix /dev/null trick does not work on Windows where it resolves to a
     // writable path and the write succeeds, suppressing the debug output).
-    const blocker = path.join(os.tmpdir(), 'selfpr-test-blocker-' + Date.now() + '.txt');
+    const blocker = path.join(
+      os.tmpdir(),
+      'selfpr-test-blocker-' + Date.now() + '.txt'
+    );
     fs.writeFileSync(blocker, 'block');
     process.env.EVOLUTION_DIR = path.join(blocker, 'nested');
 
@@ -268,14 +297,22 @@ describe('state management', () => {
     };
 
     try {
-      assert.doesNotThrow(() => writeState({ lastPRAt: null, recentDiffHashes: [] }));
-      assert.ok(captured.includes('selfPR.writeState failed'), 'diagnostic line should be emitted under DEBUG');
+      assert.doesNotThrow(() =>
+        writeState({ lastPRAt: null, recentDiffHashes: [] })
+      );
+      assert.ok(
+        captured.includes('selfPR.writeState failed'),
+        'diagnostic line should be emitted under DEBUG'
+      );
     } finally {
       process.stderr.write = origWrite;
-      try { fs.rmSync(blocker, { force: true }); } catch (_) {}
+      try {
+        fs.rmSync(blocker, { force: true });
+      } catch (_) {}
       if (origDebug !== undefined) process.env.DEBUG = origDebug;
       else delete process.env.DEBUG;
-      if (origEvolutionDir !== undefined) process.env.EVOLUTION_DIR = origEvolutionDir;
+      if (origEvolutionDir !== undefined)
+        process.env.EVOLUTION_DIR = origEvolutionDir;
       else delete process.env.EVOLUTION_DIR;
     }
   });
@@ -291,7 +328,9 @@ describe('computeDiffHash', () => {
   });
 
   afterEach(() => {
-    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch (_) {}
   });
 
   it('produces consistent hash for same content', () => {
@@ -342,23 +381,49 @@ describe('policyCheck allows optimize gene self-modify', () => {
     process.env.EVOLVE_ALLOW_SELF_MODIFY = 'true';
     const { checkConstraints } = require('../src/gep/policyCheck');
     const result = checkConstraints({
-      gene: { type: 'Gene', id: 'gene_opt', category: 'optimize', constraints: { max_files: 10 } },
-      blast: { files: 1, lines: 20, changed_files: ['skills/evolver/src/gep/signals.js'], all_changed_files: ['skills/evolver/src/gep/signals.js'] },
+      gene: {
+        type: 'Gene',
+        id: 'gene_opt',
+        category: 'optimize',
+        constraints: { max_files: 10 },
+      },
+      blast: {
+        files: 1,
+        lines: 20,
+        changed_files: ['skills/evolver/src/gep/signals.js'],
+        all_changed_files: ['skills/evolver/src/gep/signals.js'],
+      },
       repoRoot: '/tmp/fake',
     });
     assert.equal(result.ok, true, 'should not have violations');
-    assert.ok(result.warnings.some(w => w.includes('self_modify_evolver_optimize')), 'should have self_modify_evolver_optimize warning');
+    assert.ok(
+      result.warnings.some(w => w.includes('self_modify_evolver_optimize')),
+      'should have self_modify_evolver_optimize warning'
+    );
   });
 
   it('blocks optimize gene self-modify when flag is not set', () => {
     delete process.env.EVOLVE_ALLOW_SELF_MODIFY;
     const { checkConstraints } = require('../src/gep/policyCheck');
     const result = checkConstraints({
-      gene: { type: 'Gene', id: 'gene_opt', category: 'optimize', constraints: { max_files: 10 } },
-      blast: { files: 1, lines: 20, changed_files: ['skills/evolver/src/gep/signals.js'], all_changed_files: ['skills/evolver/src/gep/signals.js'] },
+      gene: {
+        type: 'Gene',
+        id: 'gene_opt',
+        category: 'optimize',
+        constraints: { max_files: 10 },
+      },
+      blast: {
+        files: 1,
+        lines: 20,
+        changed_files: ['skills/evolver/src/gep/signals.js'],
+        all_changed_files: ['skills/evolver/src/gep/signals.js'],
+      },
       repoRoot: '/tmp/fake',
     });
-    assert.ok(result.violations.some(v => v.includes('critical_path_modified')), 'should have critical_path_modified violation');
+    assert.ok(
+      result.violations.some(v => v.includes('critical_path_modified')),
+      'should have critical_path_modified violation'
+    );
   });
 });
 

@@ -16,11 +16,15 @@ describe('shield', function () {
   });
 
   it('activate does not throw', function () {
-    assert.doesNotThrow(function () { shield.activate(); });
+    assert.doesNotThrow(function () {
+      shield.activate();
+    });
   });
 
   it('check does not throw', function () {
-    assert.doesNotThrow(function () { shield.check(); });
+    assert.doesNotThrow(function () {
+      shield.check();
+    });
   });
 
   it('protectModule freezes an object', function () {
@@ -30,7 +34,9 @@ describe('shield', function () {
   });
 
   it('protectModule handles null gracefully', function () {
-    assert.doesNotThrow(function () { shield.protectModule(null); });
+    assert.doesNotThrow(function () {
+      shield.protectModule(null);
+    });
   });
 
   it('module exports are frozen', function () {

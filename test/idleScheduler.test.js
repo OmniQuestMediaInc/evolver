@@ -33,7 +33,9 @@ function teardownTempEnv() {
     if (savedEnv[key] !== undefined) process.env[key] = savedEnv[key];
     else delete process.env[key];
   });
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (e) {}
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch (e) {}
 }
 
 describe('determineIntensity', function () {
@@ -50,7 +52,10 @@ describe('determineIntensity', function () {
   });
 
   it('returns aggressive between thresholds', function () {
-    assert.equal(determineIntensity(IDLE_THRESHOLD_SECONDS + 100), 'aggressive');
+    assert.equal(
+      determineIntensity(IDLE_THRESHOLD_SECONDS + 100),
+      'aggressive'
+    );
   });
 
   it('returns deep at deep threshold', function () {
@@ -58,7 +63,10 @@ describe('determineIntensity', function () {
   });
 
   it('returns deep above deep threshold', function () {
-    assert.equal(determineIntensity(DEEP_IDLE_THRESHOLD_SECONDS + 1000), 'deep');
+    assert.equal(
+      determineIntensity(DEEP_IDLE_THRESHOLD_SECONDS + 1000),
+      'deep'
+    );
   });
 });
 
@@ -67,7 +75,11 @@ describe('schedule state persistence', function () {
   afterEach(teardownTempEnv);
 
   it('writes and reads state correctly', function () {
-    var state = { last_check: '2026-01-01T00:00:00Z', last_idle_seconds: 500, last_intensity: 'aggressive' };
+    var state = {
+      last_check: '2026-01-01T00:00:00Z',
+      last_idle_seconds: 500,
+      last_intensity: 'aggressive',
+    };
     writeScheduleState(state);
     var loaded = readScheduleState();
     assert.equal(loaded.last_idle_seconds, 500);
@@ -96,7 +108,9 @@ describe('getScheduleRecommendation', function () {
     var rec = getScheduleRecommendation();
     assert.equal(rec.enabled, true);
     assert.equal(typeof rec.idle_seconds, 'number');
-    assert.ok(['signal_only', 'normal', 'aggressive', 'deep'].includes(rec.intensity));
+    assert.ok(
+      ['signal_only', 'normal', 'aggressive', 'deep'].includes(rec.intensity)
+    );
     assert.equal(typeof rec.sleep_multiplier, 'number');
     assert.ok(rec.sleep_multiplier > 0);
     assert.equal(typeof rec.should_distill, 'boolean');
@@ -116,8 +130,16 @@ describe('getScheduleRecommendation', function () {
         'should_explore=true but intensity=' + rec.intensity
       );
       // In aggressive/deep, distill and reflect are also enabled
-      assert.equal(rec.should_distill, true, 'aggressive/deep must have should_distill=true');
-      assert.equal(rec.should_reflect, true, 'aggressive/deep must have should_reflect=true');
+      assert.equal(
+        rec.should_distill,
+        true,
+        'aggressive/deep must have should_distill=true'
+      );
+      assert.equal(
+        rec.should_reflect,
+        true,
+        'aggressive/deep must have should_reflect=true'
+      );
     }
   });
 
@@ -125,7 +147,11 @@ describe('getScheduleRecommendation', function () {
     // Deep mode always includes explore (line 134 in idleScheduler.js)
     var rec = getScheduleRecommendation();
     if (rec.should_deep_evolve === true) {
-      assert.equal(rec.should_explore, true, 'deep mode must have should_explore=true');
+      assert.equal(
+        rec.should_explore,
+        true,
+        'deep mode must have should_explore=true'
+      );
     }
   });
 

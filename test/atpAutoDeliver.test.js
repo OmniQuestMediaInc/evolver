@@ -5,7 +5,11 @@ const os = require('os');
 const path = require('path');
 
 const savedEnv = {};
-const envKeys = ['EVOLVER_ATP_AUTODELIVER', 'ATP_AUTODELIVER_POLL_MS', 'MEMORY_DIR'];
+const envKeys = [
+  'EVOLVER_ATP_AUTODELIVER',
+  'ATP_AUTODELIVER_POLL_MS',
+  'MEMORY_DIR',
+];
 
 let tmpMemoryDir;
 let autoDeliver;
@@ -45,7 +49,9 @@ afterEach(() => {
     if (savedEnv[k] === undefined) delete process.env[k];
     else process.env[k] = savedEnv[k];
   }
-  try { fs.rmSync(tmpMemoryDir, { recursive: true, force: true }); } catch (_) {}
+  try {
+    fs.rmSync(tmpMemoryDir, { recursive: true, force: true });
+  } catch (_) {}
 });
 
 describe('autoDeliver.start gating', () => {
@@ -73,8 +79,18 @@ describe('autoDeliver tick behavior', () => {
       ok: true,
       data: {
         tasks: [
-          { question_id: 'q1', atp_order_id: 'ord_1', result_asset_id: 'asset_1', status: 'claimed' },
-          { question_id: 'q2', atp_order_id: 'ord_2', result_asset_id: 'asset_2', status: 'claimed' },
+          {
+            question_id: 'q1',
+            atp_order_id: 'ord_1',
+            result_asset_id: 'asset_1',
+            status: 'claimed',
+          },
+          {
+            question_id: 'q2',
+            atp_order_id: 'ord_2',
+            result_asset_id: 'asset_2',
+            status: 'claimed',
+          },
         ],
       },
     });
@@ -92,7 +108,11 @@ describe('autoDeliver tick behavior', () => {
 
     // Second tick should be a no-op for the same orders (dedup).
     await autoDeliver.__internals.tick();
-    assert.equal(delivered.length, 2, 'already-delivered orders must not be re-submitted');
+    assert.equal(
+      delivered.length,
+      2,
+      'already-delivered orders must not be re-submitted'
+    );
   });
 
   it('skips tasks without atp_order_id', async () => {
@@ -105,7 +125,10 @@ describe('autoDeliver tick behavior', () => {
       },
     });
     let called = 0;
-    hubClient.submitDelivery = async () => { called += 1; return { ok: true }; };
+    hubClient.submitDelivery = async () => {
+      called += 1;
+      return { ok: true };
+    };
     await autoDeliver.__internals.tick();
     assert.equal(called, 0);
   });
@@ -120,7 +143,10 @@ describe('autoDeliver tick behavior', () => {
       },
     });
     let called = 0;
-    hubClient.submitDelivery = async () => { called += 1; return { ok: true }; };
+    hubClient.submitDelivery = async () => {
+      called += 1;
+      return { ok: true };
+    };
     await autoDeliver.__internals.tick();
     assert.equal(called, 0);
   });
@@ -130,12 +156,20 @@ describe('autoDeliver tick behavior', () => {
       ok: true,
       data: {
         tasks: [
-          { question_id: 'q1', atp_order_id: 'ord_bad', result_asset_id: 'asset_1', status: 'claimed' },
+          {
+            question_id: 'q1',
+            atp_order_id: 'ord_bad',
+            result_asset_id: 'asset_1',
+            status: 'claimed',
+          },
         ],
       },
     });
     let called = 0;
-    hubClient.submitDelivery = async () => { called += 1; return { ok: false, status: 400, error: 'bad_payload' }; };
+    hubClient.submitDelivery = async () => {
+      called += 1;
+      return { ok: false, status: 400, error: 'bad_payload' };
+    };
     await autoDeliver.__internals.tick();
     await autoDeliver.__internals.tick();
     assert.equal(called, 1);
@@ -146,12 +180,20 @@ describe('autoDeliver tick behavior', () => {
       ok: true,
       data: {
         tasks: [
-          { question_id: 'q1', atp_order_id: 'ord_retry', result_asset_id: 'asset_1', status: 'claimed' },
+          {
+            question_id: 'q1',
+            atp_order_id: 'ord_retry',
+            result_asset_id: 'asset_1',
+            status: 'claimed',
+          },
         ],
       },
     });
     let called = 0;
-    hubClient.submitDelivery = async () => { called += 1; return { ok: false, error: 'network_timeout' }; };
+    hubClient.submitDelivery = async () => {
+      called += 1;
+      return { ok: false, error: 'network_timeout' };
+    };
     await autoDeliver.__internals.tick();
     await autoDeliver.__internals.tick();
     assert.equal(called, 2);

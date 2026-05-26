@@ -36,9 +36,14 @@ before(() => {
 });
 
 function baseStubs() {
-  mockMods['hubSearch'] = { hubSearch: async () => ({ hit: false, reason: 'no_match' }) };
+  mockMods['hubSearch'] = {
+    hubSearch: async () => ({ hit: false, reason: 'no_match' }),
+  };
   mockMods['candidateEval'] = {
-    buildCandidatePreviews: () => ({ capabilityCandidatesPreview: '(none)', externalCandidatesPreview: '(none)' }),
+    buildCandidatePreviews: () => ({
+      capabilityCandidatesPreview: '(none)',
+      externalCandidatesPreview: '(none)',
+    }),
   };
   mockMods['memoryGraphAdapter'] = {
     getAdvice: () => ({ preferredGeneId: null, bannedGeneIds: [] }),
@@ -101,11 +106,20 @@ describe('enrich', () => {
     const { enrich } = require('../src/evolve/pipeline/enrich');
     const result = await enrich(buildCtx());
     assert.ok('observations' in result, 'observations should be present');
-    assert.ok('capabilityCandidatesPreview' in result, 'capabilityCandidatesPreview should be present');
-    assert.ok('externalCandidatesPreview' in result, 'externalCandidatesPreview should be present');
+    assert.ok(
+      'capabilityCandidatesPreview' in result,
+      'capabilityCandidatesPreview should be present'
+    );
+    assert.ok(
+      'externalCandidatesPreview' in result,
+      'externalCandidatesPreview should be present'
+    );
     assert.ok('hubHit' in result, 'hubHit should be present');
     assert.ok('memoryAdvice' in result, 'memoryAdvice should be present');
-    assert.ok(Array.isArray(result.recentFailedCapsules), 'recentFailedCapsules should be an array');
+    assert.ok(
+      Array.isArray(result.recentFailedCapsules),
+      'recentFailedCapsules should be an array'
+    );
     assert.equal(result.observations.agent, 'test-agent');
     assert.equal(result.observations.dry_run, false);
   });
@@ -114,7 +128,9 @@ describe('enrich', () => {
     baseStubs();
     mockMods['memoryGraphAdapter'] = {
       ...mockMods['memoryGraphAdapter'],
-      recordOutcome: () => { throw new Error('disk full'); },
+      recordOutcome: () => {
+        throw new Error('disk full');
+      },
     };
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
@@ -128,7 +144,9 @@ describe('enrich', () => {
     baseStubs();
     mockMods['memoryGraphAdapter'] = {
       ...mockMods['memoryGraphAdapter'],
-      recordSignalSnapshot: () => { throw new Error('permission denied'); },
+      recordSignalSnapshot: () => {
+        throw new Error('permission denied');
+      },
     };
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
@@ -142,46 +160,67 @@ describe('enrich', () => {
     baseStubs();
     mockMods['memoryGraphAdapter'] = {
       ...mockMods['memoryGraphAdapter'],
-      getAdvice: () => { throw new Error('corrupt graph'); },
+      getAdvice: () => {
+        throw new Error('corrupt graph');
+      },
     };
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
-    await assert.rejects(
-      () => enrich(buildCtx()),
-      /MemoryGraph Read failed/
-    );
+    await assert.rejects(() => enrich(buildCtx()), /MemoryGraph Read failed/);
   });
 
   it('sets hubHit to idle_skip when skipHubCalls is true', async () => {
     baseStubs();
     let hubSearchCalled = false;
-    mockMods['hubSearch'] = { hubSearch: async () => { hubSearchCalled = true; return { hit: true }; } };
+    mockMods['hubSearch'] = {
+      hubSearch: async () => {
+        hubSearchCalled = true;
+        return { hit: true };
+      },
+    };
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
     const result = await enrich(buildCtx({ skipHubCalls: true }));
-    assert.equal(hubSearchCalled, false, 'hubSearch should not be called when skipHubCalls=true');
+    assert.equal(
+      hubSearchCalled,
+      false,
+      'hubSearch should not be called when skipHubCalls=true'
+    );
     assert.equal(result.hubHit.hit, false);
     assert.equal(result.hubHit.reason, 'idle_skip');
   });
 
   it('injects hub_search_miss_with_problem when problem signal present but hub misses', async () => {
     baseStubs();
-    mockMods['hubSearch'] = { hubSearch: async () => ({ hit: false, reason: 'no_match' }) };
+    mockMods['hubSearch'] = {
+      hubSearch: async () => ({ hit: false, reason: 'no_match' }),
+    };
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
     const result = await enrich(buildCtx({ signals: ['log_error'] }));
-    assert.ok(result.signals.includes('hub_search_miss_with_problem'), 'should inject hub_search_miss_with_problem');
+    assert.ok(
+      result.signals.includes('hub_search_miss_with_problem'),
+      'should inject hub_search_miss_with_problem'
+    );
   });
 
   it('does not inject hub_search_miss_with_problem when hub hits', async () => {
     baseStubs();
     mockMods['hubSearch'] = {
-      hubSearch: async () => ({ hit: true, asset_id: 'a1', score: 0.9, mode: 'direct' }),
+      hubSearch: async () => ({
+        hit: true,
+        asset_id: 'a1',
+        score: 0.9,
+        mode: 'direct',
+      }),
     };
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
     const result = await enrich(buildCtx({ signals: ['log_error'] }));
-    assert.ok(!result.signals.includes('hub_search_miss_with_problem'), 'should NOT inject miss signal on hub hit');
+    assert.ok(
+      !result.signals.includes('hub_search_miss_with_problem'),
+      'should NOT inject miss signal on hub hit'
+    );
     assert.ok(result.hubHit.hit, 'hubHit.hit should be true');
   });
 
@@ -189,11 +228,23 @@ describe('enrich', () => {
     baseStubs();
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
-    const failEvents = Array.from({ length: 10 }, () => ({ outcome: { status: 'failure' } }));
+    const failEvents = Array.from({ length: 10 }, () => ({
+      outcome: { status: 'failure' },
+    }));
     const result = await enrich(buildCtx({ recentEvents: failEvents }));
-    assert.equal(result.IS_RANDOM_DRIFT, true, 'IS_RANDOM_DRIFT should be set to true on forced plateau');
-    assert.ok(result.signals.includes('plateau_pivot_required'), 'plateau_pivot_required signal should be injected');
-    assert.ok(result.plateauOverride && result.plateauOverride.severity === 'required', 'plateauOverride.severity should be required');
+    assert.equal(
+      result.IS_RANDOM_DRIFT,
+      true,
+      'IS_RANDOM_DRIFT should be set to true on forced plateau'
+    );
+    assert.ok(
+      result.signals.includes('plateau_pivot_required'),
+      'plateau_pivot_required signal should be injected'
+    );
+    assert.ok(
+      result.plateauOverride && result.plateauOverride.severity === 'required',
+      'plateauOverride.severity should be required'
+    );
     assert.equal(result.plateauOverride.source, 'local');
   });
 
@@ -201,19 +252,33 @@ describe('enrich', () => {
     baseStubs();
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
-    const failEvents = Array.from({ length: 5 }, () => ({ outcome: { status: 'failure' } }));
+    const failEvents = Array.from({ length: 5 }, () => ({
+      outcome: { status: 'failure' },
+    }));
     const result = await enrich(buildCtx({ recentEvents: failEvents }));
-    assert.ok(result.signals.includes('plateau_pivot_suggested'), 'plateau_pivot_suggested signal should be injected');
-    assert.ok(result.plateauOverride && result.plateauOverride.severity === 'suggested', 'plateauOverride.severity should be suggested');
+    assert.ok(
+      result.signals.includes('plateau_pivot_suggested'),
+      'plateau_pivot_suggested signal should be injected'
+    );
+    assert.ok(
+      result.plateauOverride && result.plateauOverride.severity === 'suggested',
+      'plateauOverride.severity should be suggested'
+    );
     // IS_RANDOM_DRIFT is NOT forced to true for suggested level
-    assert.equal(result.IS_RANDOM_DRIFT, false, 'IS_RANDOM_DRIFT should NOT be forced for suggested pivot');
+    assert.equal(
+      result.IS_RANDOM_DRIFT,
+      false,
+      'IS_RANDOM_DRIFT should NOT be forced for suggested pivot'
+    );
   });
 
   it('preserves existing ctx fields in returned ctx', async () => {
     baseStubs();
     delete require.cache[require.resolve('../src/evolve/pipeline/enrich')];
     const { enrich } = require('../src/evolve/pipeline/enrich');
-    const result = await enrich(buildCtx({ customField: 'keep-me', activeTask: { id: 't1' } }));
+    const result = await enrich(
+      buildCtx({ customField: 'keep-me', activeTask: { id: 't1' } })
+    );
     assert.equal(result.customField, 'keep-me');
     assert.deepEqual(result.activeTask, { id: 't1' });
   });

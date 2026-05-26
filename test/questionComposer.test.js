@@ -12,23 +12,40 @@ describe('questionComposer.compose', () => {
 
   it('returns a capability-specific template when capability is known', () => {
     const q = qc.compose({ capabilities: ['performance'], signals: [] });
-    assert.ok(/performance|bottleneck|optim/i.test(q), 'expected performance-related wording, got: ' + q);
+    assert.ok(
+      /performance|bottleneck|optim/i.test(q),
+      'expected performance-related wording, got: ' + q
+    );
   });
 
   it('is deterministic for the same inputs', () => {
-    const a = qc.compose({ capabilities: ['debugging'], signals: ['log_error', 'stack_trace'] });
-    const b = qc.compose({ capabilities: ['debugging'], signals: ['log_error', 'stack_trace'] });
+    const a = qc.compose({
+      capabilities: ['debugging'],
+      signals: ['log_error', 'stack_trace'],
+    });
+    const b = qc.compose({
+      capabilities: ['debugging'],
+      signals: ['log_error', 'stack_trace'],
+    });
     assert.equal(a, b);
   });
 
   it('never exceeds the default length cap', () => {
-    const longCaps = Array.from({ length: 20 }, function (_, i) { return 'cap_' + i; });
-    const q = qc.compose({ capabilities: longCaps, signals: ['sig_x'.repeat(200)] });
+    const longCaps = Array.from({ length: 20 }, function (_, i) {
+      return 'cap_' + i;
+    });
+    const q = qc.compose({
+      capabilities: longCaps,
+      signals: ['sig_x'.repeat(200)],
+    });
     assert.ok(q.length <= 240, 'question too long: ' + q.length);
   });
 
   it('does not leak internal signal wording', () => {
-    const q = qc.compose({ capabilities: ['code_evolution'], signals: ['evolver_cycle', 'mutation_id_x'] });
+    const q = qc.compose({
+      capabilities: ['code_evolution'],
+      signals: ['evolver_cycle', 'mutation_id_x'],
+    });
     assert.ok(!/evolver_cycle/.test(q), 'leaked evolver_cycle into question');
     assert.ok(!/mutation_id_x/.test(q), 'leaked mutation id into question');
   });

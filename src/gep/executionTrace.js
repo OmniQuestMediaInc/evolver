@@ -13,7 +13,9 @@ const path = require('path');
 const TRACE_LEVELS = { none: 0, minimal: 1, standard: 2, collaboration: 3 };
 
 function getTraceLevel() {
-  const raw = String(process.env.EVOLVER_TRACE_LEVEL || 'minimal').toLowerCase().trim();
+  const raw = String(process.env.EVOLVER_TRACE_LEVEL || 'minimal')
+    .toLowerCase()
+    .trim();
   return TRACE_LEVELS[raw] != null ? raw : 'minimal';
 }
 
@@ -42,7 +44,8 @@ function extractErrorSignature(errorText) {
 
   // Fallback: first word if it looks like an error type
   const firstWord = text.split(/[\s:]/)[0];
-  if (firstWord && firstWord.length <= 40 && /^[A-Z]/.test(firstWord)) return firstWord;
+  if (firstWord && firstWord.length <= 40 && /^[A-Z]/.test(firstWord))
+    return firstWord;
 
   return 'UnknownError';
 }
@@ -55,7 +58,11 @@ function inferToolChain(validationResults, blast) {
   if (Array.isArray(validationResults)) {
     for (const r of validationResults) {
       const cmd = String(r.cmd || '').trim();
-      if (cmd.startsWith('npm test') || cmd.includes('jest') || cmd.includes('mocha')) {
+      if (
+        cmd.startsWith('npm test') ||
+        cmd.includes('jest') ||
+        cmd.includes('mocha')
+      ) {
         tools.add('test_run');
       } else if (cmd.includes('lint') || cmd.includes('eslint')) {
         tools.add('lint_check');
@@ -96,7 +103,8 @@ function buildExecutionTrace({
 
   const trace = {
     gene_id: gene && gene.id ? String(gene.id) : null,
-    mutation_category: (mutation && mutation.category) || (gene && gene.category) || null,
+    mutation_category:
+      (mutation && mutation.category) || (gene && gene.category) || null,
     signals_matched: Array.isArray(signals) ? signals.slice(0, 10) : [],
     outcome: outcomeStatus || 'unknown',
   };
@@ -135,7 +143,9 @@ function buildExecutionTrace({
 
     // Validation commands (already safe -- node/npm/npx only)
     if (validation && Array.isArray(validation.results)) {
-      trace.validation_commands = validation.results.map(r => String(r.cmd || '').slice(0, 100));
+      trace.validation_commands = validation.results.map(r =>
+        String(r.cmd || '').slice(0, 100)
+      );
     }
 
     // Error signatures (desensitized)
@@ -144,13 +154,20 @@ function buildExecutionTrace({
       for (const v of constraintCheck.violations) {
         // Constraint violations have known prefixes; classify directly
         const vStr = String(v);
-        if (vStr.startsWith('max_files')) trace.error_signatures.push('max_files_exceeded');
-        else if (vStr.startsWith('forbidden_path')) trace.error_signatures.push('forbidden_path');
-        else if (vStr.startsWith('HARD CAP')) trace.error_signatures.push('hard_cap_breach');
-        else if (vStr.startsWith('CRITICAL')) trace.error_signatures.push('critical_overrun');
-        else if (vStr.startsWith('critical_path')) trace.error_signatures.push('critical_path_modified');
-        else if (vStr.startsWith('canary_failed')) trace.error_signatures.push('canary_failed');
-        else if (vStr.startsWith('ethics:')) trace.error_signatures.push('ethics_violation');
+        if (vStr.startsWith('max_files'))
+          trace.error_signatures.push('max_files_exceeded');
+        else if (vStr.startsWith('forbidden_path'))
+          trace.error_signatures.push('forbidden_path');
+        else if (vStr.startsWith('HARD CAP'))
+          trace.error_signatures.push('hard_cap_breach');
+        else if (vStr.startsWith('CRITICAL'))
+          trace.error_signatures.push('critical_overrun');
+        else if (vStr.startsWith('critical_path'))
+          trace.error_signatures.push('critical_path_modified');
+        else if (vStr.startsWith('canary_failed'))
+          trace.error_signatures.push('canary_failed');
+        else if (vStr.startsWith('ethics:'))
+          trace.error_signatures.push('ethics_violation');
         else {
           const sig = extractErrorSignature(v);
           if (sig) trace.error_signatures.push(sig);
@@ -177,7 +194,8 @@ function buildExecutionTrace({
 
     // Duration
     if (validation && validation.startedAt && validation.finishedAt) {
-      trace.validation_duration_ms = validation.finishedAt - validation.startedAt;
+      trace.validation_duration_ms =
+        validation.finishedAt - validation.startedAt;
     }
 
     // Canary result
@@ -201,7 +219,9 @@ function buildExecutionTrace({
 
     if (validation && Array.isArray(validation.results)) {
       if (!trace.validation_commands) {
-        trace.validation_commands = validation.results.map(r => String(r.cmd || '').slice(0, 100));
+        trace.validation_commands = validation.results.map(r =>
+          String(r.cmd || '').slice(0, 100)
+        );
       }
     }
 
@@ -234,7 +254,9 @@ function buildExecutionTrace({
       }
 
       if (ctx.teammateOutputsConsumed) {
-        trace.collaboration.context_consumption = Array.isArray(ctx.teammateOutputsConsumed)
+        trace.collaboration.context_consumption = Array.isArray(
+          ctx.teammateOutputsConsumed
+        )
           ? ctx.teammateOutputsConsumed.slice(0, 10).map(o => ({
               from_node_id: o.fromNodeId || null,
               output_type: o.outputType || 'unknown',
@@ -256,9 +278,13 @@ function buildExecutionTrace({
 
       if (ctx.reviewFeedback) {
         trace.collaboration.review_feedback = {
-          score: Math.max(0, Math.min(100, Number(ctx.reviewFeedback.score) || 0)),
+          score: Math.max(
+            0,
+            Math.min(100, Number(ctx.reviewFeedback.score) || 0)
+          ),
           issues_count: Number(ctx.reviewFeedback.issuesCount) || 0,
-          fix_instructions_count: Number(ctx.reviewFeedback.fixInstructionsCount) || 0,
+          fix_instructions_count:
+            Number(ctx.reviewFeedback.fixInstructionsCount) || 0,
         };
       }
 
@@ -271,7 +297,8 @@ function buildExecutionTrace({
       }
 
       if (ctx.sessionId) trace.collaboration.session_id = ctx.sessionId;
-      if (ctx.teamSize) trace.collaboration.team_size = Math.max(0, Number(ctx.teamSize) || 0);
+      if (ctx.teamSize)
+        trace.collaboration.team_size = Math.max(0, Number(ctx.teamSize) || 0);
     }
   }
 

@@ -6,7 +6,9 @@ const { getProxyUrl } = require('../proxy/server/settings');
 function _request(method, path, body) {
   const proxyUrl = getProxyUrl();
   if (!proxyUrl) {
-    return Promise.reject(new Error('Proxy not running (no url in settings.json)'));
+    return Promise.reject(
+      new Error('Proxy not running (no url in settings.json)')
+    );
   }
 
   const url = new URL(path, proxyUrl);
@@ -25,9 +27,9 @@ function _request(method, path, body) {
         },
         timeout: 10_000,
       },
-      (res) => {
+      res => {
         const chunks = [];
-        res.on('data', (c) => chunks.push(c));
+        res.on('data', c => chunks.push(c));
         res.on('end', () => {
           const raw = Buffer.concat(chunks).toString();
           try {
@@ -59,13 +61,15 @@ function mailboxTransportReceive(opts = {}) {
     type: opts.type || null,
     channel: opts.channel || null,
     limit: opts.limit || 20,
-  }).then((data) => data.messages || []);
+  }).then(data => data.messages || []);
 }
 
 function mailboxTransportList(opts = {}) {
   const type = opts.type || 'hub_event';
-  return _request('GET', `/mailbox/list?type=${encodeURIComponent(type)}&limit=${opts.limit || 20}`)
-    .then((data) => data.messages || []);
+  return _request(
+    'GET',
+    `/mailbox/list?type=${encodeURIComponent(type)}&limit=${opts.limit || 20}`
+  ).then(data => data.messages || []);
 }
 
 const mailboxTransport = {

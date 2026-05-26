@@ -10,7 +10,14 @@
 
 'use strict';
 
-const { describe, it, before, after, beforeEach, afterEach } = require('node:test');
+const {
+  describe,
+  it,
+  before,
+  after,
+  beforeEach,
+  afterEach,
+} = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
 const fs = require('fs');
@@ -19,7 +26,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 function listen(handler) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const server = http.createServer(handler);
     server.listen(0, '127.0.0.1', () => {
       const { port } = server.address();
@@ -29,13 +36,16 @@ function listen(handler) {
 }
 
 function readBody(req) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const chunks = [];
-    req.on('data', (c) => chunks.push(c));
+    req.on('data', c => chunks.push(c));
     req.on('end', () => {
       const raw = Buffer.concat(chunks).toString();
-      try { resolve(raw ? JSON.parse(raw) : {}); }
-      catch { resolve({ raw }); }
+      try {
+        resolve(raw ? JSON.parse(raw) : {});
+      } catch {
+        resolve({ raw });
+      }
     });
   });
 }
@@ -54,8 +64,12 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
   let origEnv;
 
   const ENV_KEYS = [
-    'EVOMAP_PROXY', 'A2A_TRANSPORT', 'A2A_HUB_URL', 'A2A_NODE_ID',
-    'A2A_NODE_SECRET', 'EVOMAP_PROXY_PORT',
+    'EVOMAP_PROXY',
+    'A2A_TRANSPORT',
+    'A2A_HUB_URL',
+    'A2A_NODE_ID',
+    'A2A_NODE_SECRET',
+    'EVOMAP_PROXY_PORT',
   ];
 
   before(async () => {
@@ -76,8 +90,8 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
   });
 
   after(async () => {
-    await new Promise((r) => proxyServer.server.close(r));
-    await new Promise((r) => hubServer.server.close(r));
+    await new Promise(r => proxyServer.server.close(r));
+    await new Promise(r => hubServer.server.close(r));
   });
 
   beforeEach(() => {
@@ -86,7 +100,10 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
     lastProxyBody = null;
 
     origEnv = {};
-    for (const k of ENV_KEYS) { origEnv[k] = process.env[k]; delete process.env[k]; }
+    for (const k of ENV_KEYS) {
+      origEnv[k] = process.env[k];
+      delete process.env[k];
+    }
 
     origHome = process.env.HOME;
     origUserProfile = process.env.USERPROFILE;
@@ -103,7 +120,11 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
 
     // Bust the require cache so our env changes take effect for every test.
     for (const key of Object.keys(require.cache)) {
-      if (/src[\\/](atp[\\/]hubClient|proxy[\\/]server[\\/]settings|gep[\\/]a2aProtocol)\.js$/.test(key)) {
+      if (
+        /src[\\/](atp[\\/]hubClient|proxy[\\/]server[\\/]settings|gep[\\/]a2aProtocol)\.js$/.test(
+          key
+        )
+      ) {
         delete require.cache[key];
       }
     }
@@ -120,7 +141,11 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
       else process.env[k] = origEnv[k];
     }
 
-    try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch { /* best effort */ }
+    try {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    } catch {
+      /* best effort */
+    }
   });
 
   function writeProxySettings(url) {
@@ -128,9 +153,12 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
     // on linux reads $HOME which we've swapped to tmpHome above.
     const settingsDir = path.join(tmpHome, '.evolver');
     fs.mkdirSync(settingsDir, { recursive: true });
-    fs.writeFileSync(path.join(settingsDir, 'settings.json'), JSON.stringify({
-      proxy: { url, pid: process.pid, started_at: new Date().toISOString() },
-    }));
+    fs.writeFileSync(
+      path.join(settingsDir, 'settings.json'),
+      JSON.stringify({
+        proxy: { url, pid: process.pid, started_at: new Date().toISOString() },
+      })
+    );
   }
 
   it('routes placeOrder through proxy when EVOMAP_PROXY=1 and proxy is running', async () => {
@@ -145,8 +173,16 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
     });
 
     assert.equal(result.ok, true);
-    assert.equal(result.data.via, 'proxy', 'response should come from proxy, not hub');
-    assert.equal(hubHits.length, 0, 'hub MUST NOT be called directly when proxy is running');
+    assert.equal(
+      result.data.via,
+      'proxy',
+      'response should come from proxy, not hub'
+    );
+    assert.equal(
+      hubHits.length,
+      0,
+      'hub MUST NOT be called directly when proxy is running'
+    );
     assert.equal(proxyHits.length, 1);
     assert.equal(proxyHits[0].method, 'POST');
     assert.equal(proxyHits[0].path, '/atp/order');
@@ -187,13 +223,20 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
   it('falls back to hub direct when EVOMAP_PROXY is unset', async () => {
     // EVOMAP_PROXY not set at all -- legacy behavior.
     const hubClient = require('../src/atp/hubClient');
-    const result = await hubClient.placeOrder({ capabilities: ['test'], budget: 1 });
+    const result = await hubClient.placeOrder({
+      capabilities: ['test'],
+      budget: 1,
+    });
 
     assert.equal(result.ok, true);
     assert.equal(result.data.via, 'hub');
     assert.equal(hubHits.length, 1);
     assert.equal(hubHits[0].path, '/a2a/atp/order');
-    assert.equal(proxyHits.length, 0, 'proxy MUST NOT be called when EVOMAP_PROXY is unset');
+    assert.equal(
+      proxyHits.length,
+      0,
+      'proxy MUST NOT be called when EVOMAP_PROXY is unset'
+    );
   });
 
   it('falls back to hub direct when EVOMAP_PROXY=1 but proxy is not running', async () => {
@@ -202,7 +245,10 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
     // env flag but the proxy never started / crashed". We must not strand
     // the call; falling back to hub keeps the CLI usable.
     const hubClient = require('../src/atp/hubClient');
-    const result = await hubClient.placeOrder({ capabilities: ['test'], budget: 1 });
+    const result = await hubClient.placeOrder({
+      capabilities: ['test'],
+      budget: 1,
+    });
 
     assert.equal(result.ok, true);
     assert.equal(result.data.via, 'hub');
@@ -215,7 +261,10 @@ describe('ATP hubClient proxy routing (regression #460 Bug 2)', () => {
     writeProxySettings(proxyUrl);
 
     const hubClient = require('../src/atp/hubClient');
-    const result = await hubClient.placeOrder({ capabilities: ['test'], budget: 1 });
+    const result = await hubClient.placeOrder({
+      capabilities: ['test'],
+      budget: 1,
+    });
 
     assert.equal(result.data.via, 'proxy');
     assert.equal(hubHits.length, 0);

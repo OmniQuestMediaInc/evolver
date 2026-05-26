@@ -60,10 +60,16 @@ describe('trimNarrative', () => {
       content += `### [2025-01-01 00:00:${String(i).padStart(2, '0')}] REPAIR - success\n`;
       content += `- ${'x'.repeat(300)}\n\n`;
     }
-    assert.ok(content.length > 12_000, 'precondition: content must exceed size limit');
+    assert.ok(
+      content.length > 12_000,
+      'precondition: content must exceed size limit'
+    );
     const trimmed = mod.trimNarrative(content);
     const entryCount = (trimmed.match(/^### \[/gm) || []).length;
-    assert.ok(entryCount <= 30, `entryCount should be <= 30, got ${entryCount}`);
+    assert.ok(
+      entryCount <= 30,
+      `entryCount should be <= 30, got ${entryCount}`
+    );
     assert.ok(trimmed.includes('# Evolution Narrative'));
     // Oldest entry removed, newest preserved.
     assert.ok(!trimmed.includes('00:00:01]'));
@@ -76,7 +82,10 @@ describe('trimNarrative', () => {
     for (let i = 1; i <= 40; i++) {
       content += `### [2025-01-01 00:00:${String(i).padStart(2, '0')}] REPAIR - success\n- ok\n\n`;
     }
-    assert.ok(content.length <= 12_000, 'precondition: content stays within size limit');
+    assert.ok(
+      content.length <= 12_000,
+      'precondition: content stays within size limit'
+    );
     const trimmed = mod.trimNarrative(content);
     assert.equal(trimmed, content);
   });
@@ -90,12 +99,21 @@ describe('trimNarrative', () => {
       content += `### [2025-01-01 00:00:${String(i).padStart(2, '0')}] REPAIR - success\n`;
       content += `- ${'x'.repeat(600)}\n\n`;
     }
-    assert.ok(content.length > 12_000, 'precondition: content must exceed size limit');
+    assert.ok(
+      content.length > 12_000,
+      'precondition: content must exceed size limit'
+    );
     const trimmed = mod.trimNarrative(content);
-    assert.ok(trimmed.length < content.length, 'trim should shrink oversized input');
+    assert.ok(
+      trimmed.length < content.length,
+      'trim should shrink oversized input'
+    );
     assert.ok(trimmed.includes('# Evolution Narrative'));
     const entryCount = (trimmed.match(/^### \[/gm) || []).length;
-    assert.ok(entryCount < 30, 'some entries should be dropped by the size-based slice');
+    assert.ok(
+      entryCount < 30,
+      'some entries should be dropped by the size-based slice'
+    );
   });
 });
 
@@ -124,7 +142,11 @@ describe('recordNarrative', () => {
 
   it('creates the narrative file with header on first record', () => {
     mod.recordNarrative({
-      gene: { id: 'g1', category: 'repair', strategy: ['analyze', 'patch', 'verify'] },
+      gene: {
+        id: 'g1',
+        category: 'repair',
+        strategy: ['analyze', 'patch', 'verify'],
+      },
       signals: ['log_error'],
       mutation: { category: 'repair', rationale: 'fix timeout' },
       outcome: { status: 'success', score: 0.9 },
@@ -135,7 +157,9 @@ describe('recordNarrative', () => {
     const content = fs.readFileSync(narrativePath, 'utf8');
     assert.ok(content.startsWith('# Evolution Narrative'));
     assert.ok(content.includes('REPAIR - success'));
-    assert.ok(content.includes('Gene: g1 | Score: 0.90 | Scope: 2 files, 10 lines'));
+    assert.ok(
+      content.includes('Gene: g1 | Score: 0.90 | Scope: 2 files, 10 lines')
+    );
     assert.ok(content.includes('Signals: [log_error]'));
     assert.ok(content.includes('Why: fix timeout'));
     assert.ok(content.includes('1. analyze'));
@@ -204,8 +228,9 @@ describe('recordNarrative', () => {
       path.join(tmpDir, 'evolution_narrative.md'),
       'utf8'
     );
-    const whyLine = content.split('\n').find((l) => l.startsWith('- Why:')) || '';
-    const resultLine = content.split('\n').find((l) => l.startsWith('- Result:')) || '';
+    const whyLine = content.split('\n').find(l => l.startsWith('- Why:')) || '';
+    const resultLine =
+      content.split('\n').find(l => l.startsWith('- Result:')) || '';
     assert.ok(whyLine.length <= '- Why: '.length + 200);
     assert.ok(resultLine.length <= '- Result: '.length + 200);
   });

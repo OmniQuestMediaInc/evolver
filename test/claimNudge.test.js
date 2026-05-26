@@ -28,16 +28,21 @@ describe('claimNudge', function () {
     delete process.env.EVOLVER_DISABLE_CLAIM_NUDGE;
     capturedLogs = [];
     origConsoleLog = console.log;
-    console.log = (...args) => { capturedLogs.push(args.join(' ')); };
+    console.log = (...args) => {
+      capturedLogs.push(args.join(' '));
+    };
   });
 
   afterEach(() => {
     console.log = origConsoleLog;
     if (origEvolverHome === undefined) delete process.env.EVOLVER_HOME;
     else process.env.EVOLVER_HOME = origEvolverHome;
-    if (origDisable === undefined) delete process.env.EVOLVER_DISABLE_CLAIM_NUDGE;
+    if (origDisable === undefined)
+      delete process.env.EVOLVER_DISABLE_CLAIM_NUDGE;
     else process.env.EVOLVER_DISABLE_CLAIM_NUDGE = origDisable;
-    try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch (_) {}
+    try {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    } catch (_) {}
   });
 
   it('prints nudge when claim_code + claim_url present', function () {
@@ -68,8 +73,14 @@ describe('claimNudge', function () {
   it('skips second call for same code within cooldown', function () {
     const nudge = freshRequire('../src/gep/claimNudge');
     nudge._resetForTests();
-    const p1 = nudge.maybePrintClaimNudge({ claim_code: 'CD-1', claim_url: 'https://evomap.ai/claim/CD-1' });
-    const p2 = nudge.maybePrintClaimNudge({ claim_code: 'CD-1', claim_url: 'https://evomap.ai/claim/CD-1' });
+    const p1 = nudge.maybePrintClaimNudge({
+      claim_code: 'CD-1',
+      claim_url: 'https://evomap.ai/claim/CD-1',
+    });
+    const p2 = nudge.maybePrintClaimNudge({
+      claim_code: 'CD-1',
+      claim_url: 'https://evomap.ai/claim/CD-1',
+    });
     assert.equal(p1, true);
     assert.equal(p2, false);
   });
@@ -77,8 +88,14 @@ describe('claimNudge', function () {
   it('prints again for a different claim_code (new cycle)', function () {
     const nudge = freshRequire('../src/gep/claimNudge');
     nudge._resetForTests();
-    const p1 = nudge.maybePrintClaimNudge({ claim_code: 'CA-1', claim_url: 'https://evomap.ai/claim/CA-1' });
-    const p2 = nudge.maybePrintClaimNudge({ claim_code: 'CA-2', claim_url: 'https://evomap.ai/claim/CA-2' });
+    const p1 = nudge.maybePrintClaimNudge({
+      claim_code: 'CA-1',
+      claim_url: 'https://evomap.ai/claim/CA-1',
+    });
+    const p2 = nudge.maybePrintClaimNudge({
+      claim_code: 'CA-2',
+      claim_url: 'https://evomap.ai/claim/CA-2',
+    });
     assert.equal(p1, true);
     assert.equal(p2, true);
   });
@@ -86,7 +103,9 @@ describe('claimNudge', function () {
   it('does nothing when claim_code missing', function () {
     const nudge = freshRequire('../src/gep/claimNudge');
     nudge._resetForTests();
-    const printed = nudge.maybePrintClaimNudge({ claim_url: 'https://evomap.ai/claim/NO-CODE' });
+    const printed = nudge.maybePrintClaimNudge({
+      claim_url: 'https://evomap.ai/claim/NO-CODE',
+    });
     assert.equal(printed, false);
     assert.equal(capturedLogs.length, 0);
   });
@@ -94,11 +113,17 @@ describe('claimNudge', function () {
   it('persists state so a second process does not re-nudge within cooldown', function () {
     const nudge1 = freshRequire('../src/gep/claimNudge');
     nudge1._resetForTests();
-    const p1 = nudge1.maybePrintClaimNudge({ claim_code: 'PR-1', claim_url: 'https://evomap.ai/claim/PR-1' });
+    const p1 = nudge1.maybePrintClaimNudge({
+      claim_code: 'PR-1',
+      claim_url: 'https://evomap.ai/claim/PR-1',
+    });
     assert.equal(p1, true);
 
     const nudge2 = freshRequire('../src/gep/claimNudge');
-    const p2 = nudge2.maybePrintClaimNudge({ claim_code: 'PR-1', claim_url: 'https://evomap.ai/claim/PR-1' });
+    const p2 = nudge2.maybePrintClaimNudge({
+      claim_code: 'PR-1',
+      claim_url: 'https://evomap.ai/claim/PR-1',
+    });
     assert.equal(p2, false);
   });
 });

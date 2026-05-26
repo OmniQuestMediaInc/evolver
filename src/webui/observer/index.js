@@ -3,7 +3,15 @@
 const { getStatus } = require('./status');
 const { getSafetyState } = require('./safety');
 const { listRuns, getRun } = require('./runs');
-const { getAssetOverview, listGenes, listCapsules, listEvents, listCandidates, listAssetCalls, getLineage } = require('./assets');
+const {
+  getAssetOverview,
+  listGenes,
+  listCapsules,
+  listEvents,
+  listCandidates,
+  listAssetCalls,
+  getLineage,
+} = require('./assets');
 const { getInteractions } = require('./interactions');
 const { getPersonality, getMemoryGraph } = require('./personality');
 const { listSkills } = require('./skills');

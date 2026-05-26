@@ -3,7 +3,13 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { getRepoRoot, getWorkspaceRoot, getMemoryDir, getEvolutionDir, getSkillsDir } = require('./paths');
+const {
+  getRepoRoot,
+  getWorkspaceRoot,
+  getMemoryDir,
+  getEvolutionDir,
+  getSkillsDir,
+} = require('./paths');
 
 const NODE_ID_DIR = path.join(os.homedir(), '.evomap');
 const NODE_ID_FILE = path.join(NODE_ID_DIR, 'node_id');
@@ -41,18 +47,29 @@ function _readJsonSafe(filePath) {
 }
 
 function _fileExists(filePath) {
-  try { return fs.existsSync(filePath); } catch (_) { return false; }
+  try {
+    return fs.existsSync(filePath);
+  } catch (_) {
+    return false;
+  }
 }
 
 function _fileSize(filePath) {
-  try { return fs.statSync(filePath).size; } catch (_) { return 0; }
+  try {
+    return fs.statSync(filePath).size;
+  } catch (_) {
+    return 0;
+  }
 }
 
 function _countDirs(dirPath) {
   try {
     if (!fs.existsSync(dirPath)) return 0;
-    return fs.readdirSync(dirPath, { withFileTypes: true })
-      .filter(function (d) { return d.isDirectory(); }).length;
+    return fs
+      .readdirSync(dirPath, { withFileTypes: true })
+      .filter(function (d) {
+        return d.isDirectory();
+      }).length;
   } catch (_) {
     return 0;
   }
@@ -72,13 +89,22 @@ function captureNodeIdentity() {
   if (!nodeId && _fileExists(localNodeIdFile)) {
     const localId = _readFileSafe(localNodeIdFile);
     if (localId) {
-      lines.push('- Local node_id fallback: ' + localId + ' (found at ' + localNodeIdFile + ')');
+      lines.push(
+        '- Local node_id fallback: ' +
+          localId +
+          ' (found at ' +
+          localNodeIdFile +
+          ')'
+      );
     }
   }
 
-  const hasSecret = !!process.env.A2A_NODE_SECRET || _fileExists(NODE_SECRET_FILE);
+  const hasSecret =
+    !!process.env.A2A_NODE_SECRET || _fileExists(NODE_SECRET_FILE);
   if (hasSecret) {
-    lines.push('- Node Secret: PRESENT (authenticated -- do NOT request new secret)');
+    lines.push(
+      '- Node Secret: PRESENT (authenticated -- do NOT request new secret)'
+    );
   } else {
     lines.push('- Node Secret: MISSING (hello handshake may be needed)');
   }
@@ -149,9 +175,14 @@ function captureEvolutionState() {
   const personality = _readJsonSafe(personalityPath);
   if (personality && personality.current) {
     var p = personality.current;
-    lines.push('- Personality: rigor=' + (p.rigor || 0) +
-      ' creativity=' + (p.creativity || 0) +
-      ' risk_tolerance=' + (p.risk_tolerance || 0));
+    lines.push(
+      '- Personality: rigor=' +
+        (p.rigor || 0) +
+        ' creativity=' +
+        (p.creativity || 0) +
+        ' risk_tolerance=' +
+        (p.risk_tolerance || 0)
+    );
   }
 
   return lines;

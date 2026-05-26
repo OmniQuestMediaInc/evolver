@@ -6,7 +6,11 @@ describe('computeAdaptiveStrategyPolicy', () => {
   it('forces innovation after repeated repair/failure streaks', () => {
     const policy = computeAdaptiveStrategyPolicy({
       signals: ['stable_success_plateau'],
-      selectedGene: { type: 'Gene', id: 'gene_x', constraints: { max_files: 20 } },
+      selectedGene: {
+        type: 'Gene',
+        id: 'gene_x',
+        constraints: { max_files: 20 },
+      },
       recentEvents: [
         { intent: 'repair', outcome: { status: 'failed' } },
         { intent: 'repair', outcome: { status: 'failed' } },
@@ -24,7 +28,9 @@ describe('computeAdaptiveStrategyPolicy', () => {
         type: 'Gene',
         id: 'gene_perf',
         constraints: { max_files: 18 },
-        anti_patterns: [{ mode: 'hard', learning_signals: ['problem:performance'] }],
+        anti_patterns: [
+          { mode: 'hard', learning_signals: ['problem:performance'] },
+        ],
         learning_history: [],
       },
       recentEvents: [],

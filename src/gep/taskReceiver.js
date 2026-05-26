@@ -14,13 +14,16 @@ function buildAuthHeaders() {
   return buildHubHeaders();
 }
 
-const TASK_STRATEGY = String(process.env.TASK_STRATEGY || 'balanced').toLowerCase();
-const TASK_MIN_CAPABILITY_MATCH = Number(process.env.TASK_MIN_CAPABILITY_MATCH) || 0.1;
+const TASK_STRATEGY = String(
+  process.env.TASK_STRATEGY || 'balanced'
+).toLowerCase();
+const TASK_MIN_CAPABILITY_MATCH =
+  Number(process.env.TASK_MIN_CAPABILITY_MATCH) || 0.1;
 
 // Scoring weights by strategy
 const STRATEGY_WEIGHTS = {
-  greedy:       { roi: 0.10, capability: 0.05, completion: 0.05, bounty: 0.80 },
-  balanced:     { roi: 0.35, capability: 0.30, completion: 0.20, bounty: 0.15 },
+  greedy: { roi: 0.1, capability: 0.05, completion: 0.05, bounty: 0.8 },
+  balanced: { roi: 0.35, capability: 0.3, completion: 0.2, bounty: 0.15 },
   conservative: { roi: 0.25, capability: 0.45, completion: 0.25, bounty: 0.05 },
 };
 
@@ -74,12 +77,22 @@ async function fetchTasks(opts) {
     const data = await res.json();
     const respPayload = data.payload || data;
     const tasks = Array.isArray(respPayload.tasks)
-      ? respPayload.tasks.map(function(t) { return createTask(t); }).filter(function(t) {
-          try { return validateTask(t); } catch (e) {
-            console.warn('[TaskReceiver] dropping invalid task:', e.message, t.task_id || '(no id)');
-            return false;
-          }
-        })
+      ? respPayload.tasks
+          .map(function (t) {
+            return createTask(t);
+          })
+          .filter(function (t) {
+            try {
+              return validateTask(t);
+            } catch (e) {
+              console.warn(
+                '[TaskReceiver] dropping invalid task:',
+                e.message,
+                t.task_id || '(no id)'
+              );
+              return false;
+            }
+          })
       : [];
     const result = { tasks };
 
@@ -88,13 +101,19 @@ async function fetchTasks(opts) {
     }
 
     // LessonL: extract relevant lessons from Hub response
-    if (Array.isArray(respPayload.relevant_lessons) && respPayload.relevant_lessons.length > 0) {
+    if (
+      Array.isArray(respPayload.relevant_lessons) &&
+      respPayload.relevant_lessons.length > 0
+    ) {
       result.relevant_lessons = respPayload.relevant_lessons;
     }
 
     return result;
   } catch (err) {
-    console.warn("[TaskReceiver] fetchTasks failed:", err && err.message ? err.message : err);
+    console.warn(
+      '[TaskReceiver] fetchTasks failed:',
+      err && err.message ? err.message : err
+    );
     return { tasks: [] };
   }
 }
@@ -105,7 +124,12 @@ async function fetchTasks(opts) {
 
 function parseSignals(raw) {
   if (!raw) return [];
-  return String(raw).split(',').map(function(s) { return s.trim().toLowerCase(); }).filter(Boolean);
+  return String(raw)
+    .split(',')
+    .map(function (s) {
+      return s.trim().toLowerCase();
+    })
+    .filter(Boolean);
 }
 
 function jaccard(a, b) {
@@ -113,7 +137,9 @@ function jaccard(a, b) {
   var setA = new Set(a);
   var setB = new Set(b);
   var inter = 0;
-  for (var v of setB) { if (setA.has(v)) inter++; }
+  for (var v of setB) {
+    if (setA.has(v)) inter++;
+  }
   return inter / (setA.size + setB.size - inter);
 }
 
@@ -137,18 +163,24 @@ function estimateCapabilityMatch(task, memoryEvents) {
 
   for (var i = 0; i < memoryEvents.length; i++) {
     var ev = memoryEvents[i];
-    if (!ev || ev.type !== 'MemoryGraphEvent' || ev.kind !== 'outcome') continue;
+    if (!ev || ev.type !== 'MemoryGraphEvent' || ev.kind !== 'outcome')
+      continue;
 
-    var sigs = (ev.signal && Array.isArray(ev.signal.signals)) ? ev.signal.signals : [];
-    var key = (ev.signal && ev.signal.key) ? String(ev.signal.key) : '';
-    var status = (ev.outcome && ev.outcome.status) ? String(ev.outcome.status) : '';
+    var sigs =
+      ev.signal && Array.isArray(ev.signal.signals) ? ev.signal.signals : [];
+    var key = ev.signal && ev.signal.key ? String(ev.signal.key) : '';
+    var status =
+      ev.outcome && ev.outcome.status ? String(ev.outcome.status) : '';
 
     for (var j = 0; j < sigs.length; j++) {
       allSignals[sigs[j].toLowerCase()] = true;
     }
 
     if (!key) continue;
-    if (!totalBySignalKey[key]) { totalBySignalKey[key] = 0; successBySignalKey[key] = 0; }
+    if (!totalBySignalKey[key]) {
+      totalBySignalKey[key] = 0;
+      successBySignalKey[key] = 0;
+    }
     totalBySignalKey[key]++;
     if (status === 'success') successBySignalKey[key]++;
   }
@@ -162,7 +194,12 @@ function estimateCapabilityMatch(task, memoryEvents) {
   var weightSum = 0;
   for (var sk in totalBySignalKey) {
     // Reconstruct signals from the key for comparison
-    var skParts = sk.split('|').map(function(s) { return s.trim().toLowerCase(); }).filter(Boolean);
+    var skParts = sk
+      .split('|')
+      .map(function (s) {
+        return s.trim().toLowerCase();
+      })
+      .filter(Boolean);
     var sim = jaccard(taskSignals, skParts);
     if (sim < 0.15) continue;
 
@@ -173,7 +210,7 @@ function estimateCapabilityMatch(task, memoryEvents) {
     weightSum += sim;
   }
 
-  var successScore = weightSum > 0 ? (weightedSuccess / weightSum) : 0.5;
+  var successScore = weightSum > 0 ? weightedSuccess / weightSum : 0.5;
 
   // Combine: 60% success rate history + 40% signal overlap
   return Math.min(1, overlapScore * 0.4 + successScore * 0.6);
@@ -197,14 +234,14 @@ function localDifficultyEstimate(task) {
 // Commitment deadline estimation -- based on task difficulty
 // ---------------------------------------------------------------------------
 
-const MIN_COMMITMENT_MS = 5 * 60 * 1000;       // 5 min (Hub minimum)
-const MAX_COMMITMENT_MS = 24 * 60 * 60 * 1000;  // 24 h  (Hub maximum)
+const MIN_COMMITMENT_MS = 5 * 60 * 1000; // 5 min (Hub minimum)
+const MAX_COMMITMENT_MS = 24 * 60 * 60 * 1000; // 24 h  (Hub maximum)
 
 const DIFFICULTY_DURATION_MAP = [
-  { threshold: 0.3, durationMs: 15 * 60 * 1000 },   // low:       15 min
-  { threshold: 0.5, durationMs: 30 * 60 * 1000 },   // medium:    30 min
-  { threshold: 0.7, durationMs: 60 * 60 * 1000 },   // high:      60 min
-  { threshold: 1.0, durationMs: 120 * 60 * 1000 },  // very high: 120 min
+  { threshold: 0.3, durationMs: 15 * 60 * 1000 }, // low:       15 min
+  { threshold: 0.5, durationMs: 30 * 60 * 1000 }, // medium:    30 min
+  { threshold: 0.7, durationMs: 60 * 60 * 1000 }, // high:      60 min
+  { threshold: 1.0, durationMs: 120 * 60 * 1000 }, // very high: 120 min
 ];
 
 /**
@@ -217,11 +254,13 @@ const DIFFICULTY_DURATION_MAP = [
 function estimateCommitmentDeadline(task) {
   if (!task) return null;
 
-  var difficulty = (task.complexity_score != null)
-    ? Number(task.complexity_score)
-    : localDifficultyEstimate(task);
+  var difficulty =
+    task.complexity_score != null
+      ? Number(task.complexity_score)
+      : localDifficultyEstimate(task);
 
-  var durationMs = DIFFICULTY_DURATION_MAP[DIFFICULTY_DURATION_MAP.length - 1].durationMs;
+  var durationMs =
+    DIFFICULTY_DURATION_MAP[DIFFICULTY_DURATION_MAP.length - 1].durationMs;
   for (var i = 0; i < DIFFICULTY_DURATION_MAP.length; i++) {
     if (difficulty <= DIFFICULTY_DURATION_MAP[i].threshold) {
       durationMs = DIFFICULTY_DURATION_MAP[i].durationMs;
@@ -229,7 +268,10 @@ function estimateCommitmentDeadline(task) {
     }
   }
 
-  durationMs = Math.max(MIN_COMMITMENT_MS, Math.min(MAX_COMMITMENT_MS, durationMs));
+  durationMs = Math.max(
+    MIN_COMMITMENT_MS,
+    Math.min(MAX_COMMITMENT_MS, durationMs)
+  );
 
   var deadline = new Date(Date.now() + durationMs);
 
@@ -259,9 +301,15 @@ function estimateCommitmentDeadline(task) {
 function scoreTask(task, capabilityMatch) {
   var w = STRATEGY_WEIGHTS[TASK_STRATEGY] || STRATEGY_WEIGHTS.balanced;
 
-  var difficulty = (task.complexity_score != null) ? task.complexity_score : localDifficultyEstimate(task);
+  var difficulty =
+    task.complexity_score != null
+      ? task.complexity_score
+      : localDifficultyEstimate(task);
   var bountyAmount = task.bounty_amount || 0;
-  var completionRate = (task.historical_completion_rate != null) ? task.historical_completion_rate : 0.5;
+  var completionRate =
+    task.historical_completion_rate != null
+      ? task.historical_completion_rate
+      : 0.5;
 
   // ROI: bounty per unit difficulty (higher = better value)
   var roiRaw = bountyAmount / (difficulty + 0.1);
@@ -304,45 +352,72 @@ function selectBestTask(tasks, memoryEvents) {
   var nodeId = getNodeId();
 
   // Already-claimed tasks for this node always take top priority (resume work)
-  var myClaimedTask = tasks.find(function(t) {
+  var myClaimedTask = tasks.find(function (t) {
     return t.status === 'claimed' && t.claimed_by === nodeId;
   });
   if (myClaimedTask) return myClaimedTask;
 
   // Filter to open tasks only
-  var open = tasks.filter(function(t) { return t.status === 'open'; });
+  var open = tasks.filter(function (t) {
+    return t.status === 'open';
+  });
   if (open.length === 0) return null;
 
   // Legacy greedy mode: preserve old behavior exactly
-  if (TASK_STRATEGY === 'greedy' && (!memoryEvents || memoryEvents.length === 0)) {
-    var bountyTasks = open.filter(function(t) { return t.bounty_id; });
+  if (
+    TASK_STRATEGY === 'greedy' &&
+    (!memoryEvents || memoryEvents.length === 0)
+  ) {
+    var bountyTasks = open.filter(function (t) {
+      return t.bounty_id;
+    });
     if (bountyTasks.length > 0) {
-      bountyTasks.sort(function(a, b) { return (b.bounty_amount || 0) - (a.bounty_amount || 0); });
+      bountyTasks.sort(function (a, b) {
+        return (b.bounty_amount || 0) - (a.bounty_amount || 0);
+      });
       return bountyTasks[0];
     }
     return open[0];
   }
 
   // Score all open tasks
-  var scored = open.map(function(t) {
+  var scored = open.map(function (t) {
     var cap = estimateCapabilityMatch(t, memoryEvents || []);
     var result = scoreTask(t, cap);
-    return { task: t, composite: result.composite, factors: result.factors, capability: cap };
+    return {
+      task: t,
+      composite: result.composite,
+      factors: result.factors,
+      capability: cap,
+    };
   });
 
   // Filter by minimum capability match (unless conservative skipping is off)
   if (TASK_MIN_CAPABILITY_MATCH > 0) {
-    var filtered = scored.filter(function(s) { return s.capability >= TASK_MIN_CAPABILITY_MATCH; });
+    var filtered = scored.filter(function (s) {
+      return s.capability >= TASK_MIN_CAPABILITY_MATCH;
+    });
     if (filtered.length > 0) scored = filtered;
   }
 
-  scored.sort(function(a, b) { return b.composite - a.composite; });
+  scored.sort(function (a, b) {
+    return b.composite - a.composite;
+  });
 
   // Log top 3 candidates for debugging
   var top3 = scored.slice(0, 3);
   for (var i = 0; i < top3.length; i++) {
     var s = top3[i];
-    console.log('[TaskStrategy] #' + (i + 1) + ' "' + (s.task.title || s.task.task_id || '').slice(0, 50) + '" score=' + s.composite + ' ' + JSON.stringify(s.factors));
+    console.log(
+      '[TaskStrategy] #' +
+        (i + 1) +
+        ' "' +
+        (s.task.title || s.task.task_id || '').slice(0, 50) +
+        '" score=' +
+        s.composite +
+        ' ' +
+        JSON.stringify(s.factors)
+    );
   }
 
   return scored[0] ? scored[0].task : null;
@@ -400,7 +475,11 @@ async function completeTask(taskId, assetId) {
     const res = await fetch(url, {
       method: 'POST',
       headers: buildAuthHeaders(),
-      body: JSON.stringify({ task_id: taskId, asset_id: assetId, node_id: nodeId }),
+      body: JSON.stringify({
+        task_id: taskId,
+        asset_id: assetId,
+        node_id: nodeId,
+      }),
       signal: controller.signal,
     });
     clearTimeout(timer);
@@ -420,11 +499,17 @@ function taskToSignals(task) {
   if (!task) return [];
   const signals = [];
   if (task.signals) {
-    const parts = String(task.signals).split(',').map(s => s.trim()).filter(Boolean);
+    const parts = String(task.signals)
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
     signals.push(...parts);
   }
   if (task.title) {
-    const words = String(task.title).toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+    const words = String(task.title)
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(w => w.length >= 3);
     for (const w of words.slice(0, 5)) {
       if (!signals.includes(w)) signals.push(w);
     }
@@ -475,7 +560,11 @@ async function completeWorkerTask(assignmentId, resultAssetId) {
     const res = await fetch(url, {
       method: 'POST',
       headers: buildAuthHeaders(),
-      body: JSON.stringify({ assignment_id: assignmentId, node_id: nodeId, result_asset_id: resultAssetId }),
+      body: JSON.stringify({
+        assignment_id: assignmentId,
+        node_id: nodeId,
+        result_asset_id: resultAssetId,
+      }),
       signal: controller.signal,
     });
     clearTimeout(timer);
@@ -513,7 +602,9 @@ async function claimAndCompleteWorkerTask(taskId, resultAssetId) {
 
   const completed = await completeWorkerTask(assignmentId, resultAssetId);
   if (!completed) {
-    console.warn(`[WorkerPool] Claimed assignment ${assignmentId} but complete failed -- will expire on Hub`);
+    console.warn(
+      `[WorkerPool] Claimed assignment ${assignmentId} but complete failed -- will expire on Hub`
+    );
     return { ok: false, error: 'complete_failed', assignment_id: assignmentId };
   }
 
@@ -550,7 +641,8 @@ function taskToSignalsWithPrivacy(task) {
   const signals = taskToSignals(task);
   const pp = detectPrivacyTask(task);
   if (pp) {
-    if (!signals.includes('privacy_computing')) signals.push('privacy_computing');
+    if (!signals.includes('privacy_computing'))
+      signals.push('privacy_computing');
     if (!signals.includes('sealed_tool')) signals.push('sealed_tool');
   }
   return signals;

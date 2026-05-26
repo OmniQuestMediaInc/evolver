@@ -2,7 +2,11 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { createTask, validateTask, VALID_TASK_STATUSES } = require('../src/gep/schemas/task');
+const {
+  createTask,
+  validateTask,
+  VALID_TASK_STATUSES,
+} = require('../src/gep/schemas/task');
 
 describe('createTask', () => {
   it('returns a fully-formed Task with all defaults when called with empty object', () => {
@@ -44,7 +48,12 @@ describe('createTask', () => {
   });
 
   it('is idempotent — createTask(createTask(x)) equals createTask(x)', () => {
-    const input = { task_id: 't1', title: 'Do it', status: 'open', bounty_amount: 10 };
+    const input = {
+      task_id: 't1',
+      title: 'Do it',
+      status: 'open',
+      bounty_amount: 10,
+    };
     const once = createTask(input);
     const twice = createTask(once);
     assert.deepEqual(once, twice);
@@ -96,7 +105,11 @@ describe('createTask', () => {
     const t1 = createTask({ task_id: 't1' });
     const t2 = createTask({ task_id: 't2' });
     t1.validation_commands.push('npm test');
-    assert.deepEqual(t2.validation_commands, [], 'validation_commands should be independent');
+    assert.deepEqual(
+      t2.validation_commands,
+      [],
+      'validation_commands should be independent'
+    );
   });
 
   it('returns independent array even when partial provides validation_commands', () => {
@@ -104,7 +117,11 @@ describe('createTask', () => {
     const t1 = createTask({ validation_commands: shared });
     const t2 = createTask({ validation_commands: shared });
     t1.validation_commands.push('npm run lint');
-    assert.equal(t2.validation_commands.length, 1, 'arrays should not share references');
+    assert.equal(
+      t2.validation_commands.length,
+      1,
+      'arrays should not share references'
+    );
     assert.equal(shared.length, 1, 'original array should not be mutated');
   });
 
@@ -129,17 +146,23 @@ describe('validateTask', () => {
   });
 
   it('throws when task_id is missing', () => {
-    assert.throws(() => validateTask(validTask({ task_id: null })), /task_id is required/);
+    assert.throws(
+      () => validateTask(validTask({ task_id: null })),
+      /task_id is required/
+    );
   });
 
   it('throws when task_id is empty string', () => {
-    assert.throws(() => validateTask(validTask({ task_id: '' })), /task_id is required/);
+    assert.throws(
+      () => validateTask(validTask({ task_id: '' })),
+      /task_id is required/
+    );
   });
 
   it('throws when status is invalid', () => {
     assert.throws(
       () => validateTask({ task_id: 'tid', status: 'pending' }),
-      /status must be one of/,
+      /status must be one of/
     );
   });
 

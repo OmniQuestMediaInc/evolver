@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { mergeJsonFile, copyHookScripts, appendSectionToFile, removeHookScripts } = require('./hookAdapter');
+const {
+  mergeJsonFile,
+  copyHookScripts,
+  appendSectionToFile,
+  removeHookScripts,
+} = require('./hookAdapter');
 
 const HOOK_SCRIPTS_DIR_NAME = 'hooks';
 const EVOLVER_MARKER = '<!-- evolver-evolution-memory -->';
@@ -70,10 +75,14 @@ function install({ configRoot, evolverRoot, force }) {
     try {
       const existing = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
       if (existing._evolver_managed) {
-        console.log('[claude-code] Evolver hooks already installed. Use --force to overwrite.');
+        console.log(
+          '[claude-code] Evolver hooks already installed. Use --force to overwrite.'
+        );
         return { ok: true, skipped: true };
       }
-    } catch { /* proceed */ }
+    } catch {
+      /* proceed */
+    }
   }
 
   fs.mkdirSync(claudeDir, { recursive: true });
@@ -82,12 +91,23 @@ function install({ configRoot, evolverRoot, force }) {
   mergeJsonFile(settingsPath, hooksCfg);
   console.log('[claude-code] Wrote ' + settingsPath);
 
-  const copied = copyHookScripts(hooksDir, path.join(evolverRoot, 'src', 'adapters'));
-  console.log('[claude-code] Copied ' + copied.length + ' hook scripts to ' + hooksDir);
+  const copied = copyHookScripts(
+    hooksDir,
+    path.join(evolverRoot, 'src', 'adapters')
+  );
+  console.log(
+    '[claude-code] Copied ' + copied.length + ' hook scripts to ' + hooksDir
+  );
 
-  const injected = appendSectionToFile(claudeMdPath, EVOLVER_MARKER, buildClaudeMdSection());
+  const injected = appendSectionToFile(
+    claudeMdPath,
+    EVOLVER_MARKER,
+    buildClaudeMdSection()
+  );
   if (injected) {
-    console.log('[claude-code] Injected evolution section into ' + claudeMdPath);
+    console.log(
+      '[claude-code] Injected evolution section into ' + claudeMdPath
+    );
   }
 
   console.log('[claude-code] Installation complete.');
@@ -119,22 +139,36 @@ function uninstall({ configRoot }) {
                   if (!matcher || !Array.isArray(matcher.hooks)) return matcher;
                   const filtered = matcher.hooks.filter(h => {
                     const cmd = (h && h.command) || '';
-                    return !cmd.includes('evolver-session') && !cmd.includes('evolver-signal');
+                    return (
+                      !cmd.includes('evolver-session') &&
+                      !cmd.includes('evolver-signal')
+                    );
                   });
                   return { ...matcher, hooks: filtered };
                 })
-                .filter(matcher => matcher && Array.isArray(matcher.hooks) && matcher.hooks.length > 0);
+                .filter(
+                  matcher =>
+                    matcher &&
+                    Array.isArray(matcher.hooks) &&
+                    matcher.hooks.length > 0
+                );
               if (data.hooks[event].length === 0) delete data.hooks[event];
             }
           }
           if (Object.keys(data.hooks).length === 0) delete data.hooks;
         }
         delete data._evolver_managed;
-        fs.writeFileSync(settingsPath, JSON.stringify(data, null, 2) + '\n', 'utf8');
+        fs.writeFileSync(
+          settingsPath,
+          JSON.stringify(data, null, 2) + '\n',
+          'utf8'
+        );
         changed = true;
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   const scripts = removeHookScripts(hooksDir);
   if (scripts > 0) changed = true;
@@ -144,18 +178,27 @@ function uninstall({ configRoot }) {
       let content = fs.readFileSync(claudeMdPath, 'utf8');
       if (content.includes(EVOLVER_MARKER)) {
         const idx = content.indexOf(EVOLVER_MARKER);
-        const nextSection = content.indexOf('\n## ', idx + EVOLVER_MARKER.length);
+        const nextSection = content.indexOf(
+          '\n## ',
+          idx + EVOLVER_MARKER.length
+        );
         const endIdx = nextSection !== -1 ? nextSection : content.length;
-        content = content.slice(0, idx).trimEnd() + (nextSection !== -1 ? content.slice(endIdx) : '');
+        content =
+          content.slice(0, idx).trimEnd() +
+          (nextSection !== -1 ? content.slice(endIdx) : '');
         fs.writeFileSync(claudeMdPath, content.trimEnd() + '\n', 'utf8');
         changed = true;
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
-  console.log(changed
-    ? '[claude-code] Uninstalled evolver hooks.'
-    : '[claude-code] No evolver hooks found to uninstall.');
+  console.log(
+    changed
+      ? '[claude-code] Uninstalled evolver hooks.'
+      : '[claude-code] No evolver hooks found to uninstall.'
+  );
 
   return { ok: true, removed: changed };
 }

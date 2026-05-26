@@ -6,7 +6,13 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { readSettings, writeSettings, clearSettings, SETTINGS_FILE, SETTINGS_DIR } = require('../src/proxy/server/settings');
+const {
+  readSettings,
+  writeSettings,
+  clearSettings,
+  SETTINGS_FILE,
+  SETTINGS_DIR,
+} = require('../src/proxy/server/settings');
 
 describe('settings', () => {
   const origFile = SETTINGS_FILE;
@@ -17,7 +23,9 @@ describe('settings', () => {
   });
 
   after(() => {
-    try { fs.rmSync(tmpDir, { recursive: true }); } catch {}
+    try {
+      fs.rmSync(tmpDir, { recursive: true });
+    } catch {}
   });
 
   it('writeSettings creates file and merges data', () => {

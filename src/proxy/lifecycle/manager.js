@@ -77,9 +77,9 @@ class LifecycleManager {
   _resolveNodeSecret() {
     const envSecret = this._suppressEnvSecret
       ? null
-      : ((process.env.A2A_NODE_SECRET || '').trim() || null);
+      : (process.env.A2A_NODE_SECRET || '').trim() || null;
     const storeSecret = this.store.getState('node_secret') || null;
-    const valid = (s) => typeof s === 'string' && /^[a-f0-9]{64}$/i.test(s);
+    const valid = s => typeof s === 'string' && /^[a-f0-9]{64}$/i.test(s);
 
     if (envSecret && storeSecret && envSecret !== storeSecret) {
       if (valid(envSecret)) {
@@ -112,13 +112,19 @@ class LifecycleManager {
     if (!this.hubUrl) return { ok: false, error: 'no_hub_url' };
 
     if (this._helloRateLimitUntil > Date.now()) {
-      const waitSec = Math.ceil((this._helloRateLimitUntil - Date.now()) / 1000);
-      this.logger.warn(`[lifecycle] hello suppressed: rate limited for ${waitSec}s`);
+      const waitSec = Math.ceil(
+        (this._helloRateLimitUntil - Date.now()) / 1000
+      );
+      this.logger.warn(
+        `[lifecycle] hello suppressed: rate limited for ${waitSec}s`
+      );
       return { ok: false, error: 'hello_rate_limit_active', waitSec };
     }
 
     const endpoint = `${this.hubUrl}/a2a/hello`;
-    const nodeId = this.store.getState('node_id') || `node_${crypto.randomBytes(6).toString('hex')}`;
+    const nodeId =
+      this.store.getState('node_id') ||
+      `node_${crypto.randomBytes(6).toString('hex')}`;
 
     const payload = { capabilities: {} };
     if (rotateSecret) payload.rotate_secret = true;
@@ -129,7 +135,8 @@ class LifecycleManager {
       protocol: 'gep-a2a',
       protocol_version: '1.0.0',
       message_type: 'hello',
-      message_id: 'msg_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
+      message_id:
+        'msg_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
       sender_id: nodeId,
       timestamp: new Date().toISOString(),
       payload,
@@ -147,9 +154,14 @@ class LifecycleManager {
         const errData = await res.json().catch(() => ({}));
         const errMsg = errData?.error || `http_${res.status}`;
         if (res.status === 429) {
-          const retryAfter = parseInt(res.headers.get('retry-after') || '3600', 10);
+          const retryAfter = parseInt(
+            res.headers.get('retry-after') || '3600',
+            10
+          );
           this._helloRateLimitUntil = Date.now() + retryAfter * 1000;
-          this.logger.error(`[lifecycle] hello rate limited (429): retry after ${retryAfter}s`);
+          this.logger.error(
+            `[lifecycle] hello rate limited (429): retry after ${retryAfter}s`
+          );
           return { ok: false, error: 'hello_rate_limited', retryAfter };
         }
         this.logger.error(`[lifecycle] hello HTTP ${res.status}: ${errMsg}`);
@@ -159,8 +171,14 @@ class LifecycleManager {
       const data = await res.json();
 
       if (data?.payload?.status === 'rejected') {
-        this.logger.error(`[lifecycle] hello rejected: ${data.payload.reason || 'unknown'}`);
-        return { ok: false, error: data.payload.reason || 'hello_rejected', response: data };
+        this.logger.error(
+          `[lifecycle] hello rejected: ${data.payload.reason || 'unknown'}`
+        );
+        return {
+          ok: false,
+          error: data.payload.reason || 'hello_rejected',
+          response: data,
+        };
       }
 
       const secret = data?.payload?.node_secret || data?.node_secret || null;
@@ -176,11 +194,15 @@ class LifecycleManager {
         // re-creating the auth loop the previous patch fixed (see #529
         // and the Bugbot review on PR #22).
         this._suppressEnvSecret = true;
-        this.logger.log('[lifecycle] new node_secret stored from hello response');
+        this.logger.log(
+          '[lifecycle] new node_secret stored from hello response'
+        );
       }
 
       this.store.setState('node_id', nodeId);
-      this.logger.log(`[lifecycle] hello OK, node_id=${nodeId}${rotateSecret ? ' (secret rotated)' : ''}`);
+      this.logger.log(
+        `[lifecycle] hello OK, node_id=${nodeId}${rotateSecret ? ' (secret rotated)' : ''}`
+      );
       return { ok: true, nodeId, response: data };
     } catch (err) {
       this.logger.error(`[lifecycle] hello failed: ${err.message}`);
@@ -204,19 +226,32 @@ class LifecycleManager {
     if (this._reauthInProgress) return false;
     if (this._reauthBackoffUntil > Date.now()) {
       const waitSec = Math.ceil((this._reauthBackoffUntil - Date.now()) / 1000);
-      this.logger.warn(`[lifecycle] re-auth suppressed: backoff active for ${waitSec}s`);
+      this.logger.warn(
+        `[lifecycle] re-auth suppressed: backoff active for ${waitSec}s`
+      );
       return false;
     }
     this._reauthInProgress = true;
     let manualResetRequired = false;
     try {
       for (let attempt = 1; attempt <= MAX_REAUTH_ATTEMPTS; attempt++) {
-        this.logger.warn(`[lifecycle] re-auth attempt ${attempt}/${MAX_REAUTH_ATTEMPTS}: rotating secret via hello...`);
+        this.logger.warn(
+          `[lifecycle] re-auth attempt ${attempt}/${MAX_REAUTH_ATTEMPTS}: rotating secret via hello...`
+        );
         const helloResult = await this.hello({ rotateSecret: true });
         if (!helloResult.ok) {
-          this.logger.error(`[lifecycle] re-auth hello failed: ${helloResult.error}`);
-          if (helloResult.error === 'hello_rate_limited' || helloResult.error === 'hello_rate_limit_active') break;
-          if (typeof helloResult.error === 'string' && helloResult.error.startsWith('node_id_already_claimed')) {
+          this.logger.error(
+            `[lifecycle] re-auth hello failed: ${helloResult.error}`
+          );
+          if (
+            helloResult.error === 'hello_rate_limited' ||
+            helloResult.error === 'hello_rate_limit_active'
+          )
+            break;
+          if (
+            typeof helloResult.error === 'string' &&
+            helloResult.error.startsWith('node_id_already_claimed')
+          ) {
             // Hub does not believe we own this nodeId. Our locally cached
             // secret(s) are useless. Drop them so attempt 2 retries WITHOUT
             // a Bearer (lenient hello path). If even unauthenticated rotate
@@ -232,12 +267,16 @@ class LifecycleManager {
         }
         const newSecret = helloResult.response?.payload?.node_secret;
         if (!newSecret) {
-          this.logger.error('[lifecycle] re-auth: hub did not return a new secret (rotate may not have taken effect)');
+          this.logger.error(
+            '[lifecycle] re-auth: hub did not return a new secret (rotate may not have taken effect)'
+          );
           break;
         }
         const hbResult = await this.heartbeat({ _skipReauth: true });
         if (hbResult.ok) {
-          this.logger.log('[lifecycle] re-auth succeeded: heartbeat confirmed with new secret');
+          this.logger.log(
+            '[lifecycle] re-auth succeeded: heartbeat confirmed with new secret'
+          );
           // Note: _envOverrideLogged is intentionally NOT reset here.
           // The successful hello path above already set _suppressEnvSecret=true,
           // which means _resolveNodeSecret will never hit the env-vs-store
@@ -245,12 +284,16 @@ class LifecycleManager {
           // fire a second time anyway. Resetting the flag was misleading.
           return true;
         }
-        this.logger.warn(`[lifecycle] re-auth attempt ${attempt}: heartbeat still failing after rotate`);
+        this.logger.warn(
+          `[lifecycle] re-auth attempt ${attempt}: heartbeat still failing after rotate`
+        );
       }
       if (manualResetRequired) {
         this._emitManualResetNeeded();
       }
-      this.logger.error('[lifecycle] re-auth exhausted all attempts, backing off for 30 minutes');
+      this.logger.error(
+        '[lifecycle] re-auth exhausted all attempts, backing off for 30 minutes'
+      );
       this._reauthBackoffUntil = Date.now() + 30 * 60_000;
       return false;
     } finally {
@@ -265,8 +308,14 @@ class LifecycleManager {
    * @param {string} reason - log tag describing why we are dropping it.
    */
   _dropLocalSecret(reason) {
-    this.logger.warn(`[lifecycle] dropping cached node_secret (reason=${reason}); next hello will run unauthenticated`);
-    try { this.store.setState('node_secret', ''); } catch { /* best-effort */ }
+    this.logger.warn(
+      `[lifecycle] dropping cached node_secret (reason=${reason}); next hello will run unauthenticated`
+    );
+    try {
+      this.store.setState('node_secret', '');
+    } catch {
+      /* best-effort */
+    }
     // Suppress the env override for this process so _resolveNodeSecret stops
     // re-seeding the store with the same stale env value next call.
     this._suppressEnvSecret = true;
@@ -286,7 +335,9 @@ class LifecycleManager {
         },
       });
     } catch (err) {
-      this.logger.warn(`[lifecycle] failed to emit manual_secret_reset_required event: ${err.message}`);
+      this.logger.warn(
+        `[lifecycle] failed to emit manual_secret_reset_required event: ${err.message}`
+      );
     }
   }
 
@@ -300,7 +351,8 @@ class LifecycleManager {
     }
 
     const endpoint = `${this.hubUrl}/a2a/heartbeat`;
-    const taskMeta = typeof this.getTaskMeta === 'function' ? this.getTaskMeta() : {};
+    const taskMeta =
+      typeof this.getTaskMeta === 'function' ? this.getTaskMeta() : {};
     const fp = _getEnvFingerprint();
     const body = {
       node_id: this.nodeId,
@@ -327,7 +379,9 @@ class LifecycleManager {
       if (res.status === 403 || res.status === 401) {
         this._consecutiveFailures++;
         const errText = await res.text().catch(() => '');
-        this.logger.error(`[lifecycle] heartbeat auth failed (${res.status}): ${errText}`);
+        this.logger.error(
+          `[lifecycle] heartbeat auth failed (${res.status}): ${errText}`
+        );
         if (!_skipReauth) {
           const recovered = await this.reAuthenticate();
           if (recovered) {
@@ -335,14 +389,24 @@ class LifecycleManager {
             return { ok: true, recovered: true };
           }
         }
-        return { ok: false, error: `auth_failed_${res.status}`, statusCode: res.status };
+        return {
+          ok: false,
+          error: `auth_failed_${res.status}`,
+          statusCode: res.status,
+        };
       }
 
       if (!res.ok) {
         this._consecutiveFailures++;
         const errText = await res.text().catch(() => '');
-        this.logger.error(`[lifecycle] heartbeat HTTP ${res.status}: ${errText}`);
-        return { ok: false, error: `http_${res.status}`, statusCode: res.status };
+        this.logger.error(
+          `[lifecycle] heartbeat HTTP ${res.status}: ${errText}`
+        );
+        return {
+          ok: false,
+          error: `http_${res.status}`,
+          statusCode: res.status,
+        };
       }
 
       const data = await res.json();
@@ -365,7 +429,10 @@ class LifecycleManager {
         );
       }
 
-      if (data?.min_proxy_version && this._shouldUpgrade(data.min_proxy_version)) {
+      if (
+        data?.min_proxy_version &&
+        this._shouldUpgrade(data.min_proxy_version)
+      ) {
         this.store.writeInbound({
           type: 'system',
           payload: {
@@ -373,18 +440,24 @@ class LifecycleManager {
             min_version: data.min_proxy_version,
             current_version: PROXY_PROTOCOL_VERSION,
             upgrade_url: data.upgrade_url || null,
-            message: data.upgrade_message || 'Proxy version is below the minimum required by Hub.',
+            message:
+              data.upgrade_message ||
+              'Proxy version is below the minimum required by Hub.',
           },
           channel: 'evomap-hub',
           priority: 'high',
         });
-        this.logger.warn(`[lifecycle] Hub requires proxy >= ${data.min_proxy_version}, current: ${PROXY_PROTOCOL_VERSION}`);
+        this.logger.warn(
+          `[lifecycle] Hub requires proxy >= ${data.min_proxy_version}, current: ${PROXY_PROTOCOL_VERSION}`
+        );
       }
 
       return { ok: true, response: data };
     } catch (err) {
       this._consecutiveFailures++;
-      this.logger.error(`[lifecycle] heartbeat failed (${this._consecutiveFailures}): ${err.message}`);
+      this.logger.error(
+        `[lifecycle] heartbeat failed (${this._consecutiveFailures}): ${err.message}`
+      );
       return { ok: false, error: err.message };
     }
   }
@@ -400,9 +473,13 @@ class LifecycleManager {
       if (!this._running) return;
       await this.heartbeat();
       if (this._running) {
-        const backoff = this._consecutiveFailures > 0
-          ? Math.min(interval * Math.pow(2, this._consecutiveFailures), 30 * 60_000)
-          : interval;
+        const backoff =
+          this._consecutiveFailures > 0
+            ? Math.min(
+                interval * Math.pow(2, this._consecutiveFailures),
+                30 * 60_000
+              )
+            : interval;
         this._heartbeatTimer = setTimeout(tick, backoff);
         if (this._heartbeatTimer.unref) this._heartbeatTimer.unref();
       }
@@ -424,7 +501,10 @@ class LifecycleManager {
     // `1-beta`, so `0.1.1-beta.1`.split('.')[2] -> `1-beta` -> parseInt = 1.
     // Using Number() here returned NaN and was treated as 0, under-counting
     // prerelease minimums. See community PR #516.
-    const parse = (v) => String(v || '0.0.0').split('.').map((part) => parseInt(part, 10));
+    const parse = v =>
+      String(v || '0.0.0')
+        .split('.')
+        .map(part => parseInt(part, 10));
     const min = parse(minVersion);
     const cur = parse(PROXY_PROTOCOL_VERSION);
     for (let i = 0; i < 3; i++) {

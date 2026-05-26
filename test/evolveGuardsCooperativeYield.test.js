@@ -17,7 +17,10 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { evaluateUserLock, evaluateReleaseWindow } = require('../src/evolve/guards');
+const {
+  evaluateUserLock,
+  evaluateReleaseWindow,
+} = require('../src/evolve/guards');
 
 describe('evaluateUserLock', () => {
   it('does not yield when the lock file does not exist', () => {
@@ -66,7 +69,9 @@ describe('evaluateUserLock', () => {
       now: Date.now(),
       ttlMs: 3600 * 1000,
       existsFn: () => true,
-      statFn: () => { throw new Error('eperm'); },
+      statFn: () => {
+        throw new Error('eperm');
+      },
     });
     assert.equal(r.yield, false);
     assert.equal(r.reason, 'stat_failed');
@@ -90,13 +95,19 @@ describe('evaluateUserLock', () => {
 
   it('returns invalid_ttl for zero/negative ttlMs', () => {
     const r1 = evaluateUserLock({
-      lockPath: '/fake/.evolver.lock', now: Date.now(), ttlMs: 0,
-      existsFn: () => true, statFn: () => ({ mtimeMs: Date.now() }),
+      lockPath: '/fake/.evolver.lock',
+      now: Date.now(),
+      ttlMs: 0,
+      existsFn: () => true,
+      statFn: () => ({ mtimeMs: Date.now() }),
     });
     assert.equal(r1.reason, 'invalid_ttl');
     const r2 = evaluateUserLock({
-      lockPath: '/fake/.evolver.lock', now: Date.now(), ttlMs: -1,
-      existsFn: () => true, statFn: () => ({ mtimeMs: Date.now() }),
+      lockPath: '/fake/.evolver.lock',
+      now: Date.now(),
+      ttlMs: -1,
+      existsFn: () => true,
+      statFn: () => ({ mtimeMs: Date.now() }),
     });
     assert.equal(r2.reason, 'invalid_ttl');
   });

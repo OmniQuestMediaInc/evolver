@@ -44,22 +44,28 @@ const DEFAULT_HOOK_TIMEOUT_MS = 25000;
 // explicit assumption of this tool, not a proven result. The rationale string
 // we emit reflects this.
 const RATIONALE_LINKS = {
-  paper: 'Wang, Ren, Zhang. From Procedural Skills to Strategy Genes. arXiv:2604.15097',
+  paper:
+    'Wang, Ren, Zhang. From Procedural Skills to Strategy Genes. arXiv:2604.15097',
   protocol: 'https://evomap.ai/wiki/16-gep-protocol',
   skill_store: 'https://evomap.ai/wiki/31-skill-store',
 };
 
-const RATIONALE_TEXT = ''
-  + 'Emitted both the human-facing Skill and the machine-facing GEP asset(s). '
-  + 'In the paper\'s domain (45 scientific code-solving scenarios, Gemini 3.1 '
-  + 'Pro/Flash Lite; ' + 'Wang, Ren, Zhang, arXiv:2604.15097'
-  + '), Gene-as-control-interface outperforms procedural SKILL.md. '
-  + 'Generalization to other domains is an assumption of this tool, not a '
-  + 'proven result; outcome quality depends on the source Skill and on real '
-  + 'execution evidence. See ' + 'https://evomap.ai/wiki/16-gep-protocol'
-  + ' for the protocol.';
+const RATIONALE_TEXT =
+  '' +
+  'Emitted both the human-facing Skill and the machine-facing GEP asset(s). ' +
+  "In the paper's domain (45 scientific code-solving scenarios, Gemini 3.1 " +
+  'Pro/Flash Lite; ' +
+  'Wang, Ren, Zhang, arXiv:2604.15097' +
+  '), Gene-as-control-interface outperforms procedural SKILL.md. ' +
+  'Generalization to other domains is an assumption of this tool, not a ' +
+  'proven result; outcome quality depends on the source Skill and on real ' +
+  'execution evidence. See ' +
+  'https://evomap.ai/wiki/16-gep-protocol' +
+  ' for the protocol.';
 
-function ensureDir(p) { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); }
+function ensureDir(p) {
+  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+}
 
 function readJsonSafe(p, fallback) {
   try {
@@ -67,7 +73,9 @@ function readJsonSafe(p, fallback) {
     const raw = fs.readFileSync(p, 'utf8');
     if (!raw.trim()) return fallback;
     return JSON.parse(raw);
-  } catch (_) { return fallback; }
+  } catch (_) {
+    return fallback;
+  }
 }
 
 function appendJsonl(p, obj) {
@@ -75,10 +83,16 @@ function appendJsonl(p, obj) {
   fs.appendFileSync(p, JSON.stringify(obj) + '\n', 'utf8');
 }
 
-function logPath() { return path.join(paths.getMemoryDir(), LOG_FILE); }
-function statePath() { return path.join(paths.getMemoryDir(), STATE_FILE); }
+function logPath() {
+  return path.join(paths.getMemoryDir(), LOG_FILE);
+}
+function statePath() {
+  return path.join(paths.getMemoryDir(), STATE_FILE);
+}
 
-function readState() { return readJsonSafe(statePath(), { seen: {} }); }
+function readState() {
+  return readJsonSafe(statePath(), { seen: {} });
+}
 function writeState(s) {
   ensureDir(path.dirname(statePath()));
   const tmp = statePath() + '.tmp';
@@ -95,10 +109,18 @@ function slugify(s) {
 }
 
 function shortHash(s) {
-  return crypto.createHash('sha256').update(String(s || '')).digest('hex').slice(0, 10);
+  return crypto
+    .createHash('sha256')
+    .update(String(s || ''))
+    .digest('hex')
+    .slice(0, 10);
 }
 
-function normalizeCmd(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+function normalizeCmd(s) {
+  return String(s || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 // ---------------------------------------------------------------------------
 // Parse a procedural SKILL.md / markdown workflow into structured sections.
@@ -110,7 +132,7 @@ function parseSkillMd(skillMd) {
   const fmMatch = text.match(/^---\n([\s\S]*?)\n---\n/);
   let body = text;
   if (fmMatch) {
-    fmMatch[1].split(/\n/).forEach((line) => {
+    fmMatch[1].split(/\n/).forEach(line => {
       const kv = line.match(/^([A-Za-z0-9_-]+)\s*:\s*(.*)$/);
       if (kv) frontmatter[kv[1].trim().toLowerCase()] = kv[2].trim();
     });
@@ -120,7 +142,7 @@ function parseSkillMd(skillMd) {
   const sections = {};
   let currentKey = '_preamble';
   sections[currentKey] = [];
-  body.split(/\n/).forEach((line) => {
+  body.split(/\n/).forEach(line => {
     const hdr = line.match(/^##+\s+(.+?)\s*$/);
     if (hdr) {
       currentKey = hdr[1].toLowerCase().trim();
@@ -129,7 +151,9 @@ function parseSkillMd(skillMd) {
       sections[currentKey].push(line);
     }
   });
-  Object.keys(sections).forEach((k) => { sections[k] = sections[k].join('\n').trim(); });
+  Object.keys(sections).forEach(k => {
+    sections[k] = sections[k].join('\n').trim();
+  });
 
   function pickSection(keywords) {
     for (const kw of keywords) {
@@ -141,19 +165,37 @@ function parseSkillMd(skillMd) {
   }
 
   const signals = [];
-  const signalSource = (frontmatter.description || '') + '\n' + pickSection([
-    'trigger', 'when to use', 'when', 'use when', 'scenario',
-  ]);
-  signalSource.split(/[`,.\n]/).forEach((tok) => {
-    const s = tok.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '');
-    if (s.length >= 3 && s.length <= 40 && /[a-z]/.test(s) && signals.indexOf(s) === -1 && !/^\d+$/.test(s)) {
+  const signalSource =
+    (frontmatter.description || '') +
+    '\n' +
+    pickSection(['trigger', 'when to use', 'when', 'use when', 'scenario']);
+  signalSource.split(/[`,.\n]/).forEach(tok => {
+    const s = tok
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '_')
+      .replace(/^_+|_+$/g, '');
+    if (
+      s.length >= 3 &&
+      s.length <= 40 &&
+      /[a-z]/.test(s) &&
+      signals.indexOf(s) === -1 &&
+      !/^\d+$/.test(s)
+    ) {
       signals.push(s);
     }
   });
 
   const strategy = [];
-  const strategyBlock = pickSection(['workflow', 'strategy', 'steps', 'procedure', 'quick start', 'how to']);
-  strategyBlock.split(/\n/).forEach((line) => {
+  const strategyBlock = pickSection([
+    'workflow',
+    'strategy',
+    'steps',
+    'procedure',
+    'quick start',
+    'how to',
+  ]);
+  strategyBlock.split(/\n/).forEach(line => {
     const step = line.match(/^\s*(?:\d+\.|[-*])\s+(.+?)\s*$/);
     if (step) {
       const s = step[1].trim();
@@ -162,8 +204,15 @@ function parseSkillMd(skillMd) {
   });
 
   const avoid = [];
-  const avoidBlock = pickSection(['avoid', 'pitfall', 'anti-pattern', 'common mistake', 'do not', 'forbidden']);
-  avoidBlock.split(/\n/).forEach((line) => {
+  const avoidBlock = pickSection([
+    'avoid',
+    'pitfall',
+    'anti-pattern',
+    'common mistake',
+    'do not',
+    'forbidden',
+  ]);
+  avoidBlock.split(/\n/).forEach(line => {
     const step = line.match(/^\s*(?:\d+\.|[-*])\s+(.+?)\s*$/);
     if (step) {
       const s = step[1].trim();
@@ -176,7 +225,7 @@ function parseSkillMd(skillMd) {
   const fenceRe = /```(?:bash|sh|shell)?\s*\n([\s\S]*?)\n```/g;
   let fm;
   while ((fm = fenceRe.exec(valBlock)) !== null) {
-    fm[1].split(/\n/).forEach((ln) => {
+    fm[1].split(/\n/).forEach(ln => {
       const t = ln.trim();
       if (t && !t.startsWith('#') && t.length <= 300) validation.push(t);
     });
@@ -184,7 +233,7 @@ function parseSkillMd(skillMd) {
 
   const preconditions = [];
   const preBlock = pickSection(['precondition', 'requirement', 'prerequisite']);
-  preBlock.split(/\n/).forEach((line) => {
+  preBlock.split(/\n/).forEach(line => {
     const step = line.match(/^\s*(?:\d+\.|[-*])\s+(.+?)\s*$/);
     if (step) preconditions.push(step[1].trim());
   });
@@ -192,7 +241,12 @@ function parseSkillMd(skillMd) {
   return {
     frontmatter: frontmatter,
     sections: sections,
-    name: frontmatter.name || (sections['_preamble'] || '').split(/\n/)[0].replace(/^#+\s*/, '').trim(),
+    name:
+      frontmatter.name ||
+      (sections['_preamble'] || '')
+        .split(/\n/)[0]
+        .replace(/^#+\s*/, '')
+        .trim(),
     description: frontmatter.description || '',
     signals_match: signals.slice(0, 8),
     strategy: strategy.slice(0, 10),
@@ -209,18 +263,26 @@ function parseSkillMd(skillMd) {
 // policy rules already hardened there.
 // ---------------------------------------------------------------------------
 function synthesizeGene(parsed, execution, opts) {
-  const traceSignals = Array.isArray(execution && execution.signals) ? execution.signals : [];
-  const mergedSignals = Array.from(new Set([].concat(parsed.signals_match || [], traceSignals)));
+  const traceSignals = Array.isArray(execution && execution.signals)
+    ? execution.signals
+    : [];
+  const mergedSignals = Array.from(
+    new Set([].concat(parsed.signals_match || [], traceSignals))
+  );
 
   // AVOID items live in their own top-level `avoid` field on the Gene, NOT as
   // synthetic "AVOID: ..." strategy steps. Skill Store / Hub renderers should
   // surface them in a dedicated "## Avoid" section so downstream consumers
   // never mistake anti-patterns for positive steps.
   const strategy = [];
-  (parsed.strategy || []).forEach((s) => strategy.push(s));
+  (parsed.strategy || []).forEach(s => strategy.push(s));
   if (strategy.length < 3) {
-    strategy.push('Identify the dominant trigger signals from the Skill description.');
-    strategy.push('Apply the smallest targeted change that satisfies the Skill workflow.');
+    strategy.push(
+      'Identify the dominant trigger signals from the Skill description.'
+    );
+    strategy.push(
+      'Apply the smallest targeted change that satisfies the Skill workflow.'
+    );
     strategy.push('Run the Skill validation commands and abort if any fails.');
   }
   const avoid = Array.isArray(parsed.avoid) ? parsed.avoid.slice(0, 5) : [];
@@ -236,19 +298,21 @@ function synthesizeGene(parsed, execution, opts) {
   //                     so Gene.validation is never empty. The quality
   //                     heuristics field records that a fallback was used.
   const policyCheck = require('./policyCheck');
-  const rawValidations = Array.isArray(parsed.validation) ? parsed.validation : [];
+  const rawValidations = Array.isArray(parsed.validation)
+    ? parsed.validation
+    : [];
   const allowedValidations = rawValidations
-    .map((v) => String(v || '').trim())
-    .filter((v) => v && policyCheck.isValidationCommandAllowed(v));
+    .map(v => String(v || '').trim())
+    .filter(v => v && policyCheck.isValidationCommandAllowed(v));
   const fallbackUsed = allowedValidations.length === 0;
   const strict = Boolean(opts && opts.strict);
   if (strict && fallbackUsed) {
     return {
       valid: false,
       errors: [
-        'strict mode: no allowed validation commands found in the Skill. '
-        + 'GEP validation only permits "node "/"npm "/"npx " prefixes. '
-        + 'Rewrite the Skill\'s validation section with those, or drop --strict.',
+        'strict mode: no allowed validation commands found in the Skill. ' +
+          'GEP validation only permits "node "/"npm "/"npx " prefixes. ' +
+          "Rewrite the Skill's validation section with those, or drop --strict.",
       ],
       gene: null,
     };
@@ -274,12 +338,21 @@ function synthesizeGene(parsed, execution, opts) {
   const draft = {
     type: 'Gene',
     id: SKILL2GEP_ID_PREFIX + skillSlug,
-    summary: (parsed.description || strategy[0] || 'Reusable strategy distilled from Skill').slice(0, 200),
+    summary: (
+      parsed.description ||
+      strategy[0] ||
+      'Reusable strategy distilled from Skill'
+    ).slice(0, 200),
     category: inferCategory(mergedSignals, parsed.description),
     signals_match: mergedSignals.slice(0, 8),
-    preconditions: (parsed.preconditions && parsed.preconditions.length > 0)
-      ? parsed.preconditions
-      : ['Skill ' + (parsed.name || 'unknown') + ' has just been executed locally'],
+    preconditions:
+      parsed.preconditions && parsed.preconditions.length > 0
+        ? parsed.preconditions
+        : [
+            'Skill ' +
+              (parsed.name || 'unknown') +
+              ' has just been executed locally',
+          ],
     strategy: strategy.slice(0, 10),
     avoid: avoid,
     constraints: {
@@ -294,23 +367,33 @@ function synthesizeGene(parsed, execution, opts) {
       skill_platform: (opts && opts.platform) || null,
       skill_hash: opts && opts.skillHash ? opts.skillHash : null,
       rationale_paper: RATIONALE_LINKS.paper,
-      paper_scope: 'code-science (arXiv:2604.15097, 45 tasks, Gemini 3.1 Pro/Flash Lite)',
+      paper_scope:
+        'code-science (arXiv:2604.15097, 45 tasks, Gemini 3.1 Pro/Flash Lite)',
       claims_outside_scope: 'assumption',
       quality_heuristics: qualityHeuristics,
     },
   };
 
   const assetsDir = paths.getGepAssetsDir();
-  const existingGenesJson = readJsonSafe(path.join(assetsDir, 'genes.json'), { genes: [] });
-  const existingGenes = Array.isArray(existingGenesJson.genes) ? existingGenesJson.genes : [];
+  const existingGenesJson = readJsonSafe(path.join(assetsDir, 'genes.json'), {
+    genes: [],
+  });
+  const existingGenes = Array.isArray(existingGenesJson.genes)
+    ? existingGenesJson.genes
+    : [];
   const result = skillDistiller.validateSynthesizedGene(draft, existingGenes);
   return result;
 }
 
 function inferCategory(signals, description) {
-  const hay = ((description || '') + ' ' + (signals || []).join(' ')).toLowerCase();
+  const hay = (
+    (description || '') +
+    ' ' +
+    (signals || []).join(' ')
+  ).toLowerCase();
   if (/error|fail|repair|rollback|bug|fix|guard/.test(hay)) return 'repair';
-  if (/feature|add|implement|new capability|innovate/.test(hay)) return 'innovate';
+  if (/feature|add|implement|new capability|innovate/.test(hay))
+    return 'innovate';
   return 'optimize';
 }
 
@@ -320,15 +403,19 @@ function inferCategory(signals, description) {
 // "hallucinating" a successful run just to bulk up the community registry.
 // ---------------------------------------------------------------------------
 function detectForgery(execution) {
-  const trace = Array.isArray(execution && execution.trace) ? execution.trace : [];
-  const blast = execution && execution.blast_radius ? execution.blast_radius : null;
+  const trace = Array.isArray(execution && execution.trace)
+    ? execution.trace
+    : [];
+  const blast =
+    execution && execution.blast_radius ? execution.blast_radius : null;
   const files = blast ? Number(blast.files || 0) : 0;
   const lines = blast ? Number(blast.lines || 0) : 0;
-  const status = execution && execution.status ? String(execution.status) : 'failed';
+  const status =
+    execution && execution.status ? String(execution.status) : 'failed';
   if (status !== 'success') return null;
   if (trace.length === 0) return 'empty_execution_trace';
   if (files === 0 && lines === 0) return 'zero_blast_radius_with_success';
-  const anyExitRecorded = trace.some((t) => Number.isInteger(t && t.exit));
+  const anyExitRecorded = trace.some(t => Number.isInteger(t && t.exit));
   if (!anyExitRecorded) return 'no_exit_code_in_trace';
   return null;
 }
@@ -340,23 +427,33 @@ function detectForgery(execution) {
 // return a diagnostic instead.
 // ---------------------------------------------------------------------------
 function assembleCapsule(gene, execution, opts) {
-  const trace = Array.isArray(execution && execution.trace) ? execution.trace : [];
+  const trace = Array.isArray(execution && execution.trace)
+    ? execution.trace
+    : [];
   const geneValidations = Array.isArray(gene.validation) ? gene.validation : [];
-  const traceCmds = new Set(trace.map((t) => normalizeCmd(t && t.cmd)));
+  const traceCmds = new Set(trace.map(t => normalizeCmd(t && t.cmd)));
   const missing = [];
-  geneValidations.forEach((v) => { if (!traceCmds.has(normalizeCmd(v))) missing.push(v); });
+  geneValidations.forEach(v => {
+    if (!traceCmds.has(normalizeCmd(v))) missing.push(v);
+  });
   if (missing.length > 0) {
-    return { ok: false, reason: 'validation_coverage_missing', missing: missing };
+    return {
+      ok: false,
+      reason: 'validation_coverage_missing',
+      missing: missing,
+    };
   }
   for (const v of geneValidations) {
-    const t = trace.find((tt) => normalizeCmd(tt && tt.cmd) === normalizeCmd(v));
+    const t = trace.find(tt => normalizeCmd(tt && tt.cmd) === normalizeCmd(v));
     if (t && !Number.isInteger(t.exit)) {
       return { ok: false, reason: 'validation_missing_exit_code', cmd: v };
     }
   }
 
-  const scoreRaw = execution && execution.score != null ? Number(execution.score) : null;
-  const status = execution && execution.status ? String(execution.status) : 'failed';
+  const scoreRaw =
+    execution && execution.score != null ? Number(execution.score) : null;
+  const status =
+    execution && execution.status ? String(execution.status) : 'failed';
   let score;
   if (Number.isFinite(scoreRaw)) {
     score = Math.max(0, Math.min(1, scoreRaw));
@@ -364,35 +461,62 @@ function assembleCapsule(gene, execution, opts) {
     score = status === 'success' ? 0.8 : 0.2;
   }
 
-  const blast = execution && execution.blast_radius ? execution.blast_radius : { files: 0, lines: 0 };
-  const env = (envFingerprint && typeof envFingerprint.captureEnvFingerprint === 'function')
-    ? envFingerprint.captureEnvFingerprint()
-    : ((execution && execution.env_fingerprint) || null);
+  const blast =
+    execution && execution.blast_radius
+      ? execution.blast_radius
+      : { files: 0, lines: 0 };
+  const env =
+    envFingerprint && typeof envFingerprint.captureEnvFingerprint === 'function'
+      ? envFingerprint.captureEnvFingerprint()
+      : (execution && execution.env_fingerprint) || null;
 
   // gene.id may have been rewritten by validateSynthesizedGene (e.g. to
   // DISTILLED_ID_PREFIX); extract whatever suffix is there instead of
   // assuming our original SKILL2GEP_ID_PREFIX is still present.
-  const geneIdSuffix = String(gene.id).replace(/^gene_[a-z0-9]+_/, '').replace(/^gene_/, '');
-  const idKey = shortHash(gene.id + '|' + (execution && execution.started_at || new Date().toISOString()));
+  const geneIdSuffix = String(gene.id)
+    .replace(/^gene_[a-z0-9]+_/, '')
+    .replace(/^gene_/, '');
+  const idKey = shortHash(
+    gene.id +
+      '|' +
+      ((execution && execution.started_at) || new Date().toISOString())
+  );
   const capsule = {
     type: 'Capsule',
     id: CAPSULE_ID_PREFIX + slugify(geneIdSuffix) + '_' + idKey,
     gene: gene.id,
-    trigger: Array.isArray(execution && execution.trigger) ? execution.trigger : (gene.signals_match || []).slice(0, 6),
-    summary: (execution && execution.summary) || ('Applied ' + gene.id + ' on scenario ' + (opts && opts.scenario || 'local skill invocation')),
+    trigger: Array.isArray(execution && execution.trigger)
+      ? execution.trigger
+      : (gene.signals_match || []).slice(0, 6),
+    summary:
+      (execution && execution.summary) ||
+      'Applied ' +
+        gene.id +
+        ' on scenario ' +
+        ((opts && opts.scenario) || 'local skill invocation'),
     confidence: Math.max(0, Math.min(1, score)),
-    blast_radius: { files: Number(blast.files || 0), lines: Number(blast.lines || 0) },
+    blast_radius: {
+      files: Number(blast.files || 0),
+      lines: Number(blast.lines || 0),
+    },
     outcome: { status: status, score: score },
-    success_reason: status === 'success' ? ((execution && execution.success_reason) || 'Skill workflow completed and all declared validations passed.') : null,
+    success_reason:
+      status === 'success'
+        ? (execution && execution.success_reason) ||
+          'Skill workflow completed and all declared validations passed.'
+        : null,
     env_fingerprint: env || { os: process.platform, node: process.version },
     source_type: 'skill2gep_hook',
     strategy: Array.isArray(gene.strategy) ? gene.strategy.slice() : [],
-    content: (execution && execution.content_summary) || buildContentSummary(trace, blast),
+    content:
+      (execution && execution.content_summary) ||
+      buildContentSummary(trace, blast),
     execution_trace: trace.map((t, i) => ({
       step: Number.isInteger(t && t.step) ? t.step : i + 1,
-      cmd: String(t && t.cmd || ''),
+      cmd: String((t && t.cmd) || ''),
       exit: Number.isInteger(t && t.exit) ? t.exit : null,
-      stdout_tail: t && t.stdout_tail ? String(t.stdout_tail).slice(0, 300) : '',
+      stdout_tail:
+        t && t.stdout_tail ? String(t.stdout_tail).slice(0, 300) : '',
     })),
     schema_version: '1.6.0',
   };
@@ -400,10 +524,20 @@ function assembleCapsule(gene, execution, opts) {
 }
 
 function buildContentSummary(trace, blast) {
-  const okCount = trace.filter((t) => Number(t && t.exit) === 0).length;
+  const okCount = trace.filter(t => Number(t && t.exit) === 0).length;
   const files = blast ? Number(blast.files || 0) : 0;
   const lines = blast ? Number(blast.lines || 0) : 0;
-  return 'Ran ' + trace.length + ' validation command(s), ' + okCount + ' passed. Blast radius: ' + files + ' files, ' + lines + ' lines.';
+  return (
+    'Ran ' +
+    trace.length +
+    ' validation command(s), ' +
+    okCount +
+    ' passed. Blast radius: ' +
+    files +
+    ' files, ' +
+    lines +
+    ' lines.'
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -449,25 +583,42 @@ function runOnSkillInvocation(opts) {
   try {
     const stat = fs.statSync(skillPath);
     if (stat.isDirectory()) skillMdPath = path.join(skillPath, 'SKILL.md');
-  } catch (_) { return { ok: false, reason: 'skill_path_unreadable' }; }
-  if (!fs.existsSync(skillMdPath)) return { ok: false, reason: 'skill_md_missing', tried: skillMdPath };
+  } catch (_) {
+    return { ok: false, reason: 'skill_path_unreadable' };
+  }
+  if (!fs.existsSync(skillMdPath))
+    return { ok: false, reason: 'skill_md_missing', tried: skillMdPath };
 
   let skillMd;
-  try { skillMd = fs.readFileSync(skillMdPath, 'utf8'); }
-  catch (err) { return { ok: false, reason: 'skill_md_read_failed', error: err && err.message ? err.message : String(err) }; }
+  try {
+    skillMd = fs.readFileSync(skillMdPath, 'utf8');
+  } catch (err) {
+    return {
+      ok: false,
+      reason: 'skill_md_read_failed',
+      error: err && err.message ? err.message : String(err),
+    };
+  }
   const skillHash = shortHash(skillMd);
 
   // Idempotency: if we've already distilled this exact skill content + the
   // same execution fingerprint, skip to avoid duplicate community uploads.
-  const execHash = shortHash(JSON.stringify({
-    trace: (opts.execution && opts.execution.trace) || [],
-    br: opts.execution && opts.execution.blast_radius || null,
-    status: opts.execution && opts.execution.status || null,
-  }));
+  const execHash = shortHash(
+    JSON.stringify({
+      trace: (opts.execution && opts.execution.trace) || [],
+      br: (opts.execution && opts.execution.blast_radius) || null,
+      status: (opts.execution && opts.execution.status) || null,
+    })
+  );
   const state = readState();
   const seenKey = skillHash + ':' + execHash;
   if (state.seen && state.seen[seenKey]) {
-    return { ok: false, reason: 'already_distilled', gene: state.seen[seenKey].gene, capsule: state.seen[seenKey].capsule };
+    return {
+      ok: false,
+      reason: 'already_distilled',
+      gene: state.seen[seenKey].gene,
+      capsule: state.seen[seenKey].capsule,
+    };
   }
 
   const parsed = parseSkillMd(skillMd);
@@ -479,10 +630,16 @@ function runOnSkillInvocation(opts) {
   });
   if (!geneResult.valid) {
     appendJsonl(logPath(), {
-      timestamp: new Date().toISOString(), status: 'gene_validation_failed',
-      skill: opts.skillName || parsed.name, errors: geneResult.errors,
+      timestamp: new Date().toISOString(),
+      status: 'gene_validation_failed',
+      skill: opts.skillName || parsed.name,
+      errors: geneResult.errors,
     });
-    return { ok: false, reason: 'gene_validation_failed', errors: geneResult.errors };
+    return {
+      ok: false,
+      reason: 'gene_validation_failed',
+      errors: geneResult.errors,
+    };
   }
   const gene = geneResult.gene;
 
@@ -493,17 +650,32 @@ function runOnSkillInvocation(opts) {
     if (forgery) {
       capsuleDiag = { reason: 'capsule_rejected_forgery', detail: forgery };
     } else {
-      const capRes = assembleCapsule(gene, opts.execution, { scenario: opts.scenario || parsed.name });
-      if (capRes.ok) capsule = capRes.capsule; else capsuleDiag = capRes;
+      const capRes = assembleCapsule(gene, opts.execution, {
+        scenario: opts.scenario || parsed.name,
+      });
+      if (capRes.ok) capsule = capRes.capsule;
+      else capsuleDiag = capRes;
     }
   }
 
   const persistErrors = [];
-  try { assetStore.upsertGene(gene); }
-  catch (err) { persistErrors.push({ step: 'upsertGene', error: err && err.message ? err.message : String(err) }); }
+  try {
+    assetStore.upsertGene(gene);
+  } catch (err) {
+    persistErrors.push({
+      step: 'upsertGene',
+      error: err && err.message ? err.message : String(err),
+    });
+  }
   if (capsule) {
-    try { assetStore.appendCapsule(capsule); }
-    catch (err) { persistErrors.push({ step: 'appendCapsule', error: err && err.message ? err.message : String(err) }); }
+    try {
+      assetStore.appendCapsule(capsule);
+    } catch (err) {
+      persistErrors.push({
+        step: 'appendCapsule',
+        error: err && err.message ? err.message : String(err),
+      });
+    }
   }
 
   state.seen = state.seen || {};
@@ -512,38 +684,52 @@ function runOnSkillInvocation(opts) {
     gene: gene.id,
     capsule: capsule ? capsule.id : null,
   };
-  try { writeState(state); } catch (err) { persistErrors.push({ step: 'writeState', error: err && err.message ? err.message : String(err) }); }
+  try {
+    writeState(state);
+  } catch (err) {
+    persistErrors.push({
+      step: 'writeState',
+      error: err && err.message ? err.message : String(err),
+    });
+  }
 
-  const shouldPublish = (opts.publish !== false)
-    && String(process.env.SKILL2GEP_AUTO_PUBLISH || 'true').toLowerCase() !== 'false';
+  const shouldPublish =
+    opts.publish !== false &&
+    String(process.env.SKILL2GEP_AUTO_PUBLISH || 'true').toLowerCase() !==
+      'false';
 
   // Kick off publish in background. We never block the hook on the Hub -- if
   // the network is slow, the hook still exits in bounded time and we log the
   // publish promise's outcome asynchronously.
   let publishPromise = null;
   if (shouldPublish) {
-    publishPromise = publishAssets(gene, capsule).then((result) => {
-      appendJsonl(logPath(), {
-        timestamp: new Date().toISOString(),
-        status: 'publish_result',
-        skill: opts.skillName || parsed.name,
-        gene_id: gene.id,
-        capsule_id: capsule ? capsule.id : null,
-        publish: result,
+    publishPromise = publishAssets(gene, capsule)
+      .then(result => {
+        appendJsonl(logPath(), {
+          timestamp: new Date().toISOString(),
+          status: 'publish_result',
+          skill: opts.skillName || parsed.name,
+          gene_id: gene.id,
+          capsule_id: capsule ? capsule.id : null,
+          publish: result,
+        });
+        return result;
+      })
+      .catch(err => {
+        const fail = {
+          ok: false,
+          error: err && err.message ? err.message : String(err),
+        };
+        appendJsonl(logPath(), {
+          timestamp: new Date().toISOString(),
+          status: 'publish_error',
+          skill: opts.skillName || parsed.name,
+          gene_id: gene.id,
+          capsule_id: capsule ? capsule.id : null,
+          publish: fail,
+        });
+        return fail;
       });
-      return result;
-    }).catch((err) => {
-      const fail = { ok: false, error: err && err.message ? err.message : String(err) };
-      appendJsonl(logPath(), {
-        timestamp: new Date().toISOString(),
-        status: 'publish_error',
-        skill: opts.skillName || parsed.name,
-        gene_id: gene.id,
-        capsule_id: capsule ? capsule.id : null,
-        publish: fail,
-      });
-      return fail;
-    });
   }
 
   appendJsonl(logPath(), {
@@ -594,11 +780,16 @@ function runOnSkillInvocation(opts) {
 // callers should check result.dry_run to distinguish from a real failure.
 function publishAssets(gene, capsule) {
   const skillPromise = publishSkillChannel(gene);
-  const bundlePromise = capsule ? publishBundleChannel(gene, capsule) : Promise.resolve({ ok: false, skipped: 'no_capsule' });
+  const bundlePromise = capsule
+    ? publishBundleChannel(gene, capsule)
+    : Promise.resolve({ ok: false, skipped: 'no_capsule' });
   return Promise.all([skillPromise, bundlePromise]).then(([skill, bundle]) => ({
     skill_store: skill,
     gep_bundle: bundle,
-    ok: Boolean((skill && skill.ok && !skill.dry_run) || (bundle && bundle.ok && !bundle.dry_run)),
+    ok: Boolean(
+      (skill && skill.ok && !skill.dry_run) ||
+      (bundle && bundle.ok && !bundle.dry_run)
+    ),
     dry_run: Boolean((skill && skill.dry_run) || (bundle && bundle.dry_run)),
   }));
 }
@@ -607,9 +798,15 @@ function publishSkillChannel(gene) {
   if (a2a._isDryRun()) return Promise.resolve({ ok: true, dry_run: true });
   try {
     const p = skillPublisher.publishSkillToHub(gene);
-    return Promise.resolve(p).catch((err) => ({ ok: false, error: err && err.message ? err.message : String(err) }));
+    return Promise.resolve(p).catch(err => ({
+      ok: false,
+      error: err && err.message ? err.message : String(err),
+    }));
   } catch (err) {
-    return Promise.resolve({ ok: false, error: err && err.message ? err.message : String(err) });
+    return Promise.resolve({
+      ok: false,
+      error: err && err.message ? err.message : String(err),
+    });
   }
 }
 
@@ -644,31 +841,54 @@ function publishBundleChannel(gene, capsule) {
       // sanitize is best-effort here; if it fails the unsanitized clone
       // still publishes — Hub's own PII redaction will still kick in.
       // Log so the operator can investigate but do not abort the publish.
-      console.log('[skill2gep] sanitize failed (non-fatal): ' + (sanitizeErr && sanitizeErr.message || sanitizeErr));
+      console.log(
+        '[skill2gep] sanitize failed (non-fatal): ' +
+          ((sanitizeErr && sanitizeErr.message) || sanitizeErr)
+      );
     }
-    message = a2a.buildPublishBundle({ gene: geneClone, capsule: capsuleClone });
+    message = a2a.buildPublishBundle({
+      gene: geneClone,
+      capsule: capsuleClone,
+    });
   } catch (err) {
-    return Promise.resolve({ ok: false, error: 'build_publish_bundle_failed: ' + (err && err.message ? err.message : String(err)) });
+    return Promise.resolve({
+      ok: false,
+      error:
+        'build_publish_bundle_failed: ' +
+        (err && err.message ? err.message : String(err)),
+    });
   }
   try {
-    const send = a2a.httpTransportSend(message, { hubUrl: hubUrl, timeoutMs: 15000 });
+    const send = a2a.httpTransportSend(message, {
+      hubUrl: hubUrl,
+      timeoutMs: 15000,
+    });
     return Promise.resolve(send)
       .then(function (res) {
         if (res && res.ok && !res.dry_run) {
           try {
             require('./recallVerifier').enqueuePublishedAsset({
-              asset_id: (capsuleClone && capsuleClone.asset_id) || capsule.asset_id,
+              asset_id:
+                (capsuleClone && capsuleClone.asset_id) || capsule.asset_id,
               type: 'SkillBundle',
               signals: Array.isArray(capsule.trigger) ? capsule.trigger : [],
               publishedAt: Date.now(),
             });
-          } catch (rvErr) { /* non-fatal */ }
+          } catch (rvErr) {
+            /* non-fatal */
+          }
         }
         return res;
       })
-      .catch((err) => ({ ok: false, error: err && err.message ? err.message : String(err) }));
+      .catch(err => ({
+        ok: false,
+        error: err && err.message ? err.message : String(err),
+      }));
   } catch (err) {
-    return Promise.resolve({ ok: false, error: err && err.message ? err.message : String(err) });
+    return Promise.resolve({
+      ok: false,
+      error: err && err.message ? err.message : String(err),
+    });
   }
 }
 

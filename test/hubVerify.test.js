@@ -2,7 +2,10 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 describe('hubVerify', function () {
-  const { isSolidifyVerifyEnabled, requestSolidifyPermitSync } = require('../src/gep/hubVerify');
+  const {
+    isSolidifyVerifyEnabled,
+    requestSolidifyPermitSync,
+  } = require('../src/gep/hubVerify');
 
   it('isSolidifyVerifyEnabled returns false when no hub URL', function () {
     const original = process.env.A2A_HUB_URL;
@@ -19,9 +22,13 @@ describe('hubVerify', function () {
     process.env.EVOLVER_SOLIDIFY_VERIFY = 'false';
     process.env.NODE_ENV = 'test';
     assert.strictEqual(isSolidifyVerifyEnabled(), false);
-    if (origUrl !== undefined) process.env.A2A_HUB_URL = origUrl; else delete process.env.A2A_HUB_URL;
-    if (origVerify !== undefined) process.env.EVOLVER_SOLIDIFY_VERIFY = origVerify; else delete process.env.EVOLVER_SOLIDIFY_VERIFY;
-    if (origNodeEnv !== undefined) process.env.NODE_ENV = origNodeEnv; else delete process.env.NODE_ENV;
+    if (origUrl !== undefined) process.env.A2A_HUB_URL = origUrl;
+    else delete process.env.A2A_HUB_URL;
+    if (origVerify !== undefined)
+      process.env.EVOLVER_SOLIDIFY_VERIFY = origVerify;
+    else delete process.env.EVOLVER_SOLIDIFY_VERIFY;
+    if (origNodeEnv !== undefined) process.env.NODE_ENV = origNodeEnv;
+    else delete process.env.NODE_ENV;
   });
 
   it('isSolidifyVerifyEnabled returns true when hub URL is set', function () {
@@ -30,14 +37,21 @@ describe('hubVerify', function () {
     process.env.A2A_HUB_URL = 'https://evomap.ai';
     delete process.env.EVOLVER_SOLIDIFY_VERIFY;
     assert.strictEqual(isSolidifyVerifyEnabled(), true);
-    if (origUrl !== undefined) process.env.A2A_HUB_URL = origUrl; else delete process.env.A2A_HUB_URL;
-    if (origVerify !== undefined) process.env.EVOLVER_SOLIDIFY_VERIFY = origVerify; else delete process.env.EVOLVER_SOLIDIFY_VERIFY;
+    if (origUrl !== undefined) process.env.A2A_HUB_URL = origUrl;
+    else delete process.env.A2A_HUB_URL;
+    if (origVerify !== undefined)
+      process.env.EVOLVER_SOLIDIFY_VERIFY = origVerify;
+    else delete process.env.EVOLVER_SOLIDIFY_VERIFY;
   });
 
   it('requestSolidifyPermitSync returns offline error when no hub URL', function () {
     const origUrl = process.env.A2A_HUB_URL;
     delete process.env.A2A_HUB_URL;
-    const result = requestSolidifyPermitSync({ geneId: 'test_gene', signals: ['a'], mutation: {} });
+    const result = requestSolidifyPermitSync({
+      geneId: 'test_gene',
+      signals: ['a'],
+      mutation: {},
+    });
     assert.strictEqual(result.ok, false);
     assert.strictEqual(result.offline, true);
     if (origUrl !== undefined) process.env.A2A_HUB_URL = origUrl;
@@ -58,8 +72,12 @@ describe('hubVerify', function () {
     process.env.EVOLVER_SOLIDIFY_VERIFY = 'false';
     process.env.NODE_ENV = 'production';
     assert.strictEqual(isSolidifyVerifyEnabled(), true);
-    if (origUrl !== undefined) process.env.A2A_HUB_URL = origUrl; else delete process.env.A2A_HUB_URL;
-    if (origVerify !== undefined) process.env.EVOLVER_SOLIDIFY_VERIFY = origVerify; else delete process.env.EVOLVER_SOLIDIFY_VERIFY;
-    if (origNodeEnv !== undefined) process.env.NODE_ENV = origNodeEnv; else delete process.env.NODE_ENV;
+    if (origUrl !== undefined) process.env.A2A_HUB_URL = origUrl;
+    else delete process.env.A2A_HUB_URL;
+    if (origVerify !== undefined)
+      process.env.EVOLVER_SOLIDIFY_VERIFY = origVerify;
+    else delete process.env.EVOLVER_SOLIDIFY_VERIFY;
+    if (origNodeEnv !== undefined) process.env.NODE_ENV = origNodeEnv;
+    else delete process.env.NODE_ENV;
   });
 });

@@ -24,21 +24,26 @@ test('withFileLock serializes critical sections on the same target', async () =>
   const leave = () => {
     active -= 1;
   };
-  const jobs = Array.from({ length: 20 }).map(() => new Promise((resolve, reject) => {
-    setTimeout(() => {
-      try {
-        withFileLock(target, () => {
-          enter();
-          const start = Date.now();
-          while (Date.now() - start < 15) { /* hold the lock briefly */ }
-          leave();
-        });
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    }, 0);
-  }));
+  const jobs = Array.from({ length: 20 }).map(
+    () =>
+      new Promise((resolve, reject) => {
+        setTimeout(() => {
+          try {
+            withFileLock(target, () => {
+              enter();
+              const start = Date.now();
+              while (Date.now() - start < 15) {
+                /* hold the lock briefly */
+              }
+              leave();
+            });
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        }, 0);
+      })
+  );
   await Promise.all(jobs);
   assert.strictEqual(maxActive, 1, 'critical section must never overlap');
 });

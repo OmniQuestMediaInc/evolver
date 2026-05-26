@@ -24,8 +24,15 @@ function parseSince(value) {
   if (m) {
     const n = Number(m[1]);
     const unit = m[2].toLowerCase();
-    const factor = unit === 's' ? 1000 : unit === 'm' ? 60000 : unit === 'h' ? 3600000 : 86400000;
-    return Date.now() - (n * factor);
+    const factor =
+      unit === 's'
+        ? 1000
+        : unit === 'm'
+          ? 60000
+          : unit === 'h'
+            ? 3600000
+            : 86400000;
+    return Date.now() - n * factor;
   }
   // Then ISO-8601. Require '-' or 'T' so we don't accept loose numeric
   // strings like "5" → year 2001.
@@ -83,14 +90,19 @@ function aggregate(events) {
     else if (v.outcome === 'roundtrip_mismatch') bucket.mismatch += 1;
     else bucket.skipped += 1;
     if (Number.isFinite(v.latency_ms)) bucket.latencies.push(v.latency_ms);
-    if (Number.isFinite(v.age_at_verify_ms)) bucket.ages.push(v.age_at_verify_ms);
+    if (Number.isFinite(v.age_at_verify_ms))
+      bucket.ages.push(v.age_at_verify_ms);
   }
   const rows = [];
   for (const bucket of byType.values()) {
     const denom = bucket.ok + bucket.missing + bucket.mismatch;
     bucket.success_rate = denom > 0 ? bucket.ok / denom : 0;
-    bucket.latencies.sort(function (a, b) { return a - b; });
-    bucket.ages.sort(function (a, b) { return a - b; });
+    bucket.latencies.sort(function (a, b) {
+      return a - b;
+    });
+    bucket.ages.sort(function (a, b) {
+      return a - b;
+    });
     bucket.p50_latency_ms = percentile(bucket.latencies, 0.5);
     bucket.p95_latency_ms = percentile(bucket.latencies, 0.95);
     bucket.p99_latency_ms = percentile(bucket.latencies, 0.99);
@@ -101,9 +113,18 @@ function aggregate(events) {
     delete bucket.ages;
     rows.push(bucket);
   }
-  rows.sort(function (a, b) { return a.type.localeCompare(b.type); });
+  rows.sort(function (a, b) {
+    return a.type.localeCompare(b.type);
+  });
 
-  const totals = { type: 'TOTAL', total: 0, ok: 0, missing: 0, mismatch: 0, skipped: 0 };
+  const totals = {
+    type: 'TOTAL',
+    total: 0,
+    ok: 0,
+    missing: 0,
+    mismatch: 0,
+    skipped: 0,
+  };
   for (const r of rows) {
     totals.total += r.total;
     totals.ok += r.ok;
@@ -127,7 +148,10 @@ function aggregate(events) {
   if (rows.length === 0) gate = 'RED';
   else {
     for (const r of rows) {
-      if (r.mismatch > 0) { gate = 'RED'; break; }
+      if (r.mismatch > 0) {
+        gate = 'RED';
+        break;
+      }
       if (r.success_rate < SUCCESS_THRESHOLD) {
         gate = escalate(gate, r.success_rate >= 0.85 ? 'YELLOW' : 'RED');
       }
@@ -153,46 +177,85 @@ function printMarkdown(result, since) {
   if (result.rows.length === 0) {
     console.log('_No `recall_verify` events found in memory graph._');
     console.log('');
-    console.log('Ship gate: **RED** (no data — feature may be disabled or daemon has not run a publish cycle yet)');
+    console.log(
+      'Ship gate: **RED** (no data — feature may be disabled or daemon has not run a publish cycle yet)'
+    );
     return;
   }
-  console.log('| asset_type   | total | ok  | missing | mismatch | skipped | success_rate | p50_latency | p99_latency | p50_age | p99_age |');
-  console.log('|--------------|------:|----:|--------:|---------:|--------:|-------------:|------------:|------------:|--------:|--------:|');
+  console.log(
+    '| asset_type   | total | ok  | missing | mismatch | skipped | success_rate | p50_latency | p99_latency | p50_age | p99_age |'
+  );
+  console.log(
+    '|--------------|------:|----:|--------:|---------:|--------:|-------------:|------------:|------------:|--------:|--------:|'
+  );
   for (const r of result.rows) {
-    console.log('| ' + r.type.padEnd(12) +
-      ' | ' + String(r.total).padStart(5) +
-      ' | ' + String(r.ok).padStart(3) +
-      ' | ' + String(r.missing).padStart(7) +
-      ' | ' + String(r.mismatch).padStart(8) +
-      ' | ' + String(r.skipped).padStart(7) +
-      ' | ' + fmtPct(r.success_rate).padStart(12) +
-      ' | ' + fmtMs(r.p50_latency_ms).padStart(11) +
-      ' | ' + fmtMs(r.p99_latency_ms).padStart(11) +
-      ' | ' + fmtMs(r.p50_age_ms).padStart(7) +
-      ' | ' + fmtMs(r.p99_age_ms).padStart(7) +
-      ' |');
+    console.log(
+      '| ' +
+        r.type.padEnd(12) +
+        ' | ' +
+        String(r.total).padStart(5) +
+        ' | ' +
+        String(r.ok).padStart(3) +
+        ' | ' +
+        String(r.missing).padStart(7) +
+        ' | ' +
+        String(r.mismatch).padStart(8) +
+        ' | ' +
+        String(r.skipped).padStart(7) +
+        ' | ' +
+        fmtPct(r.success_rate).padStart(12) +
+        ' | ' +
+        fmtMs(r.p50_latency_ms).padStart(11) +
+        ' | ' +
+        fmtMs(r.p99_latency_ms).padStart(11) +
+        ' | ' +
+        fmtMs(r.p50_age_ms).padStart(7) +
+        ' | ' +
+        fmtMs(r.p99_age_ms).padStart(7) +
+        ' |'
+    );
   }
   const t = result.totals;
-  console.log('| ' + 'TOTAL'.padEnd(12) +
-    ' | ' + String(t.total).padStart(5) +
-    ' | ' + String(t.ok).padStart(3) +
-    ' | ' + String(t.missing).padStart(7) +
-    ' | ' + String(t.mismatch).padStart(8) +
-    ' | ' + String(t.skipped).padStart(7) +
-    ' | ' + fmtPct(t.success_rate).padStart(12) +
-    ' | ' + '—'.padStart(11) +
-    ' | ' + '—'.padStart(11) +
-    ' | ' + '—'.padStart(7) +
-    ' | ' + '—'.padStart(7) +
-    ' |');
+  console.log(
+    '| ' +
+      'TOTAL'.padEnd(12) +
+      ' | ' +
+      String(t.total).padStart(5) +
+      ' | ' +
+      String(t.ok).padStart(3) +
+      ' | ' +
+      String(t.missing).padStart(7) +
+      ' | ' +
+      String(t.mismatch).padStart(8) +
+      ' | ' +
+      String(t.skipped).padStart(7) +
+      ' | ' +
+      fmtPct(t.success_rate).padStart(12) +
+      ' | ' +
+      '—'.padStart(11) +
+      ' | ' +
+      '—'.padStart(11) +
+      ' | ' +
+      '—'.padStart(7) +
+      ' | ' +
+      '—'.padStart(7) +
+      ' |'
+  );
   console.log('');
-  console.log('Ship gate: **' + result.gate + '**' + (result.gate === 'GREEN' ? ' (exit 0)' : ' (exit 2)'));
+  console.log(
+    'Ship gate: **' +
+      result.gate +
+      '**' +
+      (result.gate === 'GREEN' ? ' (exit 0)' : ' (exit 2)')
+  );
 }
 
 function main() {
   const args = parseArgs(process.argv);
   if (args.help) {
-    console.log('Usage: node scripts/recall-verify-report.js [--since <Nh|Nm|Nd|ISO>] [--json]');
+    console.log(
+      'Usage: node scripts/recall-verify-report.js [--since <Nh|Nm|Nd|ISO>] [--json]'
+    );
     process.exit(0);
   }
 
@@ -200,7 +263,11 @@ function main() {
   if (args.since) {
     const parsed = parseSince(args.since);
     if (parsed === undefined) {
-      console.error('Error: --since must be ISO-8601 or a duration like 1h / 30m / 2d (got: ' + args.since + ')');
+      console.error(
+        'Error: --since must be ISO-8601 or a duration like 1h / 30m / 2d (got: ' +
+          args.since +
+          ')'
+      );
       process.exit(1);
     }
     sinceMs = parsed;
@@ -209,17 +276,24 @@ function main() {
   const allEvents = tryReadMemoryGraphEvents(20000);
   const filtered = allEvents.filter(function (ev) {
     if (!ev || ev.kind !== 'recall_verify') return false;
-    if (sinceMs != null && Number.isFinite(ev.ts) && ev.ts < sinceMs) return false;
+    if (sinceMs != null && Number.isFinite(ev.ts) && ev.ts < sinceMs)
+      return false;
     return true;
   });
 
   const result = aggregate(filtered);
 
   if (args.json) {
-    console.log(JSON.stringify({
-      since: sinceMs ? new Date(sinceMs).toISOString() : null,
-      ...result,
-    }, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          since: sinceMs ? new Date(sinceMs).toISOString() : null,
+          ...result,
+        },
+        null,
+        2
+      )
+    );
   } else {
     printMarkdown(result, sinceMs);
   }

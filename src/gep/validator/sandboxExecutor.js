@@ -50,10 +50,14 @@ const ALLOWED_EXECUTABLES = new Set(['node']);
 // the gap where validation_commands go straight from Hub to runInSandbox
 // without passing through policyCheck.isValidationCommandAllowed().
 const BLOCKED_NODE_FLAGS = new Set([
-  '-e', '--eval',
-  '-p', '--print',
-  '-i', '--interactive',
-  '-r', '--require',
+  '-e',
+  '--eval',
+  '-p',
+  '--print',
+  '-i',
+  '--interactive',
+  '-r',
+  '--require',
   '--loader',
   '--experimental-loader',
   '--import',
@@ -68,9 +72,11 @@ function assertNodeCommandSafe(parsed) {
       throw new Error('node flag not allowed in sandbox: ' + flag);
     }
   }
-  const firstPositional = parsed.args.find((a) => !a.startsWith('-'));
+  const firstPositional = parsed.args.find(a => !a.startsWith('-'));
   if (!firstPositional) {
-    throw new Error('node requires a script file argument in sandbox (inline eval is not allowed)');
+    throw new Error(
+      'node requires a script file argument in sandbox (inline eval is not allowed)'
+    );
   }
 }
 
@@ -97,7 +103,7 @@ function parseCommand(cmdString) {
       }
       continue;
     }
-    if (ch === '\'' || ch === '"') {
+    if (ch === "'" || ch === '"') {
       quote = ch;
       continue;
     }
@@ -110,7 +116,15 @@ function parseCommand(cmdString) {
     }
     // Reject shell metacharacters that would give injection leverage even with
     // shell:false. A legitimate validation command should never contain these.
-    if (ch === '|' || ch === '&' || ch === ';' || ch === '>' || ch === '<' || ch === '`' || ch === '$') {
+    if (
+      ch === '|' ||
+      ch === '&' ||
+      ch === ';' ||
+      ch === '>' ||
+      ch === '<' ||
+      ch === '`' ||
+      ch === '$'
+    ) {
       throw new Error('shell metacharacter not allowed in command: ' + ch);
     }
     buf += ch;
@@ -138,7 +152,11 @@ function createSandboxDir() {
   if (!fs.existsSync(base)) {
     fs.mkdirSync(base, { recursive: true, mode: 0o700 });
   }
-  const name = 'task_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex');
+  const name =
+    'task_' +
+    Date.now().toString(36) +
+    '_' +
+    crypto.randomBytes(4).toString('hex');
   const dir = path.join(base, name);
   fs.mkdirSync(dir, { mode: 0o700 });
   return dir;
@@ -161,9 +179,10 @@ function buildSandboxEnv() {
   // PATH is preserved so that node remains resolvable -- the
   // ALLOWED_EXECUTABLES allowlist is the real gate against unwanted tools.
   const tmp = os.tmpdir();
-  const fallbackPath = process.platform === 'win32'
-    ? 'C:\\Windows\\System32'
-    : '/usr/local/bin:/usr/bin:/bin';
+  const fallbackPath =
+    process.platform === 'win32'
+      ? 'C:\\Windows\\System32'
+      : '/usr/local/bin:/usr/bin:/bin';
   return {
     PATH: process.env.PATH || fallbackPath,
     HOME: tmp,
@@ -182,12 +201,12 @@ function runSingleCommand(cmd, opts) {
   const options = opts || {};
   const timeoutMs = Math.min(
     safeNumber(options.timeoutMs, DEFAULT_CMD_TIMEOUT_MS),
-    MAX_CMD_TIMEOUT_MS,
+    MAX_CMD_TIMEOUT_MS
   );
   const cwd = options.cwd;
   const env = buildSandboxEnv();
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let child;
     let parsed;
     try {
@@ -198,7 +217,9 @@ function runSingleCommand(cmd, opts) {
         cmd: String(cmd),
         ok: false,
         stdout: '',
-        stderr: 'command_parse_failed: ' + (err && err.message ? err.message : String(err)),
+        stderr:
+          'command_parse_failed: ' +
+          (err && err.message ? err.message : String(err)),
         exitCode: -1,
         durationMs: 0,
         timedOut: false,
@@ -210,8 +231,12 @@ function runSingleCommand(cmd, opts) {
         cmd: String(cmd),
         ok: false,
         stdout: '',
-        stderr: 'executable_not_allowed: ' + parsed.executable
-          + ' (allowed: ' + Array.from(ALLOWED_EXECUTABLES).join(', ') + ')',
+        stderr:
+          'executable_not_allowed: ' +
+          parsed.executable +
+          ' (allowed: ' +
+          Array.from(ALLOWED_EXECUTABLES).join(', ') +
+          ')',
         exitCode: -1,
         durationMs: 0,
         timedOut: false,
@@ -230,7 +255,8 @@ function runSingleCommand(cmd, opts) {
         cmd: String(cmd),
         ok: false,
         stdout: '',
-        stderr: 'spawn_failed: ' + (err && err.message ? err.message : String(err)),
+        stderr:
+          'spawn_failed: ' + (err && err.message ? err.message : String(err)),
         exitCode: -1,
         durationMs: 0,
         timedOut: false,
@@ -245,7 +271,9 @@ function runSingleCommand(cmd, opts) {
 
     const timer = setTimeout(() => {
       if (!child.killed) {
-        try { child.kill('SIGKILL'); } catch (_) {}
+        try {
+          child.kill('SIGKILL');
+        } catch (_) {}
       }
       if (!settled) {
         settled = true;
@@ -253,7 +281,10 @@ function runSingleCommand(cmd, opts) {
           cmd: String(cmd),
           ok: false,
           stdout: truncate(stdout, MAX_OUTPUT_CHARS),
-          stderr: truncate(stderr + '\n[killed by sandbox timeout]', MAX_OUTPUT_CHARS),
+          stderr: truncate(
+            stderr + '\n[killed by sandbox timeout]',
+            MAX_OUTPUT_CHARS
+          ),
           exitCode: -1,
           durationMs: Date.now() - startedAt,
           timedOut: true,
@@ -261,20 +292,20 @@ function runSingleCommand(cmd, opts) {
       }
     }, timeoutMs);
 
-    child.stdout.on('data', (d) => {
+    child.stdout.on('data', d => {
       stdout += d.toString('utf8');
       if (stdout.length > MAX_OUTPUT_CHARS * 2) {
         stdout = stdout.slice(-MAX_OUTPUT_CHARS * 2);
       }
     });
-    child.stderr.on('data', (d) => {
+    child.stderr.on('data', d => {
       stderr += d.toString('utf8');
       if (stderr.length > MAX_OUTPUT_CHARS * 2) {
         stderr = stderr.slice(-MAX_OUTPUT_CHARS * 2);
       }
     });
 
-    child.on('error', (err) => {
+    child.on('error', err => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
@@ -282,7 +313,10 @@ function runSingleCommand(cmd, opts) {
         cmd: String(cmd),
         ok: false,
         stdout: truncate(stdout, MAX_OUTPUT_CHARS),
-        stderr: truncate(stderr + '\n' + (err && err.message ? err.message : String(err)), MAX_OUTPUT_CHARS),
+        stderr: truncate(
+          stderr + '\n' + (err && err.message ? err.message : String(err)),
+          MAX_OUTPUT_CHARS
+        ),
         exitCode: -1,
         durationMs: Date.now() - startedAt,
         timedOut: false,
@@ -293,7 +327,7 @@ function runSingleCommand(cmd, opts) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      const exitCode = typeof code === 'number' ? code : (signal ? -1 : -1);
+      const exitCode = typeof code === 'number' ? code : signal ? -1 : -1;
       resolve({
         cmd: String(cmd),
         ok: exitCode === 0,
@@ -323,7 +357,9 @@ function runSingleCommand(cmd, opts) {
  */
 async function runInSandbox(commands, opts) {
   const options = opts || {};
-  const cmds = Array.isArray(commands) ? commands.filter((c) => typeof c === 'string' && c.trim()) : [];
+  const cmds = Array.isArray(commands)
+    ? commands.filter(c => typeof c === 'string' && c.trim())
+    : [];
   const startedAt = Date.now();
 
   if (cmds.length === 0) {
@@ -339,7 +375,7 @@ async function runInSandbox(commands, opts) {
 
   const batchTimeoutMs = Math.min(
     safeNumber(options.batchTimeoutMs, DEFAULT_BATCH_TIMEOUT_MS),
-    DEFAULT_BATCH_TIMEOUT_MS * 3,
+    DEFAULT_BATCH_TIMEOUT_MS * 3
   );
 
   const sandboxDir = createSandboxDir();
@@ -358,7 +394,7 @@ async function runInSandbox(commands, opts) {
         cwd: sandboxDir,
         timeoutMs: Math.min(
           safeNumber(options.cmdTimeoutMs, DEFAULT_CMD_TIMEOUT_MS),
-          remaining,
+          remaining
         ),
       });
       results.push(r);
@@ -371,7 +407,8 @@ async function runInSandbox(commands, opts) {
     if (!options.keepSandbox) cleanupDir(sandboxDir);
   }
 
-  const overallOk = results.length > 0 && results.every((r) => r.ok) && !stoppedEarly;
+  const overallOk =
+    results.length > 0 && results.every(r => r.ok) && !stoppedEarly;
 
   return {
     results,
@@ -396,7 +433,11 @@ async function runPreflight() {
   const startedAt = Date.now();
   const scriptPath = path.join(sandboxDir, '__evolver_preflight.js');
   try {
-    fs.writeFileSync(scriptPath, "process.stdout.write('preflight_ok\\n');\nprocess.exit(0);\n", { encoding: 'utf8' });
+    fs.writeFileSync(
+      scriptPath,
+      "process.stdout.write('preflight_ok\\n');\nprocess.exit(0);\n",
+      { encoding: 'utf8' }
+    );
     const r = await runSingleCommand('node __evolver_preflight.js', {
       cwd: sandboxDir,
       timeoutMs: 10_000,
@@ -406,13 +447,19 @@ async function runPreflight() {
         ok: false,
         reason: r.timedOut
           ? 'preflight_timeout'
-          : (typeof r.exitCode === 'number' && r.exitCode !== 0 ? 'preflight_exit_nonzero' : 'preflight_failed'),
+          : typeof r.exitCode === 'number' && r.exitCode !== 0
+            ? 'preflight_exit_nonzero'
+            : 'preflight_failed',
         exitCode: r.exitCode,
         durationMs: r.durationMs,
         stderrTail: typeof r.stderr === 'string' ? r.stderr.slice(-240) : '',
       };
     }
-    return { ok: true, exitCode: r.exitCode || 0, durationMs: Date.now() - startedAt };
+    return {
+      ok: true,
+      exitCode: r.exitCode || 0,
+      durationMs: Date.now() - startedAt,
+    };
   } catch (err) {
     return {
       ok: false,
