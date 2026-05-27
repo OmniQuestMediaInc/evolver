@@ -1,5 +1,5 @@
 #!/usr/bin/env node
- 
+
 //
 // build_binaries.js — produce standalone CLI binaries of evolver via the
 // hardened "obfuscator -> bun bundle -> bun compile" pipeline.
