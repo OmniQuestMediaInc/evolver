@@ -1,3 +1,12 @@
+/**
+ * OmniQuest Media Inc.™ — CONFIDENTIAL — Proprietary
+ * Cyrano™ Engine / iMagiNarratives Framework Component
+ * Part of OmniSync™ Oracle Suite & Whisper Voice Twins
+ * Canada-only residency | AI Advisory-Only | Immutable Provenance Hashing
+ * Aligned to Business Plan v3.1 §B.3.7 & Canonical Corpus v11 (D.2)
+ * Do not distribute. All rights reserved.
+ */
+
 var _0xda7d2a = _0x4900;
 (function (_0x2b7af0, _0x1e7017) {
   var _0x171e63 = _0x4900,

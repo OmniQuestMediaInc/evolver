@@ -1,3 +1,12 @@
+/**
+ * OmniQuest Media Inc.™ — CONFIDENTIAL — Proprietary
+ * Cyrano™ Engine / iMagiNarratives Framework Component
+ * Part of OmniSync™ Oracle Suite & Whisper Voice Twins
+ * Canada-only residency | AI Advisory-Only | Immutable Provenance Hashing
+ * Aligned to Business Plan v3.1 §B.3.7 & Canonical Corpus v11 (D.2)
+ * Do not distribute. All rights reserved.
+ */
+
 // Regression guard for #460 Bug 2: when EVOMAP_PROXY=1 and a proxy is
 // running, src/atp/hubClient.js MUST route /atp/* calls through the local
 // proxy (127.0.0.1) and NOT make a direct call to the Hub. The proxy is the

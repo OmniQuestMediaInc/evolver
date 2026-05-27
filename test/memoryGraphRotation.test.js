@@ -1,3 +1,12 @@
+/**
+ * OmniQuest Media Inc.™ — CONFIDENTIAL — Proprietary
+ * Cyrano™ Engine / iMagiNarratives Framework Component
+ * Part of OmniSync™ Oracle Suite & Whisper Voice Twins
+ * Canada-only residency | AI Advisory-Only | Immutable Provenance Hashing
+ * Aligned to Business Plan v3.1 §B.3.7 & Canonical Corpus v11 (D.2)
+ * Do not distribute. All rights reserved.
+ */
+
 // Regression guard for #519: memory_graph.jsonl must rotate once it
 // exceeds EVOLVER_MEMORY_GRAPH_MAX_SIZE_MB so long-running nodes don't
 // accumulate multi-GB append-only files. The rotation is gzip'd and

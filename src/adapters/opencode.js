@@ -1,3 +1,12 @@
+/**
+ * OmniQuest Media Inc.™ — CONFIDENTIAL — Proprietary
+ * Cyrano™ Engine / iMagiNarratives Framework Component
+ * Part of OmniSync™ Oracle Suite & Whisper Voice Twins
+ * Canada-only residency | AI Advisory-Only | Immutable Provenance Hashing
+ * Aligned to Business Plan v3.1 §B.3.7 & Canonical Corpus v11 (D.2)
+ * Do not distribute. All rights reserved.
+ */
+
 const fs = require('fs');
 const path = require('path');
 const { copyHookScripts, removeHookScripts } = require('./hookAdapter');
@@ -95,193 +104,7 @@ function appendSectionToFile(filePath, marker, content) {
   try {
     existing = fs.readFileSync(filePath, 'utf8');
   } catch {
-    /* new file */
-  }
-  if (existing.includes(marker)) return false;
-  const separator =
-    existing.length > 0 && !existing.endsWith('\n') ? '\n\n' : '\n';
-  fs.writeFileSync(filePath, existing + separator + content + '\n', 'utf8');
-  return true;
-}
-
-function isEvolverManagedPluginFile(filePath) {
-  try {
-    if (!fs.existsSync(filePath)) return false;
-    const raw = fs.readFileSync(filePath, 'utf8');
-    return raw.includes('_evolver_managed: true');
-  } catch {
-    return false;
-  }
-}
-
-function writePluginFile(pluginsDir, source) {
-  fs.mkdirSync(pluginsDir, { recursive: true });
-  const dest = path.join(pluginsDir, PLUGIN_FILE_NAME);
-  const tmp = dest + '.tmp';
-  fs.writeFileSync(tmp, source, 'utf8');
-  fs.renameSync(tmp, dest);
-  return dest;
-}
-
-function install({ configRoot, evolverRoot, force }) {
-  const opencodeDir = path.join(configRoot, '.opencode');
-  const hooksDir = path.join(opencodeDir, HOOK_SCRIPTS_DIR_NAME);
-  const pluginsDir = path.join(opencodeDir, PLUGINS_DIR_NAME);
-  const pluginPath = path.join(pluginsDir, PLUGIN_FILE_NAME);
-  const agentsMdPath = path.join(configRoot, 'AGENTS.md');
-
-  if (!force && isEvolverManagedPluginFile(pluginPath)) {
-    console.log(
-      '[opencode] Evolver plugin already installed. Use --force to overwrite.'
-    );
-    printPostInstallNotice(pluginPath);
-    return { ok: true, skipped: true, plugin_path: pluginPath };
-  }
-
-  fs.mkdirSync(opencodeDir, { recursive: true });
-
-  const written = writePluginFile(pluginsDir, buildPluginSource(hooksDir));
-  console.log('[opencode] Wrote ' + written);
-
-  const copied = copyHookScripts(
-    hooksDir,
-    path.join(evolverRoot, 'src', 'adapters')
-  );
-  console.log(
-    '[opencode] Copied ' + copied.length + ' hook scripts to ' + hooksDir
-  );
-
-  const injected = appendSectionToFile(
-    agentsMdPath,
-    EVOLVER_MARKER,
-    buildAgentsMdSection()
-  );
-  if (injected) {
-    console.log('[opencode] Injected evolution section into ' + agentsMdPath);
-  }
-
-  console.log('[opencode] Installation complete.');
-  printPostInstallNotice(written);
-
-  return {
-    ok: true,
-    platform: 'opencode',
-    plugin_path: written,
-    files: [written, agentsMdPath, ...copied],
-  };
-}
-
-function printPostInstallNotice(pluginPath) {
-  // The opencode TUI "Plugins" tab only lists TUI plugins (registered via
-  // tui.json with `default export { id, tui }`). Server plugins like ours,
-  // auto-loaded from .opencode/plugins/, are functional but invisible in
-  // that tab. This is by opencode design, not a bug. See:
-  //   https://github.com/sst/opencode -> packages/opencode/specs/tui-plugins.md
-  // Surfacing this proactively here prevents the "is it actually loaded?"
-  // confusion that motivated EvoMap/Evolver issue #531.
-  console.log('');
-  console.log('[opencode] Restart opencode for the plugin to take effect.');
-  console.log(
-    '[opencode] Note: this is a SERVER plugin (event hooks). It will NOT appear in'
-  );
-  console.log(
-    '[opencode]       the TUI "Plugins" tab -- that tab only lists TUI plugins'
-  );
-  console.log(
-    '[opencode]       (registered via tui.json). The plugin is still loaded and'
-  );
-  console.log('[opencode]       running silently in the background.');
-  console.log('[opencode] To verify the plugin is loaded, run:');
-  console.log(
-    '[opencode]   opencode --print-logs --log-level INFO debug config 2>&1 | grep ' +
-      JSON.stringify(pluginPath)
-  );
-  console.log('[opencode] Or run:');
-  console.log('[opencode]   evolver setup-hooks --platform=opencode --verify');
-}
-
-// Walk the install state and report what is healthy / what is missing.
-// Used by the `--verify` flag to give users a definitive answer to
-// "is the plugin actually installed and loadable?". Returns a structured
-// result so callers (CLI, future TUI plugin) can format it as they like.
-function verify({ configRoot }) {
-  const opencodeDir = path.join(configRoot, '.opencode');
-  const hooksDir = path.join(opencodeDir, HOOK_SCRIPTS_DIR_NAME);
-  const pluginsDir = path.join(opencodeDir, PLUGINS_DIR_NAME);
-  const pluginPath = path.join(pluginsDir, PLUGIN_FILE_NAME);
-  const agentsMdPath = path.join(configRoot, 'AGENTS.md');
-  const expectedScripts = [
-    'evolver-session-start.js',
-    'evolver-signal-detect.js',
-    'evolver-session-end.js',
-  ];
-
-  const checks = [];
-
-  const pluginExists = fs.existsSync(pluginPath);
-  checks.push({
-    id: 'plugin_file_present',
-    ok: pluginExists,
-    detail: pluginExists ? pluginPath : 'missing: ' + pluginPath,
-  });
-
-  const managed = pluginExists && isEvolverManagedPluginFile(pluginPath);
-  checks.push({
-    id: 'plugin_managed_marker',
-    ok: managed,
-    detail: managed
-      ? 'first line contains _evolver_managed: true'
-      : 'plugin file is not evolver-managed (was it edited or replaced by another tool?)',
-  });
-
-  let pluginLoadable = false;
-  let pluginLoadError = null;
-  if (pluginExists) {
-    try {
-      // Require the plugin in an isolated module cache slot to confirm it
-      // parses and exports the expected shape. opencode does an ESM dynamic
-      // import; CommonJS require here is a strict subset of that, so a
-      // failure here is a guaranteed failure under opencode too.
-      delete require.cache[require.resolve(pluginPath)];
-      const mod = require(pluginPath);
-      const fn = mod && (mod.Evolver || mod.default);
-      pluginLoadable = typeof fn === 'function';
-      if (!pluginLoadable)
-        pluginLoadError = 'no Evolver/default function export';
-    } catch (err) {
-      pluginLoadError = (err && err.message) || String(err);
     }
-  }
-  checks.push({
-    id: 'plugin_loadable',
-    ok: pluginLoadable,
-    detail: pluginLoadable
-      ? 'require() succeeded and exports Evolver()'
-      : 'require() failed: ' + (pluginLoadError || 'unknown'),
-  });
-
-  const missingScripts = expectedScripts.filter(
-    name => !fs.existsSync(path.join(hooksDir, name))
-  );
-  checks.push({
-    id: 'hook_scripts_present',
-    ok: missingScripts.length === 0,
-    detail:
-      missingScripts.length === 0
-        ? 'all 3 hook scripts present in ' + hooksDir
-        : 'missing: ' + missingScripts.join(', '),
-  });
-
-  let agentsMdHasSection = false;
-  try {
-    if (fs.existsSync(agentsMdPath)) {
-      agentsMdHasSection = fs
-        .readFileSync(agentsMdPath, 'utf8')
-        .includes(EVOLVER_MARKER);
-    }
-  } catch {
-    /* ignore */
-  }
   checks.push({
     id: 'agents_md_section',
     ok: agentsMdHasSection,

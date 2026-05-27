@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+/**
+ * OmniQuest Media Inc.™ — CONFIDENTIAL — Proprietary
+ * Cyrano™ Engine / iMagiNarratives Framework Component
+ * Part of OmniSync™ Oracle Suite & Whisper Voice Twins
+ * Canada-only residency | AI Advisory-Only | Immutable Provenance Hashing
+ * Aligned to Business Plan v3.1 §B.3.7 & Canonical Corpus v11 (D.2)
+ * Do not distribute. All rights reserved.
+ */
 // Load .env BEFORE any internal require so that a2aProtocol and ATP
 // modules see A2A_NODE_SECRET / A2A_NODE_ID / A2A_HUB_URL at first
 // access and never fall back to a stale persisted/cached secret.

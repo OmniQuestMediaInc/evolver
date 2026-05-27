@@ -1,3 +1,12 @@
+/**
+ * OmniQuest Media Inc.™ — CONFIDENTIAL — Proprietary
+ * Cyrano™ Engine / iMagiNarratives Framework Component
+ * Part of OmniSync™ Oracle Suite & Whisper Voice Twins
+ * Canada-only residency | AI Advisory-Only | Immutable Provenance Hashing
+ * Aligned to Business Plan v3.1 §B.3.7 & Canonical Corpus v11 (D.2)
+ * Do not distribute. All rights reserved.
+ */
+
 'use strict';
 
 const { PROXY_PROTOCOL_VERSION } = require('../mailbox/store');
@@ -55,25 +64,6 @@ class LifecycleManager {
     return this._resolveNodeSecret();
   }
 
-  /**
-   * Resolve the active node_secret with conflict reconciliation between the
-   * persistent MailboxStore and `process.env.A2A_NODE_SECRET`.
-   *
-   * The store is normally authoritative because it is updated whenever
-   * /a2a/hello returns a fresh secret (including rotations). However, if the
-   * operator explicitly sets `A2A_NODE_SECRET` in the environment AND it
-   * disagrees with the stored value, the env var wins and we sync the store
-   * back to the env value. This breaks the failure mode reported in
-   * EvoMap/Evolver#529 where a stale secret persisted in
-   * `~/.evomap/mailbox/state.json` keeps overriding a freshly minted secret
-   * exported from `.env`, producing an infinite re-auth loop:
-   *   stale store secret -> hello "OK" (lenient path) -> heartbeat 403
-   *   -> rotate_secret hello -> node_id_already_claimed (because the bearer
-   *   we sent could not prove ownership) -> 30-min backoff.
-   *
-   * Single-source mode (only one of store/env present) is unchanged.
-   * @returns {string|null}
-   */
   _resolveNodeSecret() {
     const envSecret = this._suppressEnvSecret
       ? null
@@ -210,18 +200,6 @@ class LifecycleManager {
     }
   }
 
-  /**
-   * Re-authenticate after 403: rotate secret via hello, then verify with a
-   * heartbeat. Returns true if auth is restored, false otherwise.
-   *
-   * Recovery sequence (issue EvoMap/Evolver#529):
-   *   attempt 1 -> hello with current Bearer + rotate_secret=true
-   *                (works when the stale secret is still recognised)
-   *   attempt 2 -> drop the bearer locally, hello WITHOUT Authorization
-   *                + rotate_secret=true. If the node is owned by someone
-   *                else, hub returns node_id_already_claimed; we surface a
-   *                manual-reset hint to the user instead of churning forever.
-   */
   async reAuthenticate() {
     if (this._reauthInProgress) return false;
     if (this._reauthBackoffUntil > Date.now()) {
