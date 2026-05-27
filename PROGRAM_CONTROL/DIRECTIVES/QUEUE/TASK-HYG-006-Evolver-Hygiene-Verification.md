@@ -7,17 +7,17 @@
  * Do not distribute. All rights reserved.
 -->
 
-# TASK-HYG-006 — Evolver Hygiene Verification
+# TASK-HYG-006 — Cyrano Hygiene Verification
 
 **Type:** One-time hygiene verification task  
 **Status:** READY FOR ASSIGNMENT  
 **Priority:** Low–Medium  
-**Repo:** `OmniQuestMediaInc/Evolver`  
+**Repo:** `OmniQuestMediaInc/Cyrano`  
 **Created by:** Senior Engineering & Coding Thread  
 **Date:** 2026-05-23  
 
 ## Objective
-Complete a full hygiene verification pass on Evolver and confirm alignment with current MaxZoneGPT / OQMInc hygiene standards.
+Complete a full hygiene verification pass on Cyrano and confirm alignment with current MaxZoneGPT / OQMInc hygiene standards.
 
 ## Scope
 - Verify `archive/` folder and `README.md` are correctly in place.

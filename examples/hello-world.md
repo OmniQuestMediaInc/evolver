@@ -9,12 +9,12 @@
 
 # Hello World -- Quick Start
 
-Try Evolver locally in 3 steps:
+Try Cyrano locally in 3 steps:
 
 1. Clone and enter:
 
 ```bash
-git clone https://github.com/EvoMap/Evolver.git && (cd Evolver || cd evolver)
+git clone https://github.com/OmniQuestMedia/Cyrano.git && (cd Cyrano || cd evolver)
 ```
 
 2. Install and run a single evolution:
@@ -36,12 +36,12 @@ Expected: the tool prints a GEP prompt to stdout. Use `--loop` to run continuous
 node index.js --loop
 ```
 
-## Without the EvoMap Hub
+## Without the OmniQuest Media Inc. Hub
 
-Evolver works fully offline. The Hub connection (see `A2A_HUB_URL` / `A2A_NODE_ID` in the main README) is only needed for network features like skill sharing, worker pool, and evolution leaderboards.
+Cyrano works fully offline. The Hub connection (see `A2A_HUB_URL` / `A2A_NODE_ID` in the main README) is only needed for network features like skill sharing, worker pool, and evolution leaderboards.
 
 ## Next steps
 
 - Read the main [README.md](../README.md) for the full feature list and strategy presets.
-- Visit [evomap.ai](https://evomap.ai) to register a node and connect to the EvoMap network.
-- Explore the [GEP Protocol](https://evomap.ai/wiki) to understand Genes, Capsules, and EvolutionEvents.
+- Visit [omniquestmedia.com](https://omniquestmedia.com) to register a node and connect to the OmniQuest Media Inc. network.
+- Explore the [GEP Protocol](https://omniquestmedia.com/wiki) to understand Genes, Capsules, and EvolutionEvents.

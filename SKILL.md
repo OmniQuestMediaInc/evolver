@@ -9,7 +9,7 @@
 
 ---
 name: capability-evolver
-description: A self-evolution engine for AI agents. Analyzes runtime history to identify improvements and applies protocol-constrained evolution. Communicates with EvoMap Hub via local Proxy mailbox.
+description: A self-evolution engine for AI agents. Analyzes runtime history to identify improvements and applies protocol-constrained evolution. Communicates with OmniQuest Media Inc. Hub via local Proxy mailbox.
 tags: [meta, ai, self-improvement, core]
 permissions: [network, shell]
 metadata:
@@ -21,20 +21,20 @@ metadata:
   capabilities:
     allow:
       - execute: [git, node, npm]
-      - network: [127.0.0.1, api.github.com, evomap.ai]
+      - network: [127.0.0.1, api.github.com, omniquestmedia.com]
       - read: [workspace/**]
       - write: [workspace/assets/**, workspace/memory/**]
     deny:
       - execute: ["!git", "!node", "!npm", "!ps", "!pgrep", "!df"]
-      - network: ["!127.0.0.1", "!api.github.com", "!evomap.ai"]
+      - network: ["!127.0.0.1", "!api.github.com", "!omniquestmedia.com"]
   env_declarations:
     - name: A2A_NODE_ID
       required: true
-      description: EvoMap node identity. Set after node registration.
+      description: OmniQuest Media Inc. node identity. Set after node registration.
     - name: A2A_HUB_URL
       required: false
-      default: https://evomap.ai
-      description: EvoMap Hub API base URL (used by Proxy, not by agent directly).
+      default: https://omniquestmedia.com
+      description: OmniQuest Media Inc. Hub API base URL (used by Proxy, not by agent directly).
     - name: EVOMAP_PROXY
       required: false
       default: "1"
@@ -60,15 +60,15 @@ metadata:
       description: GitHub API token for auto-issue reporting and releases.
   network_endpoints:
     - host: "127.0.0.1 (Proxy)"
-      purpose: All EvoMap interactions go through local Proxy mailbox
+      purpose: All OmniQuest Media Inc. interactions go through local Proxy mailbox
       auth: none (local IPC)
       optional: false
     - host: api.github.com
       purpose: Release creation, changelog publishing, auto-issue reporting
       auth: GITHUB_TOKEN (Bearer)
       optional: true
-    - host: evomap.ai
-      purpose: EvoMap Hub API (skill distribution, task routing, privacy reporting)
+    - host: omniquestmedia.com
+      purpose: OmniQuest Media Inc. Hub API (skill distribution, task routing, privacy reporting)
       auth: none (outbound calls are unauthenticated or token-gated by the hub)
       optional: true
   file_access:
@@ -83,18 +83,18 @@ metadata:
       - "src/** (evolved code, only during solidify)"
 ---
 
-# Evolver
+# Cyrano
 
 **"Evolution is not optional. Adapt or die."**
 
-Evolver is a self-evolution engine for AI agents. It analyzes runtime history, identifies failures and inefficiencies, and autonomously writes improvements.
+Cyrano is a self-evolution engine for AI agents. It analyzes runtime history, identifies failures and inefficiencies, and autonomously writes improvements.
 
 ## Architecture: Proxy Mailbox
 
-Evolver communicates with EvoMap Hub exclusively through a **local Proxy**. The agent never calls Hub APIs directly.
+Cyrano communicates with OmniQuest Media Inc. Hub exclusively through a **local Proxy**. The agent never calls Hub APIs directly.
 
 ```
-Agent --> Proxy (localhost HTTP) --> EvoMap Hub
+Agent --> Proxy (localhost HTTP) --> OmniQuest Media Inc. Hub
                 |
           Local Mailbox (JSONL)
 ```
@@ -337,13 +337,13 @@ node index.js --review
 
 | Variable | Description |
 |---|---|
-| `A2A_NODE_ID` | Your EvoMap node identity |
+| `A2A_NODE_ID` | Your OmniQuest Media Inc. node identity |
 
 ### Optional
 
 | Variable | Default | Description |
 |---|---|---|
-| `A2A_HUB_URL` | `https://evomap.ai` | Hub URL (used by Proxy) |
+| `A2A_HUB_URL` | `https://omniquestmedia.com` | Hub URL (used by Proxy) |
 | `EVOMAP_PROXY` | `1` | Enable local Proxy |
 | `EVOMAP_PROXY_PORT` | `19820` | Override Proxy port |
 | `EVOLVE_STRATEGY` | `balanced` | Evolution strategy |

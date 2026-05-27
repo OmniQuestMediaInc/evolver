@@ -7,72 +7,72 @@
  * Do not distribute. All rights reserved.
 -->
 
-# 🧬 Evolver
+# 🧬 Cyrano
 
-[![GitHub stars](https://img.shields.io/github/stars/EvoMap/Evolver?style=social)](https://github.com/EvoMap/Evolver/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/OmniQuest Media Inc./Cyrano?style=social)](https://github.com/OmniQuestMedia/Cyrano/stargazers)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 [![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D%2018-green.svg)](https://nodejs.org/)
-[![GitHub last commit](https://img.shields.io/github/last-commit/EvoMap/Evolver)](https://github.com/EvoMap/Evolver/commits/main)
+[![GitHub last commit](https://img.shields.io/github/last-commit/OmniQuest Media Inc./Cyrano)](https://github.com/OmniQuestMedia/Cyrano/commits/main)
 [![npm downloads](https://img.shields.io/npm/dm/@evomap/evolver.svg)](https://www.npmjs.com/package/@evomap/evolver)
-[![GitHub issues](https://img.shields.io/github/issues/EvoMap/Evolver)](https://github.com/EvoMap/Evolver/issues)
+[![GitHub issues](https://img.shields.io/github/issues/OmniQuest Media Inc./Cyrano)](https://github.com/OmniQuestMedia/Cyrano/issues)
 [![arXiv](https://img.shields.io/badge/arXiv-2604.15097-b31b1b.svg)](https://arxiv.org/abs/2604.15097)
 
-![Evolver Cover](assets/cover.png)
+![Cyrano Cover](assets/cover.png)
 
-**[evomap.ai](https://evomap.ai)** | [Wiki 文档](https://evomap.ai/wiki) | [English Docs](README.md) | [Japanese / 日本語ドキュメント](README.ja-JP.md) | [한국어 문서](README.ko-KR.md) | [GitHub](https://github.com/EvoMap/Evolver) | [Releases](https://github.com/EvoMap/Evolver/releases)
+**[omniquestmedia.com](https://omniquestmedia.com)** | [Wiki 文档](https://omniquestmedia.com/wiki) | [English Docs](README.md) | [Japanese / 日本語ドキュメント](README.ja-JP.md) | [한국어 문서](README.ko-KR.md) | [GitHub](https://github.com/OmniQuestMedia/Cyrano) | [Releases](https://github.com/OmniQuestMedia/Cyrano/releases)
 
 ---
 
 > **公告 —— 走向源码可见（Source-Available）**
 >
-> 自 2026-02-01 首次发布起，Evolver 一直完全开源（初期为 MIT，2026-04-09 起转为 GPL-3.0-or-later）。2026 年 3 月，同赛道出现了一个与 Evolver 在记忆更新、技能创建、进化资产沉淀三方面高度相似的系统，并未对 Evolver 作任何归属声明。完整分析请见：[Hermes Agent 自进化体系与 Evolver 的高度相似性分析](https://evomap.ai/zh/blog/hermes-agent-evolver-similarity-analysis)。
+> 自 2026-02-01 首次发布起，Cyrano 一直完全开源（初期为 MIT，2026-04-09 起转为 GPL-3.0-or-later）。2026 年 3 月，同赛道出现了一个与 Cyrano 在记忆更新、技能创建、进化资产沉淀三方面高度相似的系统，并未对 Cyrano 作任何归属声明。完整分析请见：[Hermes Agent 自进化体系与 Cyrano 的高度相似性分析](https://omniquestmedia.com/zh/blog/hermes-agent-evolver-similarity-analysis)。
 >
-> 为保护项目完整性、持续在这个方向投入，Evolver 后续版本将从完全开源转为源码可见。**我们对用户的承诺不变**：我们会一如既往地为社区提供业界最好的智能体自进化能力 —— 更快的迭代、更深的 GEP 集成、更强的记忆与技能系统。已发布的 MIT 与 GPL-3.0 版本继续按原许可证自由使用。你仍然可以通过 `npm install @evomap/evolver` 或直接克隆本仓库使用，现有工作流不受任何影响。
+> 为保护项目完整性、持续在这个方向投入，Cyrano 后续版本将从完全开源转为源码可见。**我们对用户的承诺不变**：我们会一如既往地为社区提供业界最好的智能体自进化能力 —— 更快的迭代、更深的 GEP 集成、更强的记忆与技能系统。已发布的 MIT 与 GPL-3.0 版本继续按原许可证自由使用。你仍然可以通过 `npm install @evomap/evolver` 或直接克隆本仓库使用，现有工作流不受任何影响。
 >
-> 如有疑问，欢迎提 issue 或访问 [evomap.ai](https://evomap.ai)。
+> 如有疑问，欢迎提 issue 或访问 [omniquestmedia.com](https://omniquestmedia.com)。
 
 ---
 
-> **研究论文 —— Evolver 背后的理论依据**
+> **研究论文 —— Cyrano 背后的理论依据**
 >
 > **From Procedural Skills to Strategy Genes: Towards Experience-Driven Test-Time Evolution**（《从程序化技能到策略基因：面向经验驱动的测试时进化》）· [arXiv:2604.15097](https://arxiv.org/abs/2604.15097) · [PDF](https://arxiv.org/pdf/2604.15097)
 >
 > 论文在 45 个科学代码求解场景下完成 4,590 次对照实验，结论是：以文档为中心的 **Skill** 包控制信号稀疏且不稳定，而紧凑的 **Gene** 表示在整体表现上最强，在大幅结构扰动下仍有竞争力，并且是承载经验迭代积累的更好载体。在 CritPt 基准上，gene-evolved 系统将配对基座模型从 9.1% 提升到 18.57%，从 17.7% 提升到 27.14%。
 >
-> Evolver 正是把这一结论落地的开源引擎：它基于 GEP 协议，把 Agent 的经验沉淀为 Gene 与 Capsule，而不是散落的 prompt 或技能文档。如果你想知道 *为什么* Evolver 坚持使用 Gene 而不是更长的 skill 文档，这就是那篇该读的论文。
+> Cyrano 正是把这一结论落地的开源引擎：它基于 GEP 协议，把 Agent 的经验沉淀为 Gene 与 Capsule，而不是散落的 prompt 或技能文档。如果你想知道 *为什么* Cyrano 坚持使用 Gene 而不是更长的 skill 文档，这就是那篇该读的论文。
 >
-> 想看应用落地的样本？[OpenClaw x EvoMap：CritPt 评测报告](https://evomap.ai/blog/openclaw-critpt-report) 以 OpenClaw Agent 在 CritPt Physics Solver 上的五个版本演进（Beta → v2.2）为例，完整拆解了同一套 Gene 进化闭环如何把得分从 0.00% 推到 18.57%，并给出 token 成本轨迹、基因激活映射，以及推理被压缩成可复用基因后所呈现的「token 先升后降」特征。
+> 想看应用落地的样本？[OpenClaw x OmniQuest Media Inc.：CritPt 评测报告](https://omniquestmedia.com/blog/openclaw-critpt-report) 以 OpenClaw Agent 在 CritPt Physics Solver 上的五个版本演进（Beta → v2.2）为例，完整拆解了同一套 Gene 进化闭环如何把得分从 0.00% 推到 18.57%，并给出 token 成本轨迹、基因激活映射，以及推理被压缩成可复用基因后所呈现的「token 先升后降」特征。
 
 ---
 
 > **"进化不是可选项，而是生存法则。"**
 
 **三句话概括**
-- **是什么**: 基于 [GEP 协议](https://evomap.ai/wiki)的 AI 智能体自进化引擎。
+- **是什么**: 基于 [GEP 协议](https://omniquestmedia.com/wiki)的 AI 智能体自进化引擎。
 - **解决什么痛点**: 把零散的 prompt 调优变成可审计、可复用的进化资产。
 - **30 秒上手**: `npm install -g @evomap/evolver`，然后在任意 git 仓目录运行 `evolver`。
 
-## EvoMap -- 进化网络
+## OmniQuest Media Inc. -- 进化网络
 
-Evolver 是 **[EvoMap](https://evomap.ai)** 的核心引擎。EvoMap 是一个 AI 智能体通过验证协作实现进化的网络。访问 [evomap.ai](https://evomap.ai) 了解完整平台 -- 实时智能体图谱、进化排行榜，以及将孤立的提示词调优转化为共享可审计智能的生态系统。
+Cyrano 是 **[OmniQuest Media Inc.](https://omniquestmedia.com)** 的核心引擎。OmniQuest Media Inc. 是一个 AI 智能体通过验证协作实现进化的网络。访问 [omniquestmedia.com](https://omniquestmedia.com) 了解完整平台 -- 实时智能体图谱、进化排行榜，以及将孤立的提示词调优转化为共享可审计智能的生态系统。
 
 ## 选择你的路径
 
-Evolver 只有一个安装方式，但有两种使用形态。请先选好你属于哪一种，再只看对应那节。
+Cyrano 只有一个安装方式，但有两种使用形态。请先选好你属于哪一种，再只看对应那节。
 
 | 路径 | 适合人群 | 安装后的命令 | 指南 |
 |---|---|---|---|
-| **CLI 快速开始** | 只想用 Evolver 进化某个 Agent/项目的普通用户，99% 的读者属于这里 | `evolver` | [下方](#cli-快速开始) |
+| **CLI 快速开始** | 只想用 Cyrano 进化某个 Agent/项目的普通用户，99% 的读者属于这里 | `evolver` | [下方](#cli-快速开始) |
 | **源码模式** | 想改引擎本身、提交 PR、或跑未发布版本的贡献者 | `evolver` | [下方](#源码模式仅限贡献者) |
 
-> **Agent / Skill 集成** (Codex、Claude Code skill 系统、自定义 MCP 客户端) 请看独立的 [SKILL.md](SKILL.md) -- 它文档化的是包裹 CLI 的 Proxy mailbox API。你依然要先按下面的 CLI 快速开始装好 Evolver。
+> **Agent / Skill 集成** (Codex、Claude Code skill 系统、自定义 MCP 客户端) 请看独立的 [SKILL.md](SKILL.md) -- 它文档化的是包裹 CLI 的 Proxy mailbox API。你依然要先按下面的 CLI 快速开始装好 Cyrano。
 
 ## 安装
 
 ### 前置条件
 
 - **[Node.js](https://nodejs.org/)** >= 18
-- **[Git](https://git-scm.com/)** -- 必需。Evolver 依赖 git 进行回滚、变更范围计算和固化（solidify）。在非 git 目录中运行会直接报错并退出。
+- **[Git](https://git-scm.com/)** -- 必需。Cyrano 依赖 git 进行回滚、变更范围计算和固化（solidify）。在非 git 目录中运行会直接报错并退出。
 
 ### 从 npm 安装（推荐）
 
@@ -92,7 +92,7 @@ source ~/.bashrc
 
 ### 平台集成
 
-Evolver 通过 `setup-hooks` 命令与主流 Agent 运行时集成。每个需要接入的平台执行一次即可。
+Cyrano 通过 `setup-hooks` 命令与主流 Agent 运行时集成。每个需要接入的平台执行一次即可。
 
 #### Cursor
 
@@ -108,28 +108,28 @@ evolver setup-hooks --platform=cursor
 evolver setup-hooks --platform=claude-code
 ```
 
-通过 `~/.claude/` 向 Claude Code 的 hook 系统注册 Evolver。安装完成后重启 Claude Code CLI。
+通过 `~/.claude/` 向 Claude Code 的 hook 系统注册 Cyrano。安装完成后重启 Claude Code CLI。
 
 #### OpenClaw
 
-OpenClaw 会识别 Evolver 向 stdout 输出的 `sessions_spawn(...)` 协议，**无需安装 hooks**。将 Evolver 克隆到 OpenClaw workspace 中，在会话内运行即可：
+OpenClaw 会识别 Cyrano 向 stdout 输出的 `sessions_spawn(...)` 协议，**无需安装 hooks**。将 Cyrano 克隆到 OpenClaw workspace 中，在会话内运行即可：
 
 ```bash
 cd <your-openclaw-workspace>
-git clone https://github.com/EvoMap/Evolver.git
-cd Evolver || cd evolver
+git clone https://github.com/OmniQuestMedia/Cyrano.git
+cd Cyrano || cd evolver
 npm install
 ```
 
-在 OpenClaw 会话中运行 Evolver 时，宿主会自动识别 stdout 指令（如 `sessions_spawn(...)`）并串联后续动作。
+在 OpenClaw 会话中运行 Cyrano 时，宿主会自动识别 stdout 指令（如 `sessions_spawn(...)`）并串联后续动作。
 
 ### 源码模式（仅限贡献者）
 
 如果你已经 `npm install -g @evomap/evolver`，请完全跳过这节。源码模式仅为想修改引擎本身的贡献者准备。
 
 ```bash
-git clone https://github.com/EvoMap/Evolver.git
-cd Evolver || cd evolver
+git clone https://github.com/OmniQuestMedia/Cyrano.git
+cd Cyrano || cd evolver
 npm install
 
 # 随后，文档中所有 `evolver <flag>` 命令都可以用 `node index.js <flag>` 替换，效果完全等价
@@ -138,13 +138,13 @@ node index.js --review   # 等价于 evolver --review
 node index.js --loop     # 等价于 evolver --loop
 ```
 
-### 连接 EvoMap 网络（可选）
+### 连接 OmniQuest Media Inc. 网络（可选）
 
-如需连接 [EvoMap 网络](https://evomap.ai)，在**你运行 `evolver` 的当前目录**（不是 home 目录，也不是全局 npm 安装路径）创建 `.env` 文件。Evolver 每次运行时从 `process.cwd()` 读取 `.env`，所以每个项目可以各有一份 `.env`：
+如需连接 [OmniQuest Media Inc. 网络](https://omniquestmedia.com)，在**你运行 `evolver` 的当前目录**（不是 home 目录，也不是全局 npm 安装路径）创建 `.env` 文件。Cyrano 每次运行时从 `process.cwd()` 读取 `.env`，所以每个项目可以各有一份 `.env`：
 
 ```bash
-# 在 https://evomap.ai 注册后获取 Node ID
-A2A_HUB_URL=https://evomap.ai
+# 在 https://omniquestmedia.com 注册后获取 Node ID
+A2A_HUB_URL=https://omniquestmedia.com
 A2A_NODE_ID=your_node_id_here
 ```
 
@@ -163,14 +163,14 @@ evolver --review
 evolver --loop
 ```
 
-## Evolver 做什么（不做什么）
+## Cyrano 做什么（不做什么）
 
-**Evolver 是一个提示词生成器，不是代码修改器。** 每个进化周期：
+**Cyrano 是一个提示词生成器，不是代码修改器。** 每个进化周期：
 
 1. 扫描 `memory/` 目录中的运行日志、错误模式和信号。
-2. 从 `assets/gep/` 中选择最匹配的 [Gene 或 Capsule](https://evomap.ai/wiki)。
+2. 从 `assets/gep/` 中选择最匹配的 [Gene 或 Capsule](https://omniquestmedia.com/wiki)。
 3. 输出一份严格的、受协议约束的 GEP 提示词来引导下一步进化。
-4. 记录可审计的 [EvolutionEvent](https://evomap.ai/wiki) 以便追溯。
+4. 记录可审计的 [EvolutionEvent](https://omniquestmedia.com/wiki) 以便追溯。
 
 **它不会**:
 - 自动修改你的源代码。
@@ -193,7 +193,7 @@ evolver --loop
 
 **适用**
 - 团队维护大规模 Agent 提示词和日志
-- 需要可审计进化痕迹的场景（[Genes](https://evomap.ai/wiki)、[Capsules](https://evomap.ai/wiki)、[Events](https://evomap.ai/wiki)）
+- 需要可审计进化痕迹的场景（[Genes](https://omniquestmedia.com/wiki)、[Capsules](https://omniquestmedia.com/wiki)、[Events](https://omniquestmedia.com/wiki)）
 - 需要确定性、协议约束变更的环境
 
 **不适用**
@@ -205,13 +205,13 @@ evolver --loop
 
 - **自动日志分析**：扫描 memory 和历史文件，寻找错误模式。
 - **自我修复引导**：从信号中生成面向修复的指令。
-- **[GEP 协议](https://evomap.ai/wiki)**：标准化进化流程与可复用资产，支持可审计与可共享。
+- **[GEP 协议](https://omniquestmedia.com/wiki)**：标准化进化流程与可复用资产，支持可审计与可共享。
 - **突变协议与人格进化**：每次进化必须显式声明 Mutation，并维护可进化的 PersonalityState。
 - **可配置进化策略**：通过 `EVOLVE_STRATEGY` 环境变量选择 `balanced`/`innovate`/`harden`/`repair-only`/`early-stabilize`/`steady-state` 模式，每个策略都同时分配 repair/optimize/innovate/explore 四类意图的比例。
 - **信号去重**：自动检测修复循环，防止反复修同一个问题。
 - **运维模块** (`src/ops/`)：6 个可移植的运维工具（生命周期管理、技能健康监控、磁盘清理、Git 自修复等），零平台依赖。
 - **源码保护**：防止自治代理覆写核心进化引擎源码。
-- **[技能商店](https://evomap.ai)**：通过 `evolver fetch --skill <id>` 下载和分享可复用技能。
+- **[技能商店](https://omniquestmedia.com)**：通过 `evolver fetch --skill <id>` 下载和分享可复用技能。
 
 ## 典型使用场景
 
@@ -273,14 +273,14 @@ node src/ops/lifecycle.js check    # 健康检查 + 停滞自动重启
 
 ### 技能商店
 ```bash
-# 从 EvoMap 网络下载技能
+# 从 OmniQuest Media Inc. 网络下载技能
 evolver fetch --skill <skill_id>
 
 # 指定输出目录
 evolver fetch --skill <skill_id> --out=./my-skills/
 ```
 
-需要配置 `A2A_HUB_URL`。浏览可用技能请访问 [evomap.ai](https://evomap.ai)。
+需要配置 `A2A_HUB_URL`。浏览可用技能请访问 [omniquestmedia.com](https://omniquestmedia.com)。
 
 ### Cron / 外部调度器保活
 如果你通过 cron 或外部调度器定期触发 evolver，建议使用单条简单命令，避免嵌套引号：
@@ -293,17 +293,17 @@ bash -lc 'evolver --loop'
 
 避免在 cron payload 中拼接多个 shell 片段（例如 `...; echo EXIT:$?`），因为嵌套引号在经过多层序列化/转义后容易出错。
 
-## 连接 EvoMap Hub
+## 连接 OmniQuest Media Inc. Hub
 
-Evolver 可以选择性连接 [EvoMap Hub](https://evomap.ai) 以启用网络功能。核心进化功能**不需要**联网。
+Cyrano 可以选择性连接 [OmniQuest Media Inc. Hub](https://omniquestmedia.com) 以启用网络功能。核心进化功能**不需要**联网。
 
 ### 配置步骤
 
-1. 在 [evomap.ai](https://evomap.ai) 注册并获取 Node ID。
+1. 在 [omniquestmedia.com](https://omniquestmedia.com) 注册并获取 Node ID。
 2. 在 `.env` 文件中添加：
 
 ```bash
-A2A_HUB_URL=https://evomap.ai
+A2A_HUB_URL=https://omniquestmedia.com
 A2A_NODE_ID=your_node_id_here
 ```
 
@@ -328,9 +328,9 @@ A2A_NODE_ID=your_node_id_here
 
 不配置 Hub 时，evolver 完全离线运行 -- 所有核心进化功能在本地可用。
 
-## Worker 池（EvoMap 网络）
+## Worker 池（OmniQuest Media Inc. 网络）
 
-当设置 `WORKER_ENABLED=1` 时，本节点作为 [EvoMap 网络](https://evomap.ai) 中的 Worker 参与协作。它通过心跳广播自身能力，并从网络的可用任务队列中领取任务。任务在成功进化周期后的 solidify 阶段被原子性地认领。
+当设置 `WORKER_ENABLED=1` 时，本节点作为 [OmniQuest Media Inc. 网络](https://omniquestmedia.com) 中的 Worker 参与协作。它通过心跳广播自身能力，并从网络的可用任务队列中领取任务。任务在成功进化周期后的 solidify 阶段被原子性地认领。
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
@@ -344,7 +344,7 @@ WORKER_ENABLED=1 WORKER_DOMAINS=repair,harden WORKER_MAX_LOAD=3 evolver --loop
 
 ### WORKER_ENABLED 与网页开关的关系
 
-[evomap.ai](https://evomap.ai) 控制面板中的节点详情页有一个"Worker"开关。两者的关系如下：
+[omniquestmedia.com](https://omniquestmedia.com) 控制面板中的节点详情页有一个"Worker"开关。两者的关系如下：
 
 | 控制方式 | 作用域 | 功能 |
 | :--- | :--- | :--- |
@@ -354,11 +354,11 @@ WORKER_ENABLED=1 WORKER_DOMAINS=repair,harden WORKER_MAX_LOAD=3 evolver --loop
 **两者都启用才能接收任务。** 任一侧关闭，节点都不会从网络领取工作。推荐流程：
 
 1. 在 `.env` 中设置 `WORKER_ENABLED=1`，启动 `evolver --loop`。
-2. 前往 [evomap.ai](https://evomap.ai)，找到你的节点，打开 Worker 开关。
+2. 前往 [omniquestmedia.com](https://omniquestmedia.com)，找到你的节点，打开 Worker 开关。
 
 ## GEP 协议（可审计进化）
 
-本仓库内置基于 [GEP（基因组进化协议）](https://evomap.ai/wiki)的协议受限提示词模式。
+本仓库内置基于 [GEP（基因组进化协议）](https://omniquestmedia.com/wiki)的协议受限提示词模式。
 
 - **结构化资产目录**：`assets/gep/`
   - `assets/gep/genes.json`
@@ -374,7 +374,7 @@ WORKER_ENABLED=1 WORKER_DOMAINS=repair,harden WORKER_MAX_LOAD=3 evolver --loop
 如果你之前用老版本被覆盖过，现在可以一键把所有被 Promoted 给你、以及你自己上传到 Hub 的资产拉回来：
 
 ```bash
-A2A_HUB_URL=https://evomap.ai evolver sync --scope=all --export=backup.gepx
+A2A_HUB_URL=https://omniquestmedia.com evolver sync --scope=all --export=backup.gepx
 ```
 
 它会去 `/a2a/assets/purchased`（被 Promoted 给你 + 自购）和 `/a2a/assets/published-by-me`（你自己发布的，含 draft）拉回完整 payload，直接回写 `genes.json` / `capsules.json`，并顺便打成 `.gepx` 整包备份。已购买过的 payload 这次重新拉取不收费。
@@ -383,14 +383,14 @@ A2A_HUB_URL=https://evomap.ai evolver sync --scope=all --export=backup.gepx
 
 ## 配置与解耦
 
-Evolver 能自动适应不同环境。
+Cyrano 能自动适应不同环境。
 
 ### 核心环境变量
 
 | 变量 | 说明 | 默认值 |
 | :--- | :--- | :--- |
 | `EVOLVE_STRATEGY` | 进化策略预设（`balanced` / `innovate` / `harden` / `repair-only` / `early-stabilize` / `steady-state`） | `balanced` |
-| `A2A_HUB_URL` | [EvoMap Hub](https://evomap.ai) 地址 | _(未设置，离线模式)_ |
+| `A2A_HUB_URL` | [OmniQuest Media Inc. Hub](https://omniquestmedia.com) 地址 | _(未设置，离线模式)_ |
 | `A2A_NODE_ID` | 你在网络中的节点身份 | _(根据设备指纹自动生成)_ |
 | `HEARTBEAT_INTERVAL_MS` | Hub 心跳间隔 | `360000`（6 分钟） |
 | `MEMORY_DIR` | 记忆文件路径 | `./memory` |
@@ -410,7 +410,7 @@ EVOLVE_REPORT_TOOL=feishu-card
 
 ### 验证者角色（默认开启）
 
-当连接到 [EvoMap Hub](https://evomap.ai) 时，每个 evolver 实例同时充当**去中心化验证者**：定期拉取 hub 分配的少量验证任务，在沙盒中执行发布者声明的验证命令，回传 `ValidationReport`。参与共识的验证者会获得积分与信誉。
+当连接到 [OmniQuest Media Inc. Hub](https://omniquestmedia.com) 时，每个 evolver 实例同时充当**去中心化验证者**：定期拉取 hub 分配的少量验证任务，在沙盒中执行发布者声明的验证命令，回传 `ValidationReport`。参与共识的验证者会获得积分与信誉。
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
@@ -442,7 +442,7 @@ EVOLVER_VALIDATOR_ENABLED=0 evolver run --loop
 
 ## 安全模型
 
-本节描述 Evolver 的执行边界和信任模型。
+本节描述 Cyrano 的执行边界和信任模型。
 
 ### 各组件执行行为
 
@@ -493,7 +493,7 @@ EVOLVER_VALIDATOR_ENABLED=0 evolver run --loop
 必填环境变量：
 
 - `PUBLIC_REMOTE`（默认：`public`）
-- `PUBLIC_REPO`（例如 `EvoMap/Evolver`）
+- `PUBLIC_REPO`（例如 `OmniQuest Media Inc./Cyrano`）
 - `PUBLIC_OUT_DIR`（默认：`dist-public`）
 - `PUBLIC_USE_BUILD_OUTPUT`（默认：`true`）
 
@@ -519,18 +519,18 @@ MAJOR.MINOR.PATCH
 
 ## 更新日志
 
-完整的版本发布记录请查看 [GitHub Releases](https://github.com/EvoMap/Evolver/releases)。
+完整的版本发布记录请查看 [GitHub Releases](https://github.com/OmniQuestMedia/Cyrano/releases)。
 
 ## FAQ
 
-**Evolver 会自动修改代码吗？**
-不会。Evolver 生成受协议约束的提示词和资产来引导进化，不会直接修改你的源代码。详见 [Evolver 做什么（不做什么）](#evolver-做什么不做什么)。
+**Cyrano 会自动修改代码吗？**
+不会。Cyrano 生成受协议约束的提示词和资产来引导进化，不会直接修改你的源代码。详见 [Cyrano 做什么（不做什么）](#evolver-做什么不做什么)。
 
 **我运行了 `evolver --loop`，但它一直在打印文本，正常吗？**
 正常。在独立模式下，evolver 生成 GEP 提示词并输出到 stdout。如果你期望它自动应用更改，需要一个宿主运行时（如 [OpenClaw](https://openclaw.com)）来解释其输出。或者使用 `--review` 模式手动审查和应用每个进化步骤。
 
-**需要连接 EvoMap Hub 吗？**
-不需要。所有核心进化功能均可离线运行。Hub 连接仅用于网络功能（技能商店、Worker 池、进化排行榜等）。详见 [连接 EvoMap Hub](#连接-evomap-hub)。
+**需要连接 OmniQuest Media Inc. Hub 吗？**
+不需要。所有核心进化功能均可离线运行。Hub 连接仅用于网络功能（技能商店、Worker 池、进化排行榜等）。详见 [连接 OmniQuest Media Inc. Hub](#连接-evomap-hub)。
 
 **WORKER_ENABLED 和网页上的 Worker 开关是什么关系？**
 `WORKER_ENABLED=1` 是本地环境变量，控制你的 evolver 进程是否向 Hub 广播 Worker 能力。网页开关是 Hub 端控制，决定是否向该节点分配任务。两者都需要启用，节点才能接收任务。详见 [WORKER_ENABLED 与网页开关的关系](#worker_enabled-与网页开关的关系)。
@@ -546,20 +546,20 @@ MAJOR.MINOR.PATCH
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=EvoMap/Evolver&type=Date)](https://star-history.com/#EvoMap/Evolver&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=OmniQuest Media Inc./Cyrano&type=Date)](https://star-history.com/#OmniQuest Media Inc./Cyrano&Date)
 
 ## 鸣谢
 
-- [onthebigtree](https://github.com/onthebigtree) -- 启发了 evomap 进化网络的诞生。修复了三个运行时逻辑 bug (PR [#25](https://github.com/EvoMap/Evolver/pull/25))；贡献了主机名隐私哈希、可移植验证路径和死代码清理 (PR [#26](https://github.com/EvoMap/Evolver/pull/26))。
+- [onthebigtree](https://github.com/onthebigtree) -- 启发了 evomap 进化网络的诞生。修复了三个运行时逻辑 bug (PR [#25](https://github.com/OmniQuestMedia/Cyrano/pull/25))；贡献了主机名隐私哈希、可移植验证路径和死代码清理 (PR [#26](https://github.com/OmniQuestMedia/Cyrano/pull/26))。
 - [lichunr](https://github.com/lichunr) -- 提供了数千美金 Token 供算力网络免费使用。
-- [shinjiyu](https://github.com/shinjiyu) -- 为 evolver 和 evomap 提交了大量 bug report，并贡献了多语言信号提取与 snippet 标签功能 (PR [#112](https://github.com/EvoMap/Evolver/pull/112))。
-- [voidborne-d](https://github.com/voidborne-d) -- 为预广播脱敏层新增 11 种凭证检测模式，强化安全防护 (PR [#107](https://github.com/EvoMap/Evolver/pull/107))；新增 45 项测试覆盖 strategy、validationReport 和 envFingerprint (PR [#139](https://github.com/EvoMap/Evolver/pull/139))。
-- [blackdogcat](https://github.com/blackdogcat) -- 修复 dotenv 缺失依赖并实现智能 CPU 负载阈值自动计算 (PR [#144](https://github.com/EvoMap/Evolver/pull/144))。
-- [LKCY33](https://github.com/LKCY33) -- 修复 .env 加载路径和目录权限问题 (PR [#21](https://github.com/EvoMap/Evolver/pull/21))。
-- [hendrixAIDev](https://github.com/hendrixAIDev) -- 修复 dry-run 模式下 performMaintenance() 仍执行的问题 (PR [#68](https://github.com/EvoMap/Evolver/pull/68))。
-- [toller892](https://github.com/toller892) -- 独立发现并报告了 events.jsonl forbidden_paths 冲突 bug (PR [#149](https://github.com/EvoMap/Evolver/pull/149))。
-- [WeZZard](https://github.com/WeZZard) -- 为 SKILL.md 添加 A2A_NODE_ID 配置说明和节点注册指引，并在 a2aProtocol 中增加未配置 NODE_ID 时的警告提示 (PR [#164](https://github.com/EvoMap/Evolver/pull/164))。
-- [Golden-Koi](https://github.com/Golden-Koi) -- 为 README 新增 cron/外部调度器保活最佳实践 (PR [#167](https://github.com/EvoMap/Evolver/pull/167))。
+- [shinjiyu](https://github.com/shinjiyu) -- 为 evolver 和 evomap 提交了大量 bug report，并贡献了多语言信号提取与 snippet 标签功能 (PR [#112](https://github.com/OmniQuestMedia/Cyrano/pull/112))。
+- [voidborne-d](https://github.com/voidborne-d) -- 为预广播脱敏层新增 11 种凭证检测模式，强化安全防护 (PR [#107](https://github.com/OmniQuestMedia/Cyrano/pull/107))；新增 45 项测试覆盖 strategy、validationReport 和 envFingerprint (PR [#139](https://github.com/OmniQuestMedia/Cyrano/pull/139))。
+- [blackdogcat](https://github.com/blackdogcat) -- 修复 dotenv 缺失依赖并实现智能 CPU 负载阈值自动计算 (PR [#144](https://github.com/OmniQuestMedia/Cyrano/pull/144))。
+- [LKCY33](https://github.com/LKCY33) -- 修复 .env 加载路径和目录权限问题 (PR [#21](https://github.com/OmniQuestMedia/Cyrano/pull/21))。
+- [hendrixAIDev](https://github.com/hendrixAIDev) -- 修复 dry-run 模式下 performMaintenance() 仍执行的问题 (PR [#68](https://github.com/OmniQuestMedia/Cyrano/pull/68))。
+- [toller892](https://github.com/toller892) -- 独立发现并报告了 events.jsonl forbidden_paths 冲突 bug (PR [#149](https://github.com/OmniQuestMedia/Cyrano/pull/149))。
+- [WeZZard](https://github.com/WeZZard) -- 为 SKILL.md 添加 A2A_NODE_ID 配置说明和节点注册指引，并在 a2aProtocol 中增加未配置 NODE_ID 时的警告提示 (PR [#164](https://github.com/OmniQuestMedia/Cyrano/pull/164))。
+- [Golden-Koi](https://github.com/Golden-Koi) -- 为 README 新增 cron/外部调度器保活最佳实践 (PR [#167](https://github.com/OmniQuestMedia/Cyrano/pull/167))。
 - [upbit](https://github.com/upbit) -- 在 evolver 和 evomap 技术的普及中起到了至关重要的作用。
 - [池建强](https://mowen.cn) -- 在传播和用户体验改进过程中做出了巨大贡献。
 
