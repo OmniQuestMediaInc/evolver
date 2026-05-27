@@ -7,8 +7,6 @@
  * Aligned to Business Plan v3.1 §B.3.7 & Canonical Corpus v11 (D.2)
  * Do not distribute. All rights reserved.
  */
-
-#!/usr/bin/env node
  
 const fs = require('fs');
 const path = require('path');

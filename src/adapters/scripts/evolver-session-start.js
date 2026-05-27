@@ -7,8 +7,6 @@
  * Aligned to Business Plan v3.1 §B.3.7 & Canonical Corpus v11 (D.2)
  * Do not distribute. All rights reserved.
  */
-
-#!/usr/bin/env node
 // evolver-session-start.js
 // Reads recent evolution memory and injects it as context for the agent session.
 // Input: stdin JSON (session context). Output: stdout JSON with agent_message.
